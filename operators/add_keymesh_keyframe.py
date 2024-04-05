@@ -3,6 +3,7 @@ from ..functions import insert_keymesh_keyframe
 from ..functions.insert_keymesh_keyframe import is_candidate_object, new_object_id, get_next_keymesh_index
 from typing import Set
 from ..functions.object_types import remove_type
+from ..properties import addon_name
 
 class OBJECT_OT_keymesh_insert(bpy.types.Operator):
     """Adds a Keymesh keyframe to the currently selected object, after which you can edit the object data to keep the changes"""
@@ -12,7 +13,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        prefs = bpy.context.preferences.addons['Keymesh'].preferences
+        prefs = bpy.context.preferences.addons[addon_name].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
@@ -33,7 +34,7 @@ class OBJECT_OT_keymesh_insert_forward(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
-        prefs = bpy.context.preferences.addons['Keymesh'].preferences
+        prefs = bpy.context.preferences.addons[addon_name].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
@@ -64,7 +65,7 @@ class OBJECT_OT_keymesh_insert_backward(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
-        prefs = bpy.context.preferences.addons['Keymesh'].preferences
+        prefs = bpy.context.preferences.addons[addon_name].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
