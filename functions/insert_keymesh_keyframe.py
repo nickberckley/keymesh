@@ -4,6 +4,7 @@ import bpy
 # from ..functions.get_object_keyframes import get_object_key_values, get_object_keyframes
 from .update_keymesh import *
 from ..functions.object_types import obj_type
+from ..properties import addon_name
 
 
 def is_candidate_object(context: bpy.types.Context | None) -> bool:
@@ -65,7 +66,7 @@ def insert_keymesh_keyframe(obj: bpy.types.Object | Any) -> None:
 ### UNIVERSAL
 def insert_keymesh_keyframe_ex(obj: bpy.types.Object) -> bool:
     try:
-        prefs = bpy.context.preferences.addons['Keymesh'].preferences
+        prefs = bpy.context.preferences.addons[addon_name].preferences
         if obj.get("Keymesh ID") is None:
             if prefs.backup_original_data:
                 obj.data.use_fake_user = True

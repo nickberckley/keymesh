@@ -10,8 +10,6 @@ bl_info = {
     "doc_url": "https://blenderartists.org/t/keymesh-2-curves-frame-picker/",
 }
 
-__package__ = "Keymesh"
-
 import bpy, threading
 from . import (
     preferences,
@@ -93,7 +91,7 @@ def register():
 def unregister():
     preferences.unregister()
     panel.unregister()
-        
+
     add_keymesh_keyframe.unregister()
     convert_shape_keys.unregister()
     frame_picker.unregister()
