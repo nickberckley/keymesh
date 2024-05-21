@@ -11,21 +11,15 @@ bl_info = {
 }
 
 import bpy, threading
+
+from .operators import register as operators_register, unregister as operators_unregister
 from . import (
     preferences,
-    functions,
-    panel,
     properties,
+    ui,
+    functions,
 )
-from .operators import(
-    add_keymesh_keyframe,
-    convert_shape_keys,
-    frame_picker,
-    initialize_handler,
-    interpolate,
-    keymesh_frame,
-    purge_unused_data,
-)
+
 
 # @bpy.app.handlers.persistent
 # def periodic_handler(_):
@@ -53,15 +47,8 @@ addon_keymaps = []
 def register():
     preferences.register()
     properties.register()
-    panel.register()
-
-    add_keymesh_keyframe.register()
-    convert_shape_keys.register()
-    frame_picker.register()
-    initialize_handler.register()
-    keymesh_frame.register()
-    purge_unused_data.register()
-    interpolate.register()
+    ui.register()
+    operators_register()
 
     preferences.update_keymesh_category(preferences.get_preferences(__package__), bpy.context)
     bpy.app.timers.register(update_properties_from_preferences)
@@ -102,15 +89,8 @@ def register():
 def unregister():
     preferences.unregister()
     properties.unregister()
-    panel.unregister()
-
-    add_keymesh_keyframe.unregister()
-    convert_shape_keys.unregister()
-    frame_picker.unregister()
-    initialize_handler.unregister()
-    keymesh_frame.unregister()
-    purge_unused_data.unregister()
-    interpolate.unregister()
+    ui.unregister()
+    operators_unregister()
     
     # HANDLERS
     bpy.app.handlers.load_post.remove(functions.update_keymesh)
