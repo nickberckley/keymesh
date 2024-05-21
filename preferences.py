@@ -98,41 +98,6 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         col.prop(self, "enable_shape_keys")
 
 
-# scene_properties
-def register_properties():
-    bpy.types.Scene.keymesh_frame_skip_count = bpy.props.IntProperty(
-        name="Frame Count",
-        description="Skip this many frames forwards or backwards",
-        subtype="NONE",
-        options=set(),
-        default=get_preferences(__package__).frame_skip_count,
-        min=1, max=2**31 - 1, step=1,
-        soft_min=1, soft_max=100,
-    )
-    bpy.types.Scene.keymesh_insert_frame_after_skip = bpy.props.BoolProperty(
-        name="Insert Keyframe",
-        description="Whether to insert keyframe after skipping frames",
-        options=set(),
-        default=get_preferences(__package__).insert_keyframe_after_skip,
-    )
-    bpy.types.Scene.keymesh_insert_on_selection = bpy.props.BoolProperty(
-        name="Keyframe Keymesh Blocks After Selection",
-        description="If enabled when picking a keymesh block from frame picker selected block will be automatically keyframed on current frame",
-        options=set(),
-        default=True,
-    )
-    
-    bpy.types.Scene.keymesh_block_active_index = bpy.props.IntProperty(
-        default=-1,
-    )
-
-def unregister_properties():
-    del bpy.types.Scene.keymesh_frame_skip_count
-    del bpy.types.Scene.keymesh_insert_frame_after_skip
-    del bpy.types.Scene.keymesh_insert_on_selection
-    del bpy.types.Scene.keymesh_block_active_index
-
-
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
@@ -143,12 +108,7 @@ classes = [
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    register_properties()
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    unregister_properties()
-
-if __name__ == "__main__":
-    register()

@@ -15,6 +15,7 @@ from . import (
     preferences,
     functions,
     panel,
+    properties,
 )
 from .operators import(
     add_keymesh_keyframe,
@@ -35,17 +36,24 @@ from .operators import(
 #         args=[None],
 #         kwargs=None,
 #     )
-    
-    
+
+def update_properties_from_preferences():
+    scene = bpy.context.scene
+    if scene:
+        scene.keymesh.update_properties_from_preferences()
+    return None
+
+
+
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 addon_keymaps = []
 
+
 def register():
     preferences.register()
+    properties.register()
     panel.register()
-    
-    preferences.update_keymesh_category(preferences.get_preferences(__package__), bpy.context)
 
     add_keymesh_keyframe.register()
     convert_shape_keys.register()
@@ -54,6 +62,9 @@ def register():
     keymesh_frame.register()
     purge_unused_data.register()
     interpolate.register()
+
+    preferences.update_keymesh_category(preferences.get_preferences(__package__), bpy.context)
+    bpy.app.timers.register(update_properties_from_preferences)
     
     # HANDLERS
     bpy.app.handlers.load_post.append(functions.update_keymesh)
@@ -90,6 +101,7 @@ def register():
 
 def unregister():
     preferences.unregister()
+    properties.unregister()
     panel.unregister()
 
     add_keymesh_keyframe.unregister()
