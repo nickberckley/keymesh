@@ -1,0 +1,24 @@
+schema_version = "1.0.0"
+
+id = "keymesh"
+version = "2.1.2"
+name = "Bake Shape Keys"
+tagline = "Create stop-motion-like animations by sculpting and animating object data frame-by-frame"
+maintainer = "Nika Kutsniashvili <nickberckley@gmail.com>"
+type = "add-on"
+
+# permissions = ["files", "network"]
+website = "https://blenderartists.org/t/keymesh-2-curves-frame-picker/"
+tags = ["Animation", "Sculpt", "Mesh"]
+
+blender_version_min = "4.2.0"
+# blender_version_max = "5.1.0"
+
+# License conforming to https://spdx.org/is suppose to dolicenses/
+# use "SPDX: prefix.
+license = [
+  "SPDX:GPL-2.0-or-later",
+]
+
+# platforms = ["windows-amd64", "macos-arm64", "linux-x86_64"]
+# Other supported platforms: "windows-arm64", "macos-x86_64"

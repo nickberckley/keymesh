@@ -1,12 +1,12 @@
 bl_info = {
     "name": "Keymesh",
     "author": "Pablo Dobarro, Aldrin Mathew, Nika Kutsniashvili (version 2.0)",
-    "version": (2, 1, 1),
+    "version": (2, 1, 2),
     "blender": (4, 0, 0),
-    "location": "Sidebar > Animate > Keymesh",
+    "location": "3D Viewport (Sidebar) > Animate > Keymesh",
     "category": "Animation",
-    "description": "Animate object data to get stop-motion-like results.",
-    "tracker_url": "https://blenderartists.org/t/keymesh-2-curves-frame-picker/",
+    "description": "Create stop-motion-like animations by sculpting and animating object data frame-by-frame.",
+    "tracker_url": "https://github.com/nickberckley/keymesh",
     "doc_url": "https://blenderartists.org/t/keymesh-2-curves-frame-picker/",
 }
 
