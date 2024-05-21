@@ -1,32 +1,11 @@
 import bpy
-from typing import List
+
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-# def get_object_key_values(obj: bpy.types.Object):
-#     values: List[int] = []
-#     if obj.get("Keymesh ID") is not None:
-#         for action in bpy.data.actions:
-#             if obj.user_of_id(action.id_data):
-#                 fcurves = action.fcurves
-#                 if fcurves is not None:
-#                     for item in fcurves:
-#                         fcurve: bpy.types.FCurve = item
-#                         if fcurve.data_path != '["Keymesh Data"]':
-#                             continue
-
-#                         keyframe_points = fcurve.keyframe_points
-#                         for item in keyframe_points:
-#                             i = 1
-#                             while i < len(item.co):
-#                                 values.append(int(item.co[i]))
-#                                 i += 2
-#                         return values
-#     return values
-
-
 def get_object_keyframes(obj):
     """Get all Keymesh keyframes associated with the active object"""
+
     keyframes = []
     if obj is None:
         obj = bpy.context.view_layer.objects.active
@@ -50,9 +29,11 @@ def get_object_keyframes(obj):
     return keyframes
 
 
-def keymesh_block_usage_count(self, context, item):
+def keymesh_block_usage_count(self, context, block):
+    """Returns number of uses (keyframes) for each keymesh block for object"""
+
     obj = bpy.context.object
-    value = item["Keymesh Data"]
+    value = block["Keymesh Data"]
     count = 0
 
     for fcurve in obj.animation_data.action.fcurves:
@@ -60,11 +41,37 @@ def keymesh_block_usage_count(self, context, item):
             for keyframe in fcurve.keyframe_points:
                 if keyframe.co[1] == value:
                     count += 1
-
     return count
 
 
+
+#### ------------------------------ /experimental/ ------------------------------ ####
+
+# def get_object_key_values(obj):
+#     values = []
+#     if obj.get("Keymesh ID") is not None:
+#         for action in bpy.data.actions:
+#             if obj.user_of_id(action.id_data):
+#                 fcurves = action.fcurves
+#                 if fcurves is not None:
+#                     for item in fcurves:
+#                         fcurve: bpy.types.FCurve = item
+#                         if fcurve.data_path != '["Keymesh Data"]':
+#                             continue
+
+#                         keyframe_points = fcurve.keyframe_points
+#                         for item in keyframe_points:
+#                             i = 1
+#                             while i < len(item.co):
+#                                 values.append(int(item.co[i]))
+#                                 i += 2
+#                         return values
+#     return values
+
+
 def get_next_keymesh_block(obj, direction):
+    """Returns next and previous keymesh block in timeline"""
+
     if obj is None:
         obj = bpy.context.view_layer.objects.active
 

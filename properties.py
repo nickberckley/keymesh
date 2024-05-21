@@ -8,26 +8,21 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
 
     frame_skip_count: bpy.props.IntProperty(
         name = "Frame Count",
-        description = "Skip this many frames forwards or backwards",
-        subtype = "NONE",
-        options = set(),
+        description = "Jump this many frames forwards or backwards",
+        subtype = 'NONE',
         min = 1, max = 2**31-1,
         soft_min = 1, soft_max = 100,
         step = 1,
         default = 2,
     )
-
-    insert_frame_after_skip: bpy.props.BoolProperty(
+    insert_keyframe_after_skip: bpy.props.BoolProperty(
         name = "Insert Keyframe",
-        description = "Whether to insert keyframe after skipping frames",
-        options = set(),
+        description = "Whether to insert keyframe after jumping specified number of frames",
         default = True,
     )
-
     insert_on_selection: bpy.props.BoolProperty(
         name = "Keyframe Keymesh Blocks After Selection",
-        description = "If enabled when picking a keymesh block from frame picker selected block will be automatically keyframed on current frame",
-        options = set(),
+        description = "Automatically insert keyframe on current frame for keymesh block when selecting it.",
         default = True,
     )
 
@@ -39,7 +34,7 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         prefs = bpy.context.preferences.addons[__package__].preferences
         if prefs:
             self.frame_skip_count = prefs.frame_skip_count
-            self.insert_frame_after_skip = prefs.insert_keyframe_after_skip
+            self.insert_keyframe_after_skip = prefs.insert_keyframe_after_skip
 
 
 

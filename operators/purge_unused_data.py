@@ -1,12 +1,15 @@
 import bpy
 from ..functions.update_keymesh import *
+from ..functions.object_types import remove_by_type
 
+
+#### ------------------------------ OPERATORS ------------------------------ ####
 
 class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
-    """Purges all keymesh data that is not used in the animation (i.e. isn't keyframed)"""
+    """Purges all keymesh blocks that are not used in the animation"""
     bl_idname = "object.purge_keymesh_data"
     bl_label = "Purge Unused Keymesh Blocks"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -16,8 +19,8 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         used_km_block = {}
 
         for item in bpy.data.objects:
-            ob: bpy.types.Object = item
-            
+            ob = item
+
             if ob.get("Keymesh ID") is None:
                 continue
 
@@ -26,13 +29,13 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
 
             fcurves = ob.animation_data.action.fcurves
             for item in fcurves:
-                fcurve: bpy.types.FCurve = item
+                fcurve = item
                 if fcurve.data_path != '["Keymesh Data"]':
                     continue
 
                 keyframe_points = fcurve.keyframe_points
                 for item in keyframe_points:
-                    keyframe: bpy.types.Keyframe = item
+                    keyframe = item
                     used_km_block[km_id].append(keyframe.co.y)
 
         #### UNIVERSAL
@@ -53,18 +56,18 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                 if block_km_datablock not in used_km_block[block_km_id]:
                     delete_keymesh_blocks.append(block)
                     continue
-        
+
         # Info
         if len(delete_keymesh_blocks) == 0:
-            self.report({'INFO'}, 'No Keymesh data was removed')
+            self.report({'INFO'}, "No keymesh blocks were removed")
         else:
-            self.report({'INFO'}, str(len(delete_keymesh_blocks)) + ' keymesh data-blocks were removed')
-            
+            self.report({'INFO'}, str(len(delete_keymesh_blocks)) + " keymeshblocks were removed")
+
         for block in delete_keymesh_blocks:
             block.use_fake_user = False
-            
+
         update_keymesh(bpy.context.scene)
-            
+
         for block in delete_keymesh_blocks:
             if block.users == 0:
                 if isinstance(block, bpy.types.Mesh):
@@ -90,11 +93,20 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                 elif isinstance(block, bpy.types.LightProbe):
                     bpy.data.lightprobes.remove(block)
 
-        return {"FINISHED"}
+        return {'FINISHED'}
 
+
+
+#### ------------------------------ REGISTRATION ------------------------------ ####
+
+classes = [
+    OBJECT_OT_purge_keymesh_data,
+]
 
 def register():
-    bpy.utils.register_class(OBJECT_OT_purge_keymesh_data)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_purge_keymesh_data)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

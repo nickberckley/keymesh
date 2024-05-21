@@ -1,16 +1,17 @@
 import bpy
-from ..functions import insert_keymesh_keyframe
-from ..functions.insert_keymesh_keyframe import is_candidate_object, new_object_id, get_next_keymesh_index
-from typing import Set
-from ..functions.object_types import remove_type
 from .. import __package__ as base_package
+from ..functions import insert_keymesh_keyframe
+from ..functions.insert_keymesh_keyframe import is_candidate_object
+from ..functions.object_types import remove_by_type
 
+
+#### ------------------------------ OPERATORS ------------------------------ ####
 
 class OBJECT_OT_keymesh_insert(bpy.types.Operator):
-    """Adds a Keymesh keyframe to the currently selected object, after which you can edit the object data to keep the changes"""
+    """Adds a Keymesh keyframe to active object, after which you can edit the object data to keep the changes"""
     bl_idname = "object.keyframe_object_data"
     bl_label = "Insert Keymesh Keyframe"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -18,9 +19,10 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
-            return is_candidate_object and bpy.context.mode not in ['EDIT_MESH','EDIT_CURVE','EDIT_CURVES','EDIT_METABALL','EDIT_SURFACE','EDIT_FONT','EDIT_ARMATURE','EDIT_LATTICE']
+            return is_candidate_object and bpy.context.mode not in [
+                'EDIT_MESH', 'EDIT_CURVE', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_SURFACE', 'EDIT_FONT', 'EDIT_ARMATURE', 'EDIT_LATTICE']
 
-    def execute(self, context: bpy.types.Context):
+    def execute(self, context):
         obj = context.view_layer.objects.active
         if obj is not None:
             insert_keymesh_keyframe(obj)
@@ -31,59 +33,54 @@ class OBJECT_OT_keymesh_insert_forward(bpy.types.Operator):
     """Skips frames forward based on the number of frames specified in the Keymesh properties."""
     bl_idname = "object.keyframe_object_data_forward"
     bl_label = "Insert Keymesh Keyframe Forward"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(cls, context: bpy.types.Context) -> bool:
+    def poll(cls, context):
         prefs = bpy.context.preferences.addons[base_package].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
-            return is_candidate_object and bpy.context.mode not in ['EDIT_MESH','EDIT_CURVE','EDIT_CURVES','EDIT_METABALL','EDIT_SURFACE','EDIT_FONT','EDIT_ARMATURE','EDIT_LATTICE']
+            return is_candidate_object and bpy.context.mode not in [
+                'EDIT_MESH', 'EDIT_CURVE', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_SURFACE', 'EDIT_FONT', 'EDIT_ARMATURE', 'EDIT_LATTICE']
 
-    def execute(self, context: bpy.types.Context) -> Set[int] | Set[str]:
-        count = 3
-        try:
-            count = int(context.scene.keymesh.frame_skip_count)
-        except Exception as _:
-            count = 3
-            
+    def execute(self, context):
+        step = context.scene.keymesh.frame_skip_count
+
         obj = context.view_layer.objects.active
         if obj is not None:
             if obj.get("Keymesh ID") is not None:
-                bpy.context.scene.frame_current += count
-                if context.scene.keymesh.insert_frame_after_skip:
+                bpy.context.scene.frame_current += step
+                if context.scene.keymesh.insert_keyframe_after_skip:
                     insert_keymesh_keyframe(obj)
             else:
                 insert_keymesh_keyframe(obj)
         return {"FINISHED"}
 
+
 class OBJECT_OT_keymesh_insert_backward(bpy.types.Operator):
     """Skips frames backwards based on the number of frames specified in the Keymesh properties."""
     bl_idname = "object.keyframe_object_data_backward"
     bl_label = "Insert Keymesh Keyframe Backwards"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(cls, context: bpy.types.Context) -> bool:
+    def poll(cls, context):
         prefs = bpy.context.preferences.addons[base_package].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
-            return is_candidate_object and bpy.context.mode not in ['EDIT_MESH','EDIT_CURVE','EDIT_CURVES','EDIT_METABALL','EDIT_SURFACE','EDIT_FONT','EDIT_ARMATURE','EDIT_LATTICE']
+            return is_candidate_object and bpy.context.mode not in [
+                'EDIT_MESH', 'EDIT_CURVE', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_SURFACE', 'EDIT_FONT', 'EDIT_ARMATURE', 'EDIT_LATTICE']
 
-    def execute(self, context: bpy.types.Context) -> Set[int] | Set[str]:
-        count = 3
-        try:
-            count = context.scene.keymesh.frame_skip_count
-        except Exception as _:
-            count = 3
-            
+    def execute(self, context):
+        step = context.scene.keymesh.frame_skip_count
+
         obj = context.view_layer.objects.active
         if obj is not None:
             if obj.get("Keymesh ID") is not None:
-                bpy.context.scene.frame_current -= count
-                if context.scene.keymesh.insert_frame_after_skip:
+                bpy.context.scene.frame_current -= step
+                if context.scene.keymesh.insert_keyframe_after_skip:
                     insert_keymesh_keyframe(obj)
             else:
                 insert_keymesh_keyframe(obj)
@@ -96,13 +93,13 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
     bl_label = "Remove Keymesh Keyframe"
     bl_options = {"REGISTER", "UNDO"}
 
-    def execute(self, context: bpy.types.Context):
+    def execute(self, context):
         obj = bpy.context.object
         obj_id = obj.get("Keymesh ID")
         if obj is not None and obj_id is not None:
             block = obj.data
             block_data = block.get("Keymesh Data")
-            
+
             # Remove Keyframes
             anim_data = obj.animation_data
             if anim_data is not None:
@@ -112,15 +109,15 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                         for keyframe in reversed(fcurve.keyframe_points.values()):
                             if keyframe.co_ui[1] == block_data:
                                 fcurve.keyframe_points.remove(keyframe)
-                
+
                 # Refresh Timeline
                 current_frame = bpy.context.scene.frame_current
                 bpy.context.scene.frame_set(current_frame + 1)
                 bpy.context.scene.frame_set(current_frame)
-        
+
                 # Purge
-                remove_type(bpy.context, obj, block)
-   
+                remove_by_type(obj, block)
+
         return {"FINISHED"}
 
 
@@ -132,7 +129,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
         
 #         # List of Keymesh Blocks on the item
 #         keymesh_blocks = []
-#         for block in obj_type(bpy.context, obj):
+#         for block in obj_type(obj):
 #             if block.get("Keymesh ID") == keymesh_id:
 #                 keymesh_blocks.append(block)
         
@@ -158,7 +155,7 @@ classes = [
     OBJECT_OT_keymesh_insert_backward,
     OBJECT_OT_keymesh_remove,
 ]
-    
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)

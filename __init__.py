@@ -50,9 +50,9 @@ def register():
     ui.register()
     operators_register()
 
-    preferences.update_keymesh_category(preferences.get_preferences(__package__), bpy.context)
+    preferences.update_keymesh_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
     bpy.app.timers.register(update_properties_from_preferences)
-    
+
     # HANDLERS
     bpy.app.handlers.load_post.append(functions.update_keymesh)
     bpy.app.handlers.frame_change_post.append(functions.update_keymesh)
@@ -91,11 +91,11 @@ def unregister():
     properties.unregister()
     ui.unregister()
     operators_unregister()
-    
+
     # HANDLERS
     bpy.app.handlers.load_post.remove(functions.update_keymesh)
     bpy.app.handlers.frame_change_post.remove(functions.update_keymesh)
-    
+
     # KEYMAP
     for km in addon_keymaps:
         for kmi in km.keymap_items:

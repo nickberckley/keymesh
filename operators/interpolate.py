@@ -1,5 +1,6 @@
 import bpy
-from ..functions.get_object_keyframes import get_next_keymesh_block
+from ..functions.timeline import get_next_keymesh_block
+
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 

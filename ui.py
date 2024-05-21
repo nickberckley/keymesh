@@ -1,15 +1,15 @@
 import bpy
 from .functions.object_types import prop_type, obj_type
-from .functions.get_object_keyframes import keymesh_block_usage_count
+from .functions.timeline import keymesh_block_usage_count
 
 
-#### ------------------------------ MENUS ------------------------------ ####
+#### ------------------------------ PANELS ------------------------------ ####
 
 class VIEW3D_PT_keymesh(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_keymesh"
     bl_label = "Keymesh"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
     bl_category = "Animate"
 
     def draw(self, context: bpy.context):
@@ -18,26 +18,26 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         layout.use_property_decorate = False
 
         scene = context.scene.keymesh
-        
+
         # Frame Step
         column = layout.column()
         row = column.row(align=False)
         row.prop(scene, "frame_skip_count", text="Frame Step")
         row.separator()
-        row.prop(scene, "insert_frame_after_skip", text="")
-        
+        row.prop(scene, "insert_keyframe_after_skip", text="")
+
         # Insert Keyframes
         column = layout.column()
         row = column.row(align=False)
-        row.alignment = "EXPAND"
-        if scene.insert_frame_after_skip:
-            row.operator("object.keyframe_object_data_backward", text=r"Insert", depress=False, icon_value=6)
+        row.alignment = 'EXPAND'
+        if scene.insert_keyframe_after_skip:
+            row.operator("object.keyframe_object_data_backward", text="Insert", icon_value=6)
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
-            row.operator("object.keyframe_object_data_forward", text=r"Insert", depress=False, icon_value=4)
+            row.operator("object.keyframe_object_data_forward", text="Insert", icon_value=4)
         else:
-            row.operator("timeline.keymesh_frame_previous", text=r"Jump", depress=False, icon="FRAME_PREV")
+            row.operator("timeline.keymesh_frame_previous", text="Jump", icon="FRAME_PREV")
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
-            row.operator("timeline.keymesh_frame_next", text=r"Jump", depress=False, icon="FRAME_NEXT")
+            row.operator("timeline.keymesh_frame_next", text="Jump", icon="FRAME_NEXT")
 
 
 class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
@@ -47,7 +47,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = 'Animate'
     bl_parent_id = "VIEW3D_PT_keymesh"
-    
+
     @classmethod
     def poll(cls, context):
         return context.object is not None and context.object.get("Keymesh ID") is not None
@@ -56,31 +56,31 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         layout = self.layout
         scene = context.scene.keymesh
         obj = context.object
-        
-        # ui_list
+
+        # UI List
         row = layout.row()
         col = row.column()
         col.template_list("VIEW3D_UL_keymesh_blocks",
             list_id = "Keymesh Blocks",
             dataptr = bpy.data,
-            propname = prop_type(context, obj),
+            propname = prop_type(obj),
             active_dataptr = scene,
             active_propname = "keymesh_block_active_index",
             rows = 6)
 
-        # side_buttons
+        # Buttons
         col = row.column(align=True)
         col.operator("object.keyframe_object_data", text="", icon='ADD')
         col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
         col.separator()
-#            col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').type = 'UP'
-#            col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').type = 'DOWN'
-#            col.separator()
-        col.operator("object.purge_keymesh_data", text="", icon="TRASH")
+        # col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').type = 'UP'
+        # col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').type = 'DOWN'
+        # col.separator()
+        col.operator("object.purge_keymesh_data", text="", icon='TRASH')
 
-        # props
+        # Properties
         layout.prop(scene, "insert_on_selection", text="Keyframe on Selection")
-        
+
 
 class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_keymesh_tools"
@@ -90,15 +90,15 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
     bl_category = 'Animate'
     bl_parent_id = "VIEW3D_PT_keymesh"
     bl_options = {'DEFAULT_CLOSED'}
-    
+
     def draw(self, context):
         layout = self.layout
-        
+
         layout.operator("object.shape_keys_to_keymesh")
         layout.operator("object.keymesh_to_objects")
         layout.operator("scene.initialize_keymesh_handler", text="Initialize Frame Handler")
-        layout.separator()
-        layout.operator("object.keymesh_interpolate", text="INTERPOLATE")
+        # layout.separator()
+        # layout.operator("object.keymesh_interpolate", text="INTERPOLATE")
 
 
 
@@ -111,10 +111,10 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         obj_block = obj.get("Keymesh Data")
         data_block = item.get("Keymesh Data")
         usage_count = keymesh_block_usage_count(self, context, item)
-        
+
         col = layout.column(align=True)
         row = col.row(align=True)
-        
+
         # insert_button_icon
         if context.scene.keymesh.insert_on_selection:
             select_icon = 'PINNED' if data_block == obj_block else 'UNPINNED'
@@ -125,7 +125,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
                 select_icon = 'PINNED'
             else:
                 select_icon = 'UNPINNED'
-        
+
         # Keymesh Name
         row.operator("object.keymesh_pick_frame", text="", icon=select_icon).keymesh_index = item.name
         row.prop(item, "name", text="")
@@ -139,7 +139,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     def filter_items(self, context, data, propname):
         filtered = []
         ordered = []
-        
+
         items = getattr(data, propname)
         filtered = [self.bitflag_filter_item] * len(items)
         # ordered = self.make_sorted_indices_list(items, key=lambda item: item.get("Keymesh Data", 0), reverse=False)
@@ -161,8 +161,8 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     def get_props_filtered_items(self):
         obj = bpy.context.object
         obj_id = bpy.context.object.get("Keymesh ID")
-        filter_type = obj_type(bpy.context, obj)
-            
+        filter_type = obj_type(obj)
+
         filtered_items = [
             o for o in filter_type if o.get("Keymesh Data") and o.get("Keymesh ID") == obj_id or o.get("Keymesh Data") == 0 and o.get("Keymesh ID") == obj_id
         ]
@@ -178,7 +178,7 @@ classes = [
     VIEW3D_PT_keymesh_tools,
     VIEW3D_UL_keymesh_blocks,
 ]
-    
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
