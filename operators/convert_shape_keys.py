@@ -1,7 +1,7 @@
 import bpy
 from ..functions.insert_keymesh_keyframe import is_candidate_object, new_object_id, get_next_keymesh_index
-from typing import Set
-from ..properties import addon_name
+from .. import __package__ as base_package
+
 
 class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
     """Converts shape key animation into Keymesh animation. Shape keys are removed, but gives you ability to sculpt frame-by-frame on top of the existing shape key animation"""
@@ -81,7 +81,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
         layout.prop(self, 'back_up')
 
     def execute(self, context):
-        prefs = bpy.context.preferences.addons[addon_name].preferences
+        prefs = bpy.context.preferences.addons[base_package].preferences
         obj = context.active_object
         original_data = obj.data
         shape_keys = original_data.shape_keys

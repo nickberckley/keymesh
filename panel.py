@@ -16,19 +16,21 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
+
+        scene = context.scene.keymesh
         
         # Frame Step
         column = layout.column()
         row = column.row(align=False)
-        row.prop(context.scene, "keymesh_frame_skip_count", text="Frame Step")
+        row.prop(scene, "frame_skip_count", text="Frame Step")
         row.separator()
-        row.prop(context.scene, "keymesh_insert_frame_after_skip", text="")
+        row.prop(scene, "insert_frame_after_skip", text="")
         
         # Insert Keyframes
         column = layout.column()
         row = column.row(align=False)
         row.alignment = "EXPAND"
-        if context.scene.keymesh_insert_frame_after_skip:
+        if scene.insert_frame_after_skip:
             row.operator("object.keyframe_object_data_backward", text=r"Insert", depress=False, icon_value=6)
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
             row.operator("object.keyframe_object_data_forward", text=r"Insert", depress=False, icon_value=4)
@@ -52,7 +54,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
+        scene = context.scene.keymesh
         obj = context.object
         
         # ui_list
@@ -62,7 +64,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             list_id = "Keymesh Blocks",
             dataptr = bpy.data,
             propname = prop_type(context, obj),
-            active_dataptr = context.scene,
+            active_dataptr = scene,
             active_propname = "keymesh_block_active_index",
             rows = 6)
 
@@ -77,7 +79,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         col.operator("object.purge_keymesh_data", text="", icon="TRASH")
 
         # props
-        layout.prop(scene, "keymesh_insert_on_selection", text="Keyframe on Selection")
+        layout.prop(scene, "insert_on_selection", text="Keyframe on Selection")
         
 
 class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
@@ -114,7 +116,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         row = col.row(align=True)
         
         # insert_button_icon
-        if context.scene.keymesh_insert_on_selection:
+        if context.scene.keymesh.insert_on_selection:
             select_icon = 'PINNED' if data_block == obj_block else 'UNPINNED'
         else:
             if data_block == obj.data.get("Keymesh Data") and data_block != obj_block:

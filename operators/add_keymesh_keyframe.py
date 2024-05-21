@@ -3,7 +3,8 @@ from ..functions import insert_keymesh_keyframe
 from ..functions.insert_keymesh_keyframe import is_candidate_object, new_object_id, get_next_keymesh_index
 from typing import Set
 from ..functions.object_types import remove_type
-from ..properties import addon_name
+from .. import __package__ as base_package
+
 
 class OBJECT_OT_keymesh_insert(bpy.types.Operator):
     """Adds a Keymesh keyframe to the currently selected object, after which you can edit the object data to keep the changes"""
@@ -13,7 +14,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        prefs = bpy.context.preferences.addons[addon_name].preferences
+        prefs = bpy.context.preferences.addons[base_package].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
@@ -34,7 +35,7 @@ class OBJECT_OT_keymesh_insert_forward(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
-        prefs = bpy.context.preferences.addons[addon_name].preferences
+        prefs = bpy.context.preferences.addons[base_package].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
@@ -43,7 +44,7 @@ class OBJECT_OT_keymesh_insert_forward(bpy.types.Operator):
     def execute(self, context: bpy.types.Context) -> Set[int] | Set[str]:
         count = 3
         try:
-            count = context.scene.keymesh_frame_skip_count
+            count = int(context.scene.keymesh.frame_skip_count)
         except Exception as _:
             count = 3
             
@@ -51,7 +52,7 @@ class OBJECT_OT_keymesh_insert_forward(bpy.types.Operator):
         if obj is not None:
             if obj.get("Keymesh ID") is not None:
                 bpy.context.scene.frame_current += count
-                if context.scene.keymesh_insert_frame_after_skip:
+                if context.scene.keymesh.insert_frame_after_skip:
                     insert_keymesh_keyframe(obj)
             else:
                 insert_keymesh_keyframe(obj)
@@ -65,7 +66,7 @@ class OBJECT_OT_keymesh_insert_backward(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
-        prefs = bpy.context.preferences.addons[addon_name].preferences
+        prefs = bpy.context.preferences.addons[base_package].preferences
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
@@ -74,7 +75,7 @@ class OBJECT_OT_keymesh_insert_backward(bpy.types.Operator):
     def execute(self, context: bpy.types.Context) -> Set[int] | Set[str]:
         count = 3
         try:
-            count = context.scene.keymesh_frame_skip_count
+            count = context.scene.keymesh.frame_skip_count
         except Exception as _:
             count = 3
             
@@ -82,7 +83,7 @@ class OBJECT_OT_keymesh_insert_backward(bpy.types.Operator):
         if obj is not None:
             if obj.get("Keymesh ID") is not None:
                 bpy.context.scene.frame_current -= count
-                if context.scene.keymesh_insert_frame_after_skip:
+                if context.scene.keymesh.insert_frame_after_skip:
                     insert_keymesh_keyframe(obj)
             else:
                 insert_keymesh_keyframe(obj)
