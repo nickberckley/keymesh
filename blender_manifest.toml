@@ -2,13 +2,13 @@ schema_version = "1.0.0"
 
 id = "keymesh"
 version = "2.1.2"
-name = "Bake Shape Keys"
-tagline = "Create stop-motion-like animations by sculpting and animating object data frame-by-frame"
+name = "Keymesh"
+tagline = "Create stop-motion animations by sculpting frame-by-frame"
 maintainer = "Nika Kutsniashvili <nickberckley@gmail.com>"
 type = "add-on"
 
 # permissions = ["files", "network"]
-website = "https://blenderartists.org/t/keymesh-2-curves-frame-picker/"
+website = "https://blenderartists.org/t/keymesh-too/"
 tags = ["Animation", "Sculpt", "Mesh"]
 
 blender_version_min = "4.2.0"
