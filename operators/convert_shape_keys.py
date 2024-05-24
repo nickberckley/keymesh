@@ -1,6 +1,6 @@
 import bpy
 from .. import __package__ as base_package
-from ..functions.insert_keymesh_keyframe import new_object_id, get_next_keymesh_index
+from ..functions.object import new_object_id, get_next_keymesh_index
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####

@@ -1,17 +1,101 @@
 import bpy
 from .. import __package__ as base_package
-from ..functions import insert_keymesh_keyframe
-from ..functions.insert_keymesh_keyframe import is_candidate_object
-from ..functions.object_types import obj_data_type
+from ..functions.object import new_object_id, get_next_keymesh_index
+from ..functions.object_types import obj_data_type, is_candidate_object
+from ..functions.update_keymesh import *
+
+
+#### ------------------------------ FUNCTIONS ------------------------------ ####
+
+def insert_keymesh_keyframe(context, obj):
+    prefs = bpy.context.preferences.addons[base_package].preferences
+
+    object_mode = context.mode
+    if context.object.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    if obj:
+        # store_data_that_is_not_persistent
+        if obj.type == 'MESH':
+            remesh_voxel_size = obj.data.remesh_voxel_size
+            remesh_voxel_adaptivity = obj.data.remesh_voxel_adaptivity
+            symmetry_x = obj.data.use_mirror_x
+            symmetry_y = obj.data.use_mirror_y
+            symmetry_z = obj.data.use_mirror_z
+
+
+        # Assign Keymesh ID
+        if obj.get("Keymesh ID") is None:
+            if prefs.backup_original_data:
+                obj.data.use_fake_user = True
+            obj["Keymesh ID"] = new_object_id()
+        object_km_id = obj["Keymesh ID"]
+
+        # Get Block Index
+        block_index = get_next_keymesh_index(obj)
+        if prefs.naming_method == 'INDEX':
+            block_name = obj.name_full + "_keymesh_" + str(block_index)
+        elif prefs.naming_method == 'FRAME':
+            block_name = obj.name_full + "_frame_" + str(context.scene.frame_current)
+
+        # Create New Block
+        if obj.type == 'MESH':
+            if prefs.enable_shape_keys and obj.data.shape_keys is not None:
+                new_block = obj.data.copy()
+            else:
+                new_block = bpy.data.meshes.new_from_object(obj)
+        else:
+            new_block = obj.data.copy()
+
+        new_block.name = block_name
+        new_block["Keymesh ID"] = object_km_id
+        new_block["Keymesh Data"] = block_index
+
+        # Assign New Block to Object
+        obj.data = new_block
+        obj.data.use_fake_user = True
+        obj["Keymesh Data"] = block_index
+
+        # Insert Keyframe
+        obj.keyframe_insert(data_path='["Keymesh Data"]',
+                            frame=context.scene.frame_current)
+
+        for fcurve in obj.animation_data.action.fcurves:
+            if fcurve.data_path == '["Keymesh Data"]':
+                for kf in fcurve.keyframe_points:
+                    kf.interpolation = 'CONSTANT'
+
+        # update_frame_handler
+        update_keymesh(context.scene)
+        bpy.app.handlers.frame_change_post.remove(update_keymesh)
+        bpy.app.handlers.frame_change_post.append(update_keymesh)
+
+
+        # restore_inpersistent_data_for_Mesh
+        if obj.type == 'MESH':
+            obj.data.remesh_voxel_size = remesh_voxel_size
+            obj.data.remesh_voxel_adaptivity = remesh_voxel_adaptivity
+            context.object.data.use_mirror_x = symmetry_x
+            context.object.data.use_mirror_y = symmetry_y
+            context.object.data.use_mirror_z = symmetry_z
+
+        # restore_object_mode
+        if object_mode in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']:
+            object_mode = 'EDIT'
+        bpy.ops.object.mode_set(mode=object_mode)
+
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
 class OBJECT_OT_keymesh_insert(bpy.types.Operator):
-    """Adds a Keymesh keyframe to active object, after which you can edit the object data to keep the changes"""
     bl_idname = "object.keyframe_object_data"
     bl_label = "Insert Keymesh Keyframe"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Adds a Keymesh keyframe to active object, after which you can edit the object data to keep the changes"
+    bl_options = {'UNDO'}
+
+    path: bpy.props.StringProperty(
+    )
 
     @classmethod
     def poll(cls, context):
@@ -19,72 +103,36 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
-            return is_candidate_object and bpy.context.mode not in [
-                'EDIT_MESH', 'EDIT_CURVE', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_SURFACE', 'EDIT_FONT', 'EDIT_ARMATURE', 'EDIT_LATTICE']
+            return is_candidate_object(context) and bpy.context.mode not in [
+                    'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_ARMATURE', 'EDIT_LATTICE']
 
     def execute(self, context):
         obj = context.view_layer.objects.active
-        if obj is not None:
-            insert_keymesh_keyframe(obj)
-        return {"FINISHED"}
-
-
-class OBJECT_OT_keymesh_insert_forward(bpy.types.Operator):
-    """Skips frames forward based on the number of frames specified in the Keymesh properties."""
-    bl_idname = "object.keyframe_object_data_forward"
-    bl_label = "Insert Keymesh Keyframe Forward"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        prefs = bpy.context.preferences.addons[base_package].preferences
-        if prefs.enable_edit_mode:
-            return is_candidate_object(context)
-        else:
-            return is_candidate_object and bpy.context.mode not in [
-                'EDIT_MESH', 'EDIT_CURVE', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_SURFACE', 'EDIT_FONT', 'EDIT_ARMATURE', 'EDIT_LATTICE']
-
-    def execute(self, context):
         step = context.scene.keymesh.frame_skip_count
 
-        obj = context.view_layer.objects.active
         if obj is not None:
-            if obj.get("Keymesh ID") is not None:
-                bpy.context.scene.frame_current += step
-                if context.scene.keymesh.insert_keyframe_after_skip:
-                    insert_keymesh_keyframe(obj)
+            # when_no_direction
+            if not self.path:
+                insert_keymesh_keyframe(context, obj)
+                return {"FINISHED"}
+
             else:
-                insert_keymesh_keyframe(obj)
-        return {"FINISHED"}
+                # when_forwarding_first_time
+                if obj.get("Keymesh ID") is None:
+                    insert_keymesh_keyframe(context, obj)
+                    return {"FINISHED"}
+                
+                # when_forwarding
+                else:
+                    if self.path == "FORWARD":
+                        bpy.context.scene.frame_current += step
+                    elif self.path == "BACKWARD":
+                        bpy.context.scene.frame_current -= step
 
+                    if context.scene.keymesh.insert_keyframe_after_skip:
+                        insert_keymesh_keyframe(context, obj)
+                        return {"FINISHED"}
 
-class OBJECT_OT_keymesh_insert_backward(bpy.types.Operator):
-    """Skips frames backwards based on the number of frames specified in the Keymesh properties."""
-    bl_idname = "object.keyframe_object_data_backward"
-    bl_label = "Insert Keymesh Keyframe Backwards"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        prefs = bpy.context.preferences.addons[base_package].preferences
-        if prefs.enable_edit_mode:
-            return is_candidate_object(context)
-        else:
-            return is_candidate_object and bpy.context.mode not in [
-                'EDIT_MESH', 'EDIT_CURVE', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_SURFACE', 'EDIT_FONT', 'EDIT_ARMATURE', 'EDIT_LATTICE']
-
-    def execute(self, context):
-        step = context.scene.keymesh.frame_skip_count
-
-        obj = context.view_layer.objects.active
-        if obj is not None:
-            if obj.get("Keymesh ID") is not None:
-                bpy.context.scene.frame_current -= step
-                if context.scene.keymesh.insert_keyframe_after_skip:
-                    insert_keymesh_keyframe(obj)
-            else:
-                insert_keymesh_keyframe(obj)
-        return {"FINISHED"}
 
 
 class OBJECT_OT_keymesh_remove(bpy.types.Operator):
@@ -152,8 +200,6 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
 classes = [
     OBJECT_OT_keymesh_insert,
-    OBJECT_OT_keymesh_insert_forward,
-    OBJECT_OT_keymesh_insert_backward,
     OBJECT_OT_keymesh_remove,
 ]
 

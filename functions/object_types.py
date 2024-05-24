@@ -3,6 +3,14 @@ import bpy
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
+def is_candidate_object(context):
+    if context.view_layer.objects.active is None:
+        return False
+    else:
+        return context.view_layer.objects.active.type in ['MESH', 'CURVE', 'SURFACE', 'FONT', 'META', 'CURVES', 'VOLUME',
+                                                          'LATTICE', 'LIGHT', 'CAMERA', 'SPEAKER', 'LIGHT_PROBE']
+
+
 def obj_data_type(obj):
     supported_types = [
         ("MESH", bpy.data.meshes),

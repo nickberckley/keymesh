@@ -31,9 +31,9 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         row = column.row(align=False)
         row.alignment = 'EXPAND'
         if scene.insert_keyframe_after_skip:
-            row.operator("object.keyframe_object_data_backward", text="Insert", icon_value=6)
+            row.operator("object.keyframe_object_data", text="Insert", icon_value=6).path="BACKWARD"
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
-            row.operator("object.keyframe_object_data_forward", text="Insert", icon_value=4)
+            row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path="FORWARD"
         else:
             row.operator("timeline.keymesh_frame_previous", text="Jump", icon="FRAME_PREV")
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')

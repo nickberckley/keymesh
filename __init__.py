@@ -61,17 +61,19 @@ def register():
     addon = bpy.context.window_manager.keyconfigs.addon
     km = addon.keymaps.new(name="3D View", space_type="VIEW_3D")
     kmi = km.keymap_items.new(
-        "object.keyframe_object_data_forward",
+        "object.keyframe_object_data",
         type="PAGE_UP",
         value="PRESS",
         ctrl=True,
     )
+    kmi.properties.path="FORWARD"
     kmi = km.keymap_items.new(
-        "object.keyframe_object_data_backward",
+        "object.keyframe_object_data",
         type="PAGE_DOWN",
         value="PRESS",
         ctrl=True,
     )
+    kmi.properties.path="BACKWARD"
     kmi = km.keymap_items.new(
         "timeline.keymesh_frame_previous",
         type = "PAGE_DOWN",

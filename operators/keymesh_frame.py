@@ -1,5 +1,5 @@
 import bpy
-from ..functions.insert_keymesh_keyframe import is_candidate_object
+from ..functions.object_types import is_candidate_object
 from ..functions.timeline import get_object_keyframes
 
 
