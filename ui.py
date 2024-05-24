@@ -1,5 +1,5 @@
 import bpy
-from .functions.object_types import prop_type, obj_data_type
+from .functions.poll import prop_type, obj_data_type
 from .functions.timeline import keymesh_block_usage_count
 
 
@@ -35,9 +35,9 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
             row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path="FORWARD"
         else:
-            row.operator("timeline.keymesh_frame_previous", text="Jump", icon="FRAME_PREV")
+            row.operator("timeline.keymesh_frame_previous", text="Jump", icon='FRAME_PREV')
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
-            row.operator("timeline.keymesh_frame_next", text="Jump", icon="FRAME_NEXT")
+            row.operator("timeline.keymesh_frame_next", text="Jump", icon='FRAME_NEXT')
 
 
 class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
@@ -45,7 +45,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
     bl_label = "Frame Picker"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Animate'
+    bl_category = "Animate"
     bl_parent_id = "VIEW3D_PT_keymesh"
 
     @classmethod
@@ -87,7 +87,7 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
     bl_label = "Tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Animate'
+    bl_category = "Animate"
     bl_parent_id = "VIEW3D_PT_keymesh"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -108,8 +108,8 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     """List of Keymesh data-blocks for active object"""
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.object
-        obj_block = obj.get("Keymesh Data")
-        data_block = item.get("Keymesh Data")
+        obj_keymesh_data = obj.get("Keymesh Data")
+        block_keymesh_data = item.get("Keymesh Data")
         usage_count = keymesh_block_usage_count(self, context, item)
 
         col = layout.column(align=True)
@@ -117,11 +117,11 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
 
         # insert_button_icon
         if context.scene.keymesh.insert_on_selection:
-            select_icon = 'PINNED' if data_block == obj_block else 'UNPINNED'
+            select_icon = 'PINNED' if block_keymesh_data == obj_keymesh_data else 'UNPINNED'
         else:
-            if data_block == obj.data.get("Keymesh Data") and data_block != obj_block:
+            if block_keymesh_data == obj.data.get("Keymesh Data") and block_keymesh_data != obj_keymesh_data:
                 select_icon = 'VIEWZOOM'
-            elif data_block == obj_block:
+            elif block_keymesh_data == obj_keymesh_data:
                 select_icon = 'PINNED'
             else:
                 select_icon = 'UNPINNED'
@@ -160,11 +160,11 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
 
     def get_props_filtered_items(self):
         obj = bpy.context.object
-        obj_id = bpy.context.object.get("Keymesh ID")
+        obj_keymesh_id = bpy.context.object.get("Keymesh ID")
         filter_type = obj_data_type(obj)
 
         filtered_items = [
-            o for o in filter_type if o.get("Keymesh Data") and o.get("Keymesh ID") == obj_id or o.get("Keymesh Data") == 0 and o.get("Keymesh ID") == obj_id
+            o for o in filter_type if o.get("Keymesh Data") and o.get("Keymesh ID") == obj_keymesh_id or o.get("Keymesh Data") == 0 and o.get("Keymesh ID") == obj_keymesh_id
         ]
         return filtered_items
 

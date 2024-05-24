@@ -30,7 +30,7 @@ def get_object_keyframes(obj):
 
 
 def keymesh_block_usage_count(self, context, block):
-    """Returns number of uses (keyframes) for each keymesh block for object"""
+    """Returns number of uses (keyframes) for each Keymesh block for object"""
 
     obj = bpy.context.object
     value = block["Keymesh Data"]
@@ -44,36 +44,11 @@ def keymesh_block_usage_count(self, context, block):
     return count
 
 
-
-#### ------------------------------ /experimental/ ------------------------------ ####
-
-# def get_object_key_values(obj):
-#     values = []
-#     if obj.get("Keymesh ID") is not None:
-#         for action in bpy.data.actions:
-#             if obj.user_of_id(action.id_data):
-#                 fcurves = action.fcurves
-#                 if fcurves is not None:
-#                     for item in fcurves:
-#                         fcurve: bpy.types.FCurve = item
-#                         if fcurve.data_path != '["Keymesh Data"]':
-#                             continue
-
-#                         keyframe_points = fcurve.keyframe_points
-#                         for item in keyframe_points:
-#                             i = 1
-#                             while i < len(item.co):
-#                                 values.append(int(item.co[i]))
-#                                 i += 2
-#                         return values
-#     return values
-
-
-def get_next_keymesh_block(obj, direction):
-    """Returns next and previous keymesh block in timeline"""
+def get_next_keymesh_block(context, obj, direction):
+    """Returns next and previous Keymesh block in timeline"""
 
     if obj is None:
-        obj = bpy.context.view_layer.objects.active
+        obj = context.view_layer.objects.active
 
     obj_id = obj.get("Keymesh ID", None)
     next_keyframe = None
@@ -89,16 +64,16 @@ def get_next_keymesh_block(obj, direction):
                         if fcurve.data_path != '["Keymesh Data"]':
                             continue
 
-                        current_frame = bpy.context.scene.frame_current
+                        current_frame = context.scene.frame_current
                         keyframe_points = fcurve.keyframe_points
 
-                        if direction == "next":
+                        if direction == "NEXT":
                             for keyframe in keyframe_points:
                                 if keyframe.co.x > current_frame:
                                     next_keyframe = keyframe.co.x
                                     next_value = keyframe.co.y
                                     break
-                        elif direction == "previous":
+                        elif direction == "PREVIOUS":
                             for keyframe in keyframe_points:
                                 if keyframe.co.x < current_frame:
                                     next_keyframe = keyframe.co.x
@@ -111,3 +86,24 @@ def get_next_keymesh_block(obj, direction):
                     next_keymesh_block = mesh
 
     return next_keyframe, next_keymesh_block
+
+
+# def get_object_key_values(obj):
+#     values = []
+#     if obj.get("Keymesh ID") is not None:
+#         for action in bpy.data.actions:
+#             if obj.user_of_id(action.id_data):
+#                 fcurves = action.fcurves
+#                 if fcurves is not None:
+#                     for fcurve in fcurves:
+#                         if fcurve.data_path != '["Keymesh Data"]':
+#                             continue
+
+#                         keyframe_points = fcurve.keyframe_points
+#                         for item in keyframe_points:
+#                             i = 1
+#                             while i < len(item.co):
+#                                 values.append(int(item.co[i]))
+#                                 i += 2
+#                         return values
+#     return values

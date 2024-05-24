@@ -6,9 +6,9 @@ from ..functions.object import new_object_id, get_next_keymesh_index
 #### ------------------------------ OPERATORS ------------------------------ ####
 
 class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
-    """Converts shape key animations into Keymesh and removes shape keys."""
     bl_idname = "object.shape_keys_to_keymesh"
     bl_label = "Shape Keys to Keymesh"
+    bl_description = "Converts shape key animations into Keymesh and removes shape keys"
     bl_options = {'REGISTER', 'UNDO'}
 
     delete_duplicates: bpy.props.BoolProperty(
@@ -131,7 +131,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
         bpy.ops.scene.initialize_keymesh_handler()
         bpy.context.scene.frame_set(initial_frame)
-        return {"FINISHED"}
+        return {'FINISHED'}
 
 
     def invoke(self, context, event):
@@ -176,9 +176,9 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
 
 class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
-    """Creates object for each Keymesh frame. Animation will be lost"""
     bl_idname = "object.keymesh_to_objects"
     bl_label = "Convert to Separate Objects"
+    bl_description = "Creates object for each Keymesh frame. Animation will be lost"
     bl_options = {"REGISTER", "UNDO"}
 
     back_up: bpy.props.BoolProperty(
@@ -203,7 +203,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         description = "Axis to move the duplicated objects on",
         items = [("X", "X", "Move on X axis"),
                 ("Y", "Y", "Move on Y axis"),
-               ("Z", "Z", "Move on Z axis")],
+                ("Z", "Z", "Move on Z axis")],
         default = 'X',
     )
 

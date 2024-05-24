@@ -32,14 +32,13 @@ def update_properties_from_preferences():
 
 addon_keymaps = []
 
-
 def register():
     preferences.register()
     properties.register()
     ui.register()
     operators_register()
 
-    preferences.update_keymesh_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
+    preferences.update_sidebar_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
     bpy.app.timers.register(update_properties_from_preferences)
 
     # HANDLERS
@@ -49,30 +48,12 @@ def register():
     # KEYMAP
     addon = bpy.context.window_manager.keyconfigs.addon
     km = addon.keymaps.new(name="3D View", space_type="VIEW_3D")
-    kmi = km.keymap_items.new(
-        "object.keyframe_object_data",
-        type="PAGE_UP",
-        value="PRESS",
-        ctrl=True,
-    )
+    kmi = km.keymap_items.new("object.keyframe_object_data", type="PAGE_UP", value="PRESS", ctrl=True)
     kmi.properties.path="FORWARD"
-    kmi = km.keymap_items.new(
-        "object.keyframe_object_data",
-        type="PAGE_DOWN",
-        value="PRESS",
-        ctrl=True,
-    )
+    kmi = km.keymap_items.new("object.keyframe_object_data", type="PAGE_DOWN", value="PRESS", ctrl=True)
     kmi.properties.path="BACKWARD"
-    kmi = km.keymap_items.new(
-        "timeline.keymesh_frame_previous",
-        type = "PAGE_DOWN",
-        value = "PRESS",
-    )
-    kmi = km.keymap_items.new(
-        "timeline.keymesh_frame_next",
-        type= "PAGE_UP",
-        value= "PRESS",
-    )
+    kmi = km.keymap_items.new("timeline.keymesh_frame_previous", type = "PAGE_DOWN", value = "PRESS")
+    kmi = km.keymap_items.new("timeline.keymesh_frame_next", type= "PAGE_UP", value= "PRESS")
     kmi.active = True
     addon_keymaps.append(km)
 

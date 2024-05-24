@@ -2,13 +2,15 @@ import bpy
 from . import ui
 
 
+#### ------------------------------ FUNCTIONS ------------------------------ ####
+
 panel_classes = [
     ui.VIEW3D_PT_keymesh,
     ui.VIEW3D_PT_keymesh_frame_picker,
     ui.VIEW3D_PT_keymesh_tools,
 ]
 
-def update_keymesh_category(self, context):
+def update_sidebar_category(self, context):
     for cls in panel_classes:
         try:
             bpy.utils.unregister_class(cls)
@@ -29,7 +31,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         name = "Sidebar Category",
         description = ("Choose a name for the category of the Keymesh panel in the sidebar"),
         default = "Animate",
-        update = update_keymesh_category,
+        update = update_sidebar_category,
     )
 
     # defaults
@@ -47,7 +49,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         description = "When enabled, skipping frames forward or backwards will also keyframe the object data",
         default = True,
     )
-    
+
     backup_original_data: bpy.props.BoolProperty(
         name = "Backup Original Object Data (Set Fake User)",
         description = "When enabled original object data will be preserved by fake user when first Keymesh frame is created",

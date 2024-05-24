@@ -8,7 +8,7 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
 
     frame_skip_count: bpy.props.IntProperty(
         name = "Frame Count",
-        description = "Jump this many frames forwards or backwards",
+        description = "Skip this many frames forwards or backwards when inserting keyframe",
         subtype = 'NONE',
         min = 1, max = 2**31-1,
         soft_min = 1, soft_max = 100,
@@ -17,12 +17,13 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     )
     insert_keyframe_after_skip: bpy.props.BoolProperty(
         name = "Insert Keyframe",
-        description = "Whether to insert keyframe after jumping specified number of frames",
+        description = ("When enabled, skipping frames forward or backwards will also keyframe the object data/n"
+                    "WARNING: jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
         default = True,
     )
     insert_on_selection: bpy.props.BoolProperty(
         name = "Keyframe Keymesh Blocks After Selection",
-        description = "Automatically insert keyframe on current frame for keymesh block when selecting it.",
+        description = "Automatically insert keyframe on current frame for Keymesh block when selecting it.",
         default = True,
     )
 
@@ -50,7 +51,6 @@ def register():
 
     # PROPERTY
     bpy.types.Scene.keymesh = bpy.props.PointerProperty(type = SCENE_PG_keymesh)
-
 
 def unregister():
     for cls in reversed(classes):

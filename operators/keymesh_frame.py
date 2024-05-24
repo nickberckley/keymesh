@@ -1,14 +1,14 @@
 import bpy
-from ..functions.object_types import is_candidate_object
+from ..functions.poll import is_candidate_object
 from ..functions.timeline import get_object_keyframes
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
 class TIMELINE_OT_keymesh_frame_next(bpy.types.Operator):
-    """Find and jump to the next frame that has a keymesh keyframe for the current object"""
     bl_idname = "timeline.keymesh_frame_next"
     bl_label = "Next Keymesh Keyframe"
+    bl_description = "Jump to the next frame that has a keymesh keyframe for the current object"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -30,9 +30,9 @@ class TIMELINE_OT_keymesh_frame_next(bpy.types.Operator):
 
 
 class TIMELINE_OT_keymesh_frame_previous(bpy.types.Operator):
-    """Find and jump to the previous frame that has a keymesh keyframe for the current object"""
     bl_idname = "timeline.keymesh_frame_previous"
     bl_label = "Previous Keymesh Keyframe"
+    bl_description = "Find and jump to the previous frame that has a keymesh keyframe for the current object"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -51,6 +51,7 @@ class TIMELINE_OT_keymesh_frame_previous(bpy.types.Operator):
 
             context.scene.frame_current = highest
         return {'FINISHED'}
+
 
 
 #### ------------------------------ REGISTRATION ------------------------------ ####

@@ -5,9 +5,9 @@ from ..functions.handler import update_keymesh
 #### ------------------------------ OPERATORS ------------------------------ ####
 
 class SCENE_OT_initialize_keymesh_handler(bpy.types.Operator):
-    """If Keymesh stops working try using this operator to re-initialize it's frame handler"""
     bl_idname = "scene.initialize_keymesh_handler"
     bl_label = "Initialize Keymesh Frame Handler"
+    bl_description = "If Keymesh stops working try using this operator to re-initialize it's frame handler"
     bl_options = {'REGISTER'}
 
     @classmethod

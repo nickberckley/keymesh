@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object_types import obj_data_type
+from ..functions.poll import obj_data_type
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -33,31 +33,34 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
-    """Move the active Keymesh block up or down"""
-    bl_idname = "object.keymesh_block_move"
-    bl_label = "Move Keymesh Block"
-    bl_options = {'UNDO'}
+# class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
+#     bl_idname = "object.keymesh_block_move"
+#     bl_label = "Move Keymesh Block"
+#     bl_description = "Move the active Keymesh block up or down in the frame picker"
+#     bl_options = {'UNDO'}
 
-    type: bpy.props.EnumProperty(items = [
-        ('UP', "", ""),
-        ('DOWN', "", ""),
-    ])
+#     direction: bpy.props.EnumProperty(
+#         name = "Direction",
+#         items = [('UP', "", ""),
+#                 ('DOWN', "", ""),],
+#     )
 
-#    @classmethod
-#    def poll(cls, context):
-#        return context.scene.camera is not None and context.scene.camera.type == 'CAMERA' and len(context.scene.camera.camera_shakes) > 1
+#     @classmethod
+#     def poll(cls, context):
+#         return True
 
-    def execute(self, context):
-        obj = context.object.data
-        index = int(context.scene.keymesh_block_active_index)
-        if self.type == 'UP' and index > 0:
-            obj.keymesh_blocks.move(index, index - 1)
-            context.scene.keymesh_block_active_index -= 1
-        elif self.type == 'DOWN' and (index + 1) < len(camera.camera_shakes):
-            obj.keymesh_blocks.move(index, index + 1)
-            context.scene.keymesh_block_active_index += 1
-        return {'FINISHED'}
+#     def execute(self, context):
+#         obj = context.object.data
+#         index = int(context.scene.keymesh_block_active_index)
+
+#         if self.direction == 'UP' and index > 0:
+#             obj.keymesh_blocks.move(index, index - 1)
+#             context.scene.keymesh_block_active_index -= 1
+
+#         elif self.direction == 'DOWN' and (index + 1) < len(''): # length_should_be_of_full_list_of_items_in_ui_list
+#             obj.keymesh_blocks.move(index, index + 1)
+#             context.scene.keymesh_block_active_index += 1
+#         return {'FINISHED'}
 
 
 
@@ -65,9 +68,9 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
 
 classes = [
     OBJECT_OT_keymesh_pick_frame,
-    OBJECT_OT_keymesh_block_move,
+    # OBJECT_OT_keymesh_block_move,
 ]
-    
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
