@@ -21,7 +21,6 @@ def obj_data_type(obj):
         ("META", bpy.data.metaballs),
         ("VOLUME", bpy.data.volumes),
 
-        ("ARMATURE", bpy.data.armatures),
         ("LATTICE", bpy.data.lattices),
         ("LIGHT", bpy.data.lights),
         ("LIGHT_PROBE", bpy.data.lightprobes),
@@ -44,7 +43,6 @@ def prop_type(obj):
         ("META", "metaballs"),
         ("VOLUME", "volumes"),
 
-        ("ARMATURE", "armatures"),
         ("LATTICE", "lattices"),
         ("LIGHT", "lights"),
         ("LIGHT_PROBE", "lightprobes"),

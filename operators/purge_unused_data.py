@@ -40,7 +40,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
 
         #### UNIVERSAL
         delete_keymesh_blocks = []
-        for data_collection in [bpy.data.meshes, bpy.data.curves, bpy.data.metaballs, bpy.data.hair_curves, bpy.data.volumes, bpy.data.lattices, bpy.data.lights, bpy.data.cameras, bpy.data.lightprobes, bpy.data.speakers, bpy.data.armatures]:
+        for data_collection in [bpy.data.meshes, bpy.data.curves, bpy.data.metaballs, bpy.data.hair_curves, bpy.data.volumes, bpy.data.lattices, bpy.data.lights, bpy.data.cameras, bpy.data.lightprobes, bpy.data.speakers]:
             for block in data_collection:
                 if block.get("Keymesh ID") is None:
                     continue
@@ -80,8 +80,6 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                     bpy.data.hair_curves.remove(block)
                 elif isinstance(block, bpy.types.Volume):
                     bpy.data.volumes.remove(block)
-                elif isinstance(block, bpy.types.Armature):
-                    bpy.data.armatures.remove(block)
                 elif isinstance(block, bpy.types.Lattice):
                     bpy.data.lattices.remove(block)
                 elif isinstance(block, bpy.types.Light):

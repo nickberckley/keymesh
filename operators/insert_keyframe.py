@@ -104,7 +104,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
             return is_candidate_object(context)
         else:
             return is_candidate_object(context) and bpy.context.mode not in [
-                    'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_ARMATURE', 'EDIT_LATTICE']
+                    'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']
 
     def execute(self, context):
         obj = context.view_layer.objects.active
