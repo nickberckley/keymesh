@@ -1,5 +1,5 @@
 import bpy
-from ..functions.update_keymesh import *
+from ..functions.handler import update_keymesh
 from ..functions.object_types import obj_data_type
 
 

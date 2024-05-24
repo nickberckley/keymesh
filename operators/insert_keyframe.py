@@ -2,7 +2,7 @@ import bpy
 from .. import __package__ as base_package
 from ..functions.object import new_object_id, get_next_keymesh_index
 from ..functions.object_types import obj_data_type, is_candidate_object
-from ..functions.update_keymesh import *
+from ..functions.handler import update_keymesh
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####

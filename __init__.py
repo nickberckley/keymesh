@@ -10,8 +10,7 @@ bl_info = {
     "doc_url": "https://blenderartists.org/t/keymesh-2-curves-frame-picker/",
 }
 
-import bpy, threading
-
+import bpy
 from .operators import register as operators_register, unregister as operators_unregister
 from . import (
     preferences,
@@ -20,16 +19,6 @@ from . import (
     functions,
 )
 
-
-# @bpy.app.handlers.persistent
-# def periodic_handler(_):
-#     functions.frame_handler(None)
-#     threading.Timer(
-#         interval=180,
-#         function=functions.frame_handler,
-#         args=[None],
-#         kwargs=None,
-#     )
 
 def update_properties_from_preferences():
     scene = bpy.context.scene
@@ -54,8 +43,8 @@ def register():
     bpy.app.timers.register(update_properties_from_preferences)
 
     # HANDLERS
-    bpy.app.handlers.load_post.append(functions.update_keymesh)
-    bpy.app.handlers.frame_change_post.append(functions.update_keymesh)
+    bpy.app.handlers.load_post.append(functions.handler.update_keymesh)
+    bpy.app.handlers.frame_change_post.append(functions.handler.update_keymesh)
 
     # KEYMAP
     addon = bpy.context.window_manager.keyconfigs.addon
@@ -95,8 +84,8 @@ def unregister():
     operators_unregister()
 
     # HANDLERS
-    bpy.app.handlers.load_post.remove(functions.update_keymesh)
-    bpy.app.handlers.frame_change_post.remove(functions.update_keymesh)
+    bpy.app.handlers.load_post.remove(functions.handler.update_keymesh)
+    bpy.app.handlers.frame_change_post.remove(functions.handler.update_keymesh)
 
     # KEYMAP
     for km in addon_keymaps:
