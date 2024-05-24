@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object_types import index_by_type
+from ..functions.object_types import obj_data_type
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -14,13 +14,14 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.object
+        data_type = obj_data_type(obj)
 
         current_mode = obj.mode
         if current_mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
         # assign_keymesh_block_to_object
-        obj.data = index_by_type(self, obj)
+        obj.data = data_type[self.keymesh_index]
         keymesh_block = context.object.data.get("Keymesh Data")
 
         # Keyframe Block

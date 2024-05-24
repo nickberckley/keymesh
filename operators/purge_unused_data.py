@@ -1,6 +1,6 @@
 import bpy
 from ..functions.update_keymesh import *
-from ..functions.object_types import remove_by_type
+from ..functions.object_types import obj_data_type
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####

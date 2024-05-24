@@ -2,7 +2,7 @@ import bpy
 from .. import __package__ as base_package
 from ..functions import insert_keymesh_keyframe
 from ..functions.insert_keymesh_keyframe import is_candidate_object
-from ..functions.object_types import remove_by_type
+from ..functions.object_types import obj_data_type
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -116,7 +116,8 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                 bpy.context.scene.frame_set(current_frame)
 
                 # Purge
-                remove_by_type(obj, block)
+                data_type = obj_data_type(obj)
+                data_type.remove(block)
 
         return {"FINISHED"}
 
@@ -129,7 +130,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
         
 #         # List of Keymesh Blocks on the item
 #         keymesh_blocks = []
-#         for block in obj_type(obj):
+#         for block in obj_data_type(obj):
 #             if block.get("Keymesh ID") == keymesh_id:
 #                 keymesh_blocks.append(block)
         

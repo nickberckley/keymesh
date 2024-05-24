@@ -1,5 +1,5 @@
 import bpy
-from .functions.object_types import prop_type, obj_type
+from .functions.object_types import prop_type, obj_data_type
 from .functions.timeline import keymesh_block_usage_count
 
 
@@ -161,7 +161,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     def get_props_filtered_items(self):
         obj = bpy.context.object
         obj_id = bpy.context.object.get("Keymesh ID")
-        filter_type = obj_type(obj)
+        filter_type = obj_data_type(obj)
 
         filtered_items = [
             o for o in filter_type if o.get("Keymesh Data") and o.get("Keymesh ID") == obj_id or o.get("Keymesh Data") == 0 and o.get("Keymesh ID") == obj_id

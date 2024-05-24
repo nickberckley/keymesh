@@ -1,5 +1,5 @@
 import bpy
-from .object_types import obj_type
+from .object_types import obj_data_type
 
 @bpy.app.handlers.persistent
 def update_keymesh(scene: bpy.types.Scene) -> None:
@@ -12,7 +12,7 @@ def update_keymesh(scene: bpy.types.Scene) -> None:
         object_km_datablock = object["Keymesh Data"]
         
         final_block = None
-        for block in obj_type(object):
+        for block in obj_data_type(object):
 
             # No Keymesh Datablock
             if block.get("Keymesh ID") is None:

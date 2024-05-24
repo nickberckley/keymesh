@@ -3,7 +3,7 @@ from typing import Any, List
 import bpy
 # from ..functions.timeline import get_object_key_values, get_object_keyframes
 from .update_keymesh import *
-from ..functions.object_types import obj_type
+from ..functions.object_types import obj_data_type
 from .. import __package__ as base_package
 
 
@@ -19,7 +19,7 @@ def new_object_id() -> int:
     max_id = 0
     obj = bpy.context.object
     
-    for item in obj_type(obj):
+    for item in obj_data_type(obj):
         if item.get("Keymesh ID") is None:
             continue
         object_km_id = item["Keymesh ID"]
@@ -124,9 +124,11 @@ def insert_keymesh_keyframe_ex(obj: bpy.types.Object) -> bool:
             block.use_fake_user = False
         update_keymesh(bpy.context.scene)
         
+        # # purge
+        # data_type = obj_data_type(obj)
         # for block in del_block:
         #     if block.users == 0:
-        #         remove_by_type(obj)
+        #         data_type.remove(block)
 
         return True
     except:
@@ -142,7 +144,7 @@ def get_next_keymesh_index(obj: bpy.types.Object) -> int:
         
         # List of Keymesh Blocks on the item
         keymesh_blocks = []
-        for block in obj_type(obj):
+        for block in obj_data_type(obj):
             if block.get("Keymesh ID") == keymesh_id:
                 keymesh_blocks.append(block)
         
