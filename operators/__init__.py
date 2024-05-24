@@ -5,8 +5,8 @@ from . import (
     frame_picker,
     initialize_handler,
     insert_keyframe,
-    keymesh_frame,
     purge_unused_data,
+    timeline_jump,
 
     # interpolate,
 )
@@ -19,8 +19,8 @@ def register():
     frame_picker.register()
     initialize_handler.register()
     insert_keyframe.register()
-    keymesh_frame.register()
     purge_unused_data.register()
+    timeline_jump.register()
 
     # interpolate.register()
 
@@ -29,7 +29,7 @@ def unregister():
     frame_picker.unregister()
     initialize_handler.unregister()
     insert_keyframe.unregister()
-    keymesh_frame.unregister()
     purge_unused_data.unregister()
+    timeline_jump.unregister()
 
     # interpolate.unregister()

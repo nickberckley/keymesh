@@ -108,7 +108,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
                     'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']
 
     def execute(self, context):
-        obj = context.view_layer.objects.active
+        obj = context.active_object
         step = context.scene.keymesh.frame_skip_count
 
         if obj is not None:

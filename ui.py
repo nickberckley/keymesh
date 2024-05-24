@@ -35,9 +35,9 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
             row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path="FORWARD"
         else:
-            row.operator("timeline.keymesh_frame_previous", text="Jump", icon='FRAME_PREV')
+            row.operator("timeline.keymesh_frame_jump", text="Jump", icon='FRAME_PREV').path="BACKWARD"
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
-            row.operator("timeline.keymesh_frame_next", text="Jump", icon='FRAME_NEXT')
+            row.operator("timeline.keymesh_frame_jump", text="Jump", icon='FRAME_NEXT').path="FORWARD"
 
 
 class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):

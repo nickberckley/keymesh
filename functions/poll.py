@@ -4,10 +4,10 @@ import bpy
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def is_candidate_object(context):
-    if context.view_layer.objects.active is None:
+    if context.active_object is None:
         return False
     else:
-        return context.view_layer.objects.active.type in ['MESH', 'CURVE', 'SURFACE', 'FONT', 'CURVES', 'META', 'VOLUME',
+        return context.active_object.type in ['MESH', 'CURVE', 'SURFACE', 'FONT', 'CURVES', 'META', 'VOLUME',
                                                           'LATTICE', 'LIGHT', 'LIGHT_PROBE', 'CAMERA', 'SPEAKER']
 
 

@@ -52,8 +52,10 @@ def register():
     kmi.properties.path="FORWARD"
     kmi = km.keymap_items.new("object.keyframe_object_data", type="PAGE_DOWN", value="PRESS", ctrl=True)
     kmi.properties.path="BACKWARD"
-    kmi = km.keymap_items.new("timeline.keymesh_frame_previous", type = "PAGE_DOWN", value = "PRESS")
-    kmi = km.keymap_items.new("timeline.keymesh_frame_next", type= "PAGE_UP", value= "PRESS")
+    kmi = km.keymap_items.new("timeline.keymesh_frame_jump", type= "PAGE_UP", value= "PRESS")
+    kmi.properties.path="FORWARD"
+    kmi = km.keymap_items.new("timeline.keymesh_frame_jump", type = "PAGE_DOWN", value = "PRESS")
+    kmi.properties.path="BACKWARD"
     kmi.active = True
     addon_keymaps.append(km)
 

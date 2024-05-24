@@ -8,7 +8,7 @@ def get_object_keyframes(obj):
 
     keyframes = []
     if obj is None:
-        obj = bpy.context.view_layer.objects.active
+        obj = bpy.context.active_object
 
     if obj.get("Keymesh ID") is not None:
         for action in bpy.data.actions:
@@ -48,7 +48,7 @@ def get_next_keymesh_block(context, obj, direction):
     """Returns next and previous Keymesh block in timeline"""
 
     if obj is None:
-        obj = context.view_layer.objects.active
+        obj = context.active_object
 
     obj_id = obj.get("Keymesh ID", None)
     next_keyframe = None

@@ -11,7 +11,7 @@ class ANIM_OT_keymesh_interpolate(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.view_layer.objects.active is not None
+        return context.active_object is not None
 
     def execute(self, context):
         obj = context.active_object
