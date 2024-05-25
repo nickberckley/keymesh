@@ -3,6 +3,20 @@ import bpy
 
 #### ------------------------------ PROPERTIES ------------------------------ ####
 
+class KeymeshBlocks(bpy.types.PropertyGroup):
+    block: bpy.props.PointerProperty(
+        type = bpy.types.Mesh,
+    )
+
+
+class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
+    # OBJECT-level PROPERTIES
+
+    blocks: bpy.props.CollectionProperty(
+        type = KeymeshBlocks,
+    )
+
+
 class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     # SCENE-level PROPERTIES
 
@@ -42,6 +56,8 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
+    KeymeshBlocks,
+    OBJECT_PG_keymesh,
     SCENE_PG_keymesh,
 ]
 
@@ -51,6 +67,7 @@ def register():
 
     # PROPERTY
     bpy.types.Scene.keymesh = bpy.props.PointerProperty(type = SCENE_PG_keymesh)
+    bpy.types.Object.keymesh = bpy.props.PointerProperty(type = OBJECT_PG_keymesh)
 
 def unregister():
     for cls in reversed(classes):
@@ -58,3 +75,4 @@ def unregister():
 
     # PROPERTY
     del bpy.types.Scene.keymesh
+    del bpy.types.Object.keymesh

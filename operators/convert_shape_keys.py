@@ -97,6 +97,8 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             new_block.name = obj.name + "_frame_" + str(frame)
             new_block.use_fake_user = True
             new_block["Keymesh ID"] = obj_km_id
+            block_registry = obj.keymesh.blocks.add()
+            block_registry.block = new_block
 
             # apply_shape_keys
             obj.data = new_block
