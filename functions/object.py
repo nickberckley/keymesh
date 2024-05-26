@@ -43,3 +43,13 @@ def get_next_keymesh_index(obj):
 
         if largest_value is not None:
             return largest_value + 1
+
+
+def list_block_users(block):
+    users = []
+    for obj in bpy.data.objects:
+        if obj.get("Keymesh ID", None):
+            if block.get("Keymesh ID") == obj.get("Keymesh ID"):
+                users.append(obj)
+
+    return users
