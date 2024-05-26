@@ -69,7 +69,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             propname = "blocks",
             active_dataptr = obj.keymesh,
             active_propname = "block_active_index",
-            rows = 6)
+            rows = 8)
 
         # Buttons
         col = row.column(align=True)
