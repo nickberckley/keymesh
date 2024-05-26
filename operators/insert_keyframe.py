@@ -106,8 +106,9 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
-            return is_candidate_object(context) and bpy.context.mode not in [
-                    'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']
+            return (is_candidate_object(context) and context.active_object in context.editable_objects
+                    and bpy.context.mode not in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
+                                                 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE'])
 
     def execute(self, context):
         obj = context.active_object

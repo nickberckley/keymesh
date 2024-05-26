@@ -106,6 +106,10 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
     bl_description = "Removes selected Keymesh block and deletes every keyframe associated with it"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        return context.active_object in context.editable_objects
+
     def execute(self, context):
         obj = bpy.context.object
         obj_id = obj.get("Keymesh ID", None)

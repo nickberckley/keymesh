@@ -79,7 +79,10 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         col.operator("object.purge_keymesh_data", text="", icon='TRASH')
 
         # Properties
-        layout.prop(scene, "insert_on_selection", text="Keyframe on Selection")
+        col = layout.column(align=True)
+        col.prop(scene, "insert_on_selection", text="Keyframe on Selection")
+        if not obj in context.editable_objects:
+            col.enabled = False
 
 
 class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
@@ -116,7 +119,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         row = col.row(align=True)
 
         # insert_button_icon
-        if context.scene.keymesh.insert_on_selection:
+        if context.scene.keymesh.insert_on_selection and obj in context.editable_objects:
             select_icon = 'PINNED' if block_keymesh_data == obj_keymesh_data else 'UNPINNED'
         else:
             if block_keymesh_data == obj.data.get("Keymesh Data") and block_keymesh_data != obj_keymesh_data:

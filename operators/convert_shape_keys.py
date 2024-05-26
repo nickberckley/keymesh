@@ -40,7 +40,8 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object and context.active_object.type in ('MESH', 'CURVE', 'LATTICE') and context.active_object.data.shape_keys is not None
+        return (context.active_object and context.active_object.type in ('MESH', 'CURVE', 'LATTICE')
+                and context.active_object.data.shape_keys is not None and context.active_object in context.editable_objects)
 
     # Naming Convention
     def naming_convention(self, key):
