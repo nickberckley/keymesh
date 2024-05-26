@@ -18,6 +18,7 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         layout.use_property_decorate = False
 
         scene = context.scene.keymesh
+        obj = context.active_object
 
         # Frame Step
         column = layout.column()
@@ -25,12 +26,14 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         row.prop(scene, "frame_skip_count", text="Frame Step")
         row.separator()
         row.prop(scene, "insert_keyframe_after_skip", text="")
+        if obj not in context.editable_objects:
+            row.enabled = False
 
         # Insert Keyframes
         column = layout.column()
         row = column.row(align=False)
         row.alignment = 'EXPAND'
-        if scene.insert_keyframe_after_skip:
+        if scene.insert_keyframe_after_skip and obj in context.editable_objects:
             row.operator("object.keyframe_object_data", text="Insert", icon_value=6).path="BACKWARD"
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
             row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path="FORWARD"
