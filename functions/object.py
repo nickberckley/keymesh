@@ -24,7 +24,7 @@ def get_next_keymesh_index(context, obj):
     if obj.get("Keymesh Data") is None:
         return 0
     else:
-        obj_keymesh_id = obj.get("Keymesh ID")
+        obj_keymesh_id = obj.keymesh.get("Keymesh ID")
         obj = context.active_object
 
         # list_keymesh_blocks_of_the_object
@@ -48,8 +48,8 @@ def get_next_keymesh_index(context, obj):
 def list_block_users(block):
     users = []
     for obj in bpy.data.objects:
-        if obj.get("Keymesh ID", None):
-            if block.get("Keymesh ID") == obj.get("Keymesh ID"):
+        if obj.keymesh.get("Keymesh ID", None):
+            if block.get("Keymesh ID") == obj.keymesh.get("Keymesh ID"):
                 users.append(obj)
 
     return users

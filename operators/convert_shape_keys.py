@@ -81,11 +81,11 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             backup.hide_viewport = True
 
         # Assign Keymesh ID Property
-        if obj.get("Keymesh ID") is None:
-            obj["Keymesh ID"] = new_object_id(context)
+        if obj.keymesh.get("Keymesh ID") is None:
+            obj.keymesh["Keymesh ID"] = new_object_id(context)
             if prefs.backup_original_data:
                 original_data.use_fake_user = True
-        obj_km_id = obj["Keymesh ID"]
+        obj_km_id = obj.keymesh["Keymesh ID"]
 
         initial_values = [key.value for key in shape_keys.key_blocks]
         for frame in range(frame_start, frame_end + 1):
@@ -213,7 +213,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and context.active_object.get("Keymesh ID")
+        return context.active_object is not None and context.active_object.keymesh.get("Keymesh ID")
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -259,7 +259,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                 dup_obj.animation_data_clear()
                 context.collection.objects.link(dup_obj)
                 del dup_obj["Keymesh Data"]
-                del dup_obj["Keymesh ID"]
+                del dup_obj.keymesh["Keymesh ID"]
 
                 dup_data = obj.data.copy()
                 dup_data.name + obj.data.name + "_frame_" + str(frame)

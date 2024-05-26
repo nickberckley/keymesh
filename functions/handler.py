@@ -11,7 +11,7 @@ def update_keymesh(scene):
         if obj.get("Keymesh Data") is None:
             continue
 
-        obj_keymesh_id = obj["Keymesh ID"]
+        obj_keymesh_id = obj.keymesh["Keymesh ID"]
         obj_keymesh_data = obj["Keymesh Data"]
 
         final_block = None
@@ -41,7 +41,7 @@ def update_keymesh(scene):
 # def frame_handler(dummy):
 #     objects = bpy.data.objects
 #     for obj in objects:
-#         if "Keymesh Data" and "Keymesh ID" in obj:
+#         if "Keymesh Data" and "Keymesh ID" in obj.keymesh:
 #             bpy.app.handlers.frame_change_post.remove(update_keymesh)
 #             bpy.app.handlers.frame_change_post.append(update_keymesh)
 #             break
