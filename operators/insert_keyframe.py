@@ -57,6 +57,7 @@ def insert_keymesh_keyframe(context, obj):
         obj["Keymesh Data"] = block_index
         block_registry = obj.keymesh.blocks.add()
         block_registry.block = new_block
+        block_registry.name = new_block.name
 
         # Insert Keyframe
         obj.keyframe_insert(data_path='["Keymesh Data"]',
