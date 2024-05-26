@@ -17,10 +17,10 @@ def update_keymesh(scene):
         final_block = None
         for block in obj_data_type(obj):
             # is_not_keymesh_block
-            if block.get("Keymesh ID") is None:
+            if block.keymesh.get("ID") is None:
                 continue
 
-            block_km_id = block["Keymesh ID"]
+            block_km_id = block.keymesh["ID"]
             block_km_data = block["Keymesh Data"]
 
             # is_not_objects_block

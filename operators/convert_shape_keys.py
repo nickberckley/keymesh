@@ -97,7 +97,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             new_block = original_data.copy()
             new_block.name = obj.name + "_frame_" + str(frame)
             new_block.use_fake_user = True
-            new_block["Keymesh ID"] = obj_km_id
+            new_block.keymesh["ID"] = obj_km_id
             block_registry = obj.keymesh.blocks.add()
             block_registry.block = new_block
             block_registry.name = new_block.name
@@ -113,7 +113,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
             # delete_duplicates
             if self.delete_duplicates:
-                if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.get("Keymesh ID") == obj_km_id):
+                if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.keymesh.get("ID") == obj_km_id):
                     match = next((block for block in bpy.data.meshes if block.get("shape_key_value") == name), None)
                     match_id = match.get("Keymesh Data")
                     bpy.data.meshes.remove(new_block)
@@ -265,7 +265,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                 dup_data.name + obj.data.name + "_frame_" + str(frame)
                 dup_obj.data = dup_data
                 del dup_data["Keymesh Data"]
-                del dup_data["Keymesh ID"]
+                del dup_data.keymesh["ID"]
 
                 # Move to Collection
                 duplicates_collection.objects.link(dup_obj)

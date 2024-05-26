@@ -10,8 +10,8 @@ def new_object_id(context):
     max_id = 0
     obj = context.object
     for item in obj_data_type(obj):
-        if item.get("Keymesh ID") is not None:
-            obj_keymesh_id = item["Keymesh ID"]
+        if item.keymesh.get("ID") is not None:
+            obj_keymesh_id = item.keymesh["ID"]
             if obj_keymesh_id > max_id:
                 max_id = obj_keymesh_id
 
@@ -30,7 +30,7 @@ def get_next_keymesh_index(context, obj):
         # list_keymesh_blocks_of_the_object
         keymesh_blocks = []
         for block in obj_data_type(obj):
-            if block.get("Keymesh ID") == obj_keymesh_id:
+            if block.keymesh.get("ID") == obj_keymesh_id:
                 keymesh_blocks.append(block)
 
         # find_the_largest_value_in_the_list
@@ -49,7 +49,7 @@ def list_block_users(block):
     users = []
     for obj in bpy.data.objects:
         if obj.keymesh.get("ID", None):
-            if block.get("Keymesh ID") == obj.keymesh.get("ID"):
+            if block.keymesh.get("ID") == obj.keymesh.get("ID"):
                 users.append(obj)
 
     return users

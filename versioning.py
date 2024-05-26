@@ -15,10 +15,10 @@ def populate_keymesh_blocks(scene):
         # list_objects_blocks
         unregistered_blocks = []
         for block in obj_data_type(obj):
-            if block.get("Keymesh ID") is None:
+            if block.keymesh.get("ID") is None:
                 continue
 
-            if block.get("Keymesh ID") == obj_keymesh_id:
+            if block.keymesh.get("ID") == obj_keymesh_id:
                 unregistered_blocks.append(block)
 
         # register_to_object

@@ -87,7 +87,7 @@ def get_next_keymesh_block(context, obj, direction):
                     break
 
         for mesh in bpy.data.meshes:
-            if mesh.get("Keymesh ID", None) and mesh.get("Keymesh ID", None) == obj_id:
+            if mesh.keymesh.get("ID", None) and mesh.get("ID", None) == obj_id:
                 if mesh.get("Keymesh Data", None) == next_value:
                     next_keymesh_block = mesh
 

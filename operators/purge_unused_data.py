@@ -46,10 +46,10 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
             for data_collection in [bpy.data.meshes, bpy.data.curves, bpy.data.hair_curves, bpy.data.metaballs, bpy.data.volumes,
                                     bpy.data.lattices, bpy.data.lights, bpy.data.lightprobes, bpy.data.cameras, bpy.data.speakers]:
                 for block in data_collection:
-                    if block.get("Keymesh ID") is None:
+                    if block.keymesh.get("ID") is None:
                         continue
 
-                    block_keymesh_id = block.get("Keymesh ID")
+                    block_keymesh_id = block.keymesh.get("ID")
                     if block_keymesh_id not in used_keymesh_blocks:
                         delete_keymesh_blocks.append(block)
                         continue
@@ -63,10 +63,10 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         else:
             obj = context.active_object
             for block in obj_data_type(obj):
-                if block.get("Keymesh ID") is None:
+                if block.keymesh.get("ID") is None:
                     continue
 
-                block_keymesh_id = block.get("Keymesh ID")
+                block_keymesh_id = block.keymesh.get("ID")
                 if block_keymesh_id != obj.keymesh.get("ID"):
                     continue
 
