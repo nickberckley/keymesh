@@ -10,8 +10,8 @@ def new_object_id(context):
     max_id = 0
     obj = context.object
     for item in obj_data_type(obj):
-        if item.get("ID") is not None:
-            obj_keymesh_id = item["ID"]
+        if item.get("Keymesh ID") is not None:
+            obj_keymesh_id = item["Keymesh ID"]
             if obj_keymesh_id > max_id:
                 max_id = obj_keymesh_id
 
