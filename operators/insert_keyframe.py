@@ -11,7 +11,7 @@ def insert_keymesh_keyframe(context, obj):
     prefs = bpy.context.preferences.addons[base_package].preferences
 
     object_mode = context.mode
-    if context.object.mode != 'OBJECT':
+    if context.active_object.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
 
     if obj:

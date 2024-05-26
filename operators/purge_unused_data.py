@@ -15,6 +15,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     all: bpy.props.BoolProperty(
+        name="For All Objects",
         default=False,
     )
 

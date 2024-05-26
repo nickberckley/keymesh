@@ -20,14 +20,14 @@ def update_keymesh(scene):
             if block.keymesh.get("ID") is None:
                 continue
 
-            block_km_id = block.keymesh["ID"]
-            block_km_data = block.keymesh["Data"]
+            block_keymesh_id = block.keymesh["ID"]
+            block_keymesh_data = block.keymesh["Data"]
 
             # is_not_objects_block
-            if block_km_id != obj_keymesh_id:
+            if block_keymesh_id != obj_keymesh_id:
                 continue
             # is_not_correct_for_this_frame
-            if block_km_data != obj_keymesh_data:
+            if block_keymesh_data != obj_keymesh_data:
                 continue
 
             final_block = block

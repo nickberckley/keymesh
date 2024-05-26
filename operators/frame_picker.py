@@ -14,7 +14,7 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        obj = context.object
+        obj = context.active_object
         data_type = obj_data_type(obj)
 
         current_mode = obj.mode
@@ -23,7 +23,7 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
 
         # assign_keymesh_block_to_object
         obj.data = data_type[self.keymesh_index]
-        keymesh_block = context.object.data.keymesh.get("Data")
+        keymesh_block = context.active_object.data.keymesh.get("Data")
 
         # Keyframe Block
         if obj in context.editable_objects:
@@ -52,7 +52,7 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         index = int(obj.keymesh.block_active_index)
 
         if self.direction == 'UP' and index > 0:

@@ -85,7 +85,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             obj.keymesh["ID"] = new_object_id(context)
             if prefs.backup_original_data:
                 original_data.use_fake_user = True
-        obj_km_id = obj.keymesh["ID"]
+        obj_keymesh_id = obj.keymesh["ID"]
 
         initial_values = [key.value for key in shape_keys.key_blocks]
         for frame in range(frame_start, frame_end + 1):
@@ -97,7 +97,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             new_block = original_data.copy()
             new_block.name = obj.name + "_frame_" + str(frame)
             new_block.use_fake_user = True
-            new_block.keymesh["ID"] = obj_km_id
+            new_block.keymesh["ID"] = obj_keymesh_id
             block_registry = obj.keymesh.blocks.add()
             block_registry.block = new_block
             block_registry.name = new_block.name
@@ -113,7 +113,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
             # delete_duplicates
             if self.delete_duplicates:
-                if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.keymesh.get("ID") == obj_km_id):
+                if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.keymesh.get("ID") == obj_keymesh_id):
                     match = next((block for block in bpy.data.meshes if block.get("shape_key_value") == name), None)
                     match_id = match.keymesh.get("Data")
                     bpy.data.meshes.remove(new_block)

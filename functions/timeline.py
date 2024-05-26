@@ -45,7 +45,7 @@ def get_keymesh_keyframes(context, obj):
 def keymesh_block_usage_count(self, context, block):
     """Returns number of uses (keyframes) for each Keymesh block for object"""
 
-    obj = context.object
+    obj = context.active_object
     value = block.keymesh["Data"]
     count = 0
 

@@ -53,12 +53,12 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object is not None and context.object.keymesh.get("ID") is not None
+        return context.active_object is not None and context.active_object.keymesh.get("ID") is not None
 
     def draw(self, context):
         layout = self.layout
         scene = context.scene.keymesh
-        obj = context.object
+        obj = context.active_object
 
         # UI List
         row = layout.row()
@@ -112,7 +112,7 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
 class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     """List of Keymesh data-blocks for active object"""
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
-        obj = context.object
+        obj = context.active_object
         # item = item.block
 
         obj_keymesh_data = obj.keymesh.get("Keymesh Data")

@@ -8,10 +8,10 @@ def new_object_id(context):
     """Returns lowest unused number to be used as ID"""
 
     max_id = 0
-    obj = context.object
-    for item in obj_data_type(obj):
-        if item.keymesh.get("ID") is not None:
-            obj_keymesh_id = item.keymesh["ID"]
+    obj = context.active_object
+    for block in obj_data_type(obj):
+        if block.keymesh.get("ID") is not None:
+            obj_keymesh_id = block.keymesh["ID"]
             if obj_keymesh_id > max_id:
                 max_id = obj_keymesh_id
 
