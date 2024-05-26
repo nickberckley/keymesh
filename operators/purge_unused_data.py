@@ -9,17 +9,23 @@ from ..functions.poll import obj_data_type
 class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
     bl_idname = "object.purge_keymesh_data"
     bl_label = "Purge Unused Keymesh Blocks"
-    bl_description = "Purges all Keymesh blocks that are not used in the animation"
+    bl_description = ("Purges all Keymesh blocks from active object that are not used in the animation.\n"
+                    "Shift-click purges unused blocks for all objects in the .blend file")
     bl_options = {'REGISTER', 'UNDO'}
+
+    all: bpy.props.BoolProperty(
+        default=False,
+    )
 
     @classmethod
     def poll(cls, context):
-        return True
+        return context.active_object and context.active_object in context.editable_objects
 
     def execute(self, context):
-        # list_used_keymesh_blocks
+        # List Used Keymesh Blocks
         used_keymesh_blocks = {}
-        for obj in bpy.data.objects:
+        objects = bpy.data.objects if self.all else [context.active_object]
+        for obj in objects:
             if obj.get("Keymesh ID") is None:
                 continue
 
@@ -37,17 +43,34 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                     used_keymesh_blocks[obj_keymesh_id].append(keyframe.co.y)
 
 
-        # list_unused_keymesh_blocks
+        # list_unused_keymesh_blocks (for_all_objects)
         delete_keymesh_blocks = []
-        for data_collection in [bpy.data.meshes, bpy.data.curves, bpy.data.hair_curves, bpy.data.metaballs, bpy.data.volumes,
-                                bpy.data.lattices, bpy.data.lights, bpy.data.lightprobes, bpy.data.cameras, bpy.data.speakers]:
-            for block in data_collection:
+        if self.all:
+            for data_collection in [bpy.data.meshes, bpy.data.curves, bpy.data.hair_curves, bpy.data.metaballs, bpy.data.volumes,
+                                    bpy.data.lattices, bpy.data.lights, bpy.data.lightprobes, bpy.data.cameras, bpy.data.speakers]:
+                for block in data_collection:
+                    if block.get("Keymesh ID") is None:
+                        continue
+
+                    block_keymesh_id = block.get("Keymesh ID")
+                    if block_keymesh_id not in used_keymesh_blocks:
+                        delete_keymesh_blocks.append(block)
+                        continue
+
+                    block_keymesh_data = block.get("Keymesh Data")
+                    if block_keymesh_data not in used_keymesh_blocks[block_keymesh_id]:
+                        delete_keymesh_blocks.append(block)
+                        continue
+
+        # list_unused_keymesh_blocks (for_active_object)
+        else:
+            obj = context.active_object
+            for block in obj_data_type(obj):
                 if block.get("Keymesh ID") is None:
                     continue
 
                 block_keymesh_id = block.get("Keymesh ID")
-                if block_keymesh_id not in used_keymesh_blocks:
-                    delete_keymesh_blocks.append(block)
+                if block_keymesh_id != obj.get("Keymesh ID"):
                     continue
 
                 block_keymesh_data = block.get("Keymesh Data")
@@ -55,17 +78,22 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                     delete_keymesh_blocks.append(block)
                     continue
 
-        # purge_unused_blocks
+
+        # Purge Unused Blocks
         for block in delete_keymesh_blocks:
             block.use_fake_user = False
 
             # remove_from_block_registry
             users = list_block_users(block)
             for user in users:
+                if user not in context.editable_objects:
+                    continue
+
                 for index, mesh_ref in enumerate(user.keymesh.blocks):
                     if mesh_ref.block == block:
                         user.keymesh.blocks.remove(index)
 
+            removed_blocks = []
             if block.users == 0:
                 if isinstance(block, bpy.types.Mesh):
                     bpy.data.meshes.remove(block)
@@ -87,17 +115,27 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                     bpy.data.cameras.remove(block)
                 elif isinstance(block, bpy.types.Speaker):
                     bpy.data.speakers.remove(block)
+                removed_blocks.append(block)
 
         # update_frame_handler
         update_keymesh(bpy.context.scene)
+
 
         # Info
         if len(delete_keymesh_blocks) == 0:
             self.report({'INFO'}, "No Keymesh blocks were removed")
         else:
-            self.report({'INFO'}, str(len(delete_keymesh_blocks)) + " Keymesh blocks removed")
+            if self.all:
+                specifier = " from the scene"
+            else:
+                specifier = " for " + context.active_object.name
+            self.report({'INFO'}, str(len(delete_keymesh_blocks)) + " Keymesh block(s) removed" + specifier)
 
         return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        self.all = event.shift
+        return self.execute(context)
 
 
 class OBJECT_OT_keymesh_remove(bpy.types.Operator):
