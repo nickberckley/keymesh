@@ -25,11 +25,11 @@ def insert_keymesh_keyframe(context, obj):
 
 
         # Assign Keymesh ID
-        if obj.keymesh.get("Keymesh ID") is None:
+        if obj.keymesh.get("ID") is None:
             if prefs.backup_original_data:
                 obj.data.use_fake_user = True
-            obj.keymesh["Keymesh ID"] = new_object_id(context)
-        obj_keymesh_id = obj.keymesh["Keymesh ID"]
+            obj.keymesh["ID"] = new_object_id(context)
+        obj_keymesh_id = obj.keymesh["ID"]
 
         # Get Block Index
         block_index = get_next_keymesh_index(context, obj)
@@ -123,7 +123,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
             else:
                 # when_forwarding_first_time
-                if obj.keymesh.get("Keymesh ID") is None:
+                if obj.keymesh.get("ID") is None:
                     insert_keymesh_keyframe(context, obj)
                     return {'FINISHED'}
                 

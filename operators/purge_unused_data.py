@@ -27,10 +27,10 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         used_keymesh_blocks = {}
         objects = bpy.data.objects if self.all else [context.active_object]
         for obj in objects:
-            if obj.keymesh.get("Keymesh ID") is None:
+            if obj.keymesh.get("ID") is None:
                 continue
 
-            obj_keymesh_id = obj.keymesh.get("Keymesh ID")
+            obj_keymesh_id = obj.keymesh.get("ID")
             used_keymesh_blocks[obj_keymesh_id] = []
 
             fcurve = get_keymesh_fcurve(context, obj)
@@ -67,7 +67,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                     continue
 
                 block_keymesh_id = block.get("Keymesh ID")
-                if block_keymesh_id != obj.keymesh.get("Keymesh ID"):
+                if block_keymesh_id != obj.keymesh.get("ID"):
                     continue
 
                 block_keymesh_data = block.get("Keymesh Data")
@@ -147,7 +147,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        obj_id = obj.keymesh.get("Keymesh ID", None)
+        obj_id = obj.keymesh.get("ID", None)
         if obj and obj_id is not None:
             block = obj.data
             block_keymesh_data = block.get("Keymesh Data")

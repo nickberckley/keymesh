@@ -9,7 +9,7 @@ def get_keymesh_fcurve(context, obj):
     if obj is None:
         obj = context.active_object
 
-    if obj.keymesh.get("Keymesh ID") is not None:
+    if obj.keymesh.get("ID") is not None:
         if obj.animation_data is not None:
             for f in obj.animation_data.action.fcurves:
                 if f.data_path == '["Keymesh Data"]':
@@ -63,12 +63,12 @@ def get_next_keymesh_block(context, obj, direction):
     if obj is None:
         obj = context.active_object
 
-    obj_id = obj.keymesh.get("Keymesh ID", None)
+    obj_id = obj.keymesh.get("ID", None)
     next_keyframe = None
     next_value = None
     next_keymesh_block = None
 
-    if obj.keymesh.get("Keymesh ID") is not None:
+    if obj.keymesh.get("ID") is not None:
         current_frame = context.scene.frame_current
         fcurve = get_keymesh_fcurve(context, obj)
         keyframe_points = fcurve.keyframe_points

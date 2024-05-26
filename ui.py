@@ -53,7 +53,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object is not None and context.object.keymesh.get("Keymesh ID") is not None
+        return context.object is not None and context.object.keymesh.get("ID") is not None
 
     def draw(self, context):
         layout = self.layout
