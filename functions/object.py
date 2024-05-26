@@ -4,11 +4,11 @@ from .poll import obj_data_type
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-def new_object_id():
+def new_object_id(context):
     """Returns lowest unused number to be used as ID"""
 
     max_id = 0
-    obj = bpy.context.object
+    obj = context.object
     for item in obj_data_type(obj):
         if item.get("Keymesh ID") is not None:
             obj_keymesh_id = item["Keymesh ID"]
@@ -18,14 +18,14 @@ def new_object_id():
     return max_id + 1
 
 
-def get_next_keymesh_index(obj):
+def get_next_keymesh_index(context, obj):
     """Get the appropriate index for the newly created Keymesh block"""
 
     if obj.get("Keymesh Data") is None:
         return 0
     else:
         obj_keymesh_id = obj.get("Keymesh ID")
-        obj = bpy.context.active_object
+        obj = context.active_object
 
         # list_keymesh_blocks_of_the_object
         keymesh_blocks = []

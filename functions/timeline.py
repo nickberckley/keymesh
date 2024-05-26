@@ -3,12 +3,12 @@ import bpy
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-def get_object_keyframes(obj):
+def get_object_keyframes(context, obj):
     """Get all Keymesh keyframes associated with the active object"""
 
     keyframes = []
     if obj is None:
-        obj = bpy.context.active_object
+        obj = context.active_object
 
     if obj.get("Keymesh ID") is not None:
         for action in bpy.data.actions:
@@ -32,7 +32,7 @@ def get_object_keyframes(obj):
 def keymesh_block_usage_count(self, context, block):
     """Returns number of uses (keyframes) for each Keymesh block for object"""
 
-    obj = bpy.context.object
+    obj = context.object
     value = block["Keymesh Data"]
     count = 0
 

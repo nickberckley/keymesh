@@ -28,11 +28,11 @@ def insert_keymesh_keyframe(context, obj):
         if obj.get("Keymesh ID") is None:
             if prefs.backup_original_data:
                 obj.data.use_fake_user = True
-            obj["Keymesh ID"] = new_object_id()
+            obj["Keymesh ID"] = new_object_id(context)
         obj_keymesh_id = obj["Keymesh ID"]
 
         # Get Block Index
-        block_index = get_next_keymesh_index(obj)
+        block_index = get_next_keymesh_index(context, obj)
         if prefs.naming_method == 'INDEX':
             block_name = obj.name_full + "_keymesh_" + str(block_index)
         elif prefs.naming_method == 'FRAME':
@@ -93,7 +93,7 @@ def insert_keymesh_keyframe(context, obj):
 class OBJECT_OT_keymesh_insert(bpy.types.Operator):
     bl_idname = "object.keyframe_object_data"
     bl_label = "Insert Keymesh Keyframe"
-    bl_description = ("Adds a Keymesh keyframe on active object./n"
+    bl_description = ("Adds a Keymesh keyframe on active object.\n"
                     "Object data gets tied to the frame. You can edit it while previous one is kept on previous frame")
     bl_options = {'UNDO'}
 
@@ -107,7 +107,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
             return is_candidate_object(context)
         else:
             return (is_candidate_object(context) and context.active_object in context.editable_objects
-                    and bpy.context.mode not in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
+                    and context.mode not in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
                                                  'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE'])
 
     def execute(self, context):
@@ -129,9 +129,9 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
                 # when_forwarding
                 else:
                     if self.path == "FORWARD":
-                        bpy.context.scene.frame_current += step
+                        context.scene.frame_current += step
                     elif self.path == "BACKWARD":
-                        bpy.context.scene.frame_current -= step
+                        context.scene.frame_current -= step
 
                     if context.scene.keymesh.insert_keyframe_after_skip:
                         insert_keymesh_keyframe(context, obj)

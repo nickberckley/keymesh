@@ -13,7 +13,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
     delete_duplicates: bpy.props.BoolProperty(
         name = "Delete Duplicates",
-        description = "When enabled, if object has same exact shape on two or more frames, operator will delete duplicates/n"
+        description = "When enabled, if object has same exact shape on two or more frames, operator will delete duplicates\n"
                     "and instead it will instance one Keymesh block on each frame.",
         default = True,
     )
@@ -63,10 +63,10 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
         data_type = type(obj.data)
 
         # Define Frame Range
-        initial_frame = bpy.context.scene.frame_current
+        initial_frame = context.scene.frame_current
         if self.follow_scene_range == True:
-            frame_start = bpy.context.scene.frame_start
-            frame_end = bpy.context.scene.frame_end
+            frame_start = context.scene.frame_start
+            frame_end = context.scene.frame_end
         else:
             frame_start = self.frame_start
             frame_end = self.frame_end
@@ -74,7 +74,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
         # Create Back-up
         if self.back_up:
             backup = obj.copy()
-            bpy.context.collection.objects.link(backup)
+            context.collection.objects.link(backup)
             backup.data = original_data
             backup.name = obj.name + "_backup"
             backup.hide_render = True
@@ -82,14 +82,14 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
         # Assign Keymesh ID Property
         if obj.get("Keymesh ID") is None:
-            obj["Keymesh ID"] = new_object_id()
+            obj["Keymesh ID"] = new_object_id(context)
             if prefs.backup_original_data:
                 original_data.use_fake_user = True
         obj_km_id = obj["Keymesh ID"]
 
         initial_values = [key.value for key in shape_keys.key_blocks]
         for frame in range(frame_start, frame_end + 1):
-            bpy.context.scene.frame_set(frame)
+            context.scene.frame_set(frame)
             current_values = [key.value for key in shape_keys.key_blocks]
             name = ''.join([self.naming_convention(key) for key in shape_keys.key_blocks if key.name != 'Basis'])
 
@@ -107,7 +107,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             obj.data = original_data
 
             # Assign Keymesh Data
-            block_index = get_next_keymesh_index(obj)
+            block_index = get_next_keymesh_index(context, obj)
             new_block["Keymesh Data"] = block_index
 
             # delete_duplicates
@@ -125,7 +125,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
             # animate_keymesh_data
             if current_values != initial_values:
-                obj.keyframe_insert(data_path='["Keymesh Data"]', frame=bpy.context.scene.frame_current)
+                obj.keyframe_insert(data_path='["Keymesh Data"]', frame=context.scene.frame_current)
                 initial_values = current_values
 
         fcurve = obj.animation_data.action.fcurves.find('["Keymesh Data"]')
@@ -133,7 +133,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             keyframe_point.interpolation = 'CONSTANT'
 
         bpy.ops.scene.initialize_keymesh_handler()
-        bpy.context.scene.frame_set(initial_frame)
+        context.scene.frame_set(initial_frame)
         return {'FINISHED'}
 
 
@@ -243,12 +243,12 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         frame_start = min(animated_frames)
         frame_end = max(animated_frames)
 
-        initial_frame = bpy.context.scene.frame_current
+        initial_frame = context.scene.frame_current
 
         previous_value = None
         prev_obj = None
         for frame in range(frame_start, frame_end + 1):
-            bpy.context.scene.frame_set(frame)
+            context.scene.frame_set(frame)
             current_value = obj["Keymesh Data"]
 
             if current_value != previous_value:
@@ -256,7 +256,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                 dup_obj = obj.copy()
                 dup_obj.name = obj.name + "_frame_" + str(frame)
                 dup_obj.animation_data_clear()
-                bpy.context.collection.objects.link(dup_obj)
+                context.collection.objects.link(dup_obj)
                 del dup_obj["Keymesh Data"]
                 del dup_obj["Keymesh ID"]
 
@@ -280,7 +280,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
                 previous_value = current_value
 
-        bpy.context.scene.frame_set(initial_frame)
+        context.scene.frame_set(initial_frame)
 
         return {'FINISHED'}
 

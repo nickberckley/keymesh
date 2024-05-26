@@ -12,7 +12,7 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = "Animate"
 
-    def draw(self, context: bpy.context):
+    def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False

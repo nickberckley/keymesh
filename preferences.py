@@ -37,7 +37,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     # defaults
     frame_skip_count: bpy.props.IntProperty(
         name = "Default Frame Skip Count",
-        description = "Skip this many frames forwards or backwards when inserting keyframe./n"
+        description = "Skip this many frames forwards or backwards when inserting keyframe.\n"
                     "(by default, can be changed in Keymesh panel in sidebar)",
         default = 2,
         min = 1, max = 100,
@@ -57,8 +57,8 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     )
     naming_method: bpy.props.EnumProperty(
         name = "Name Keymesh Blocks After...",
-        description = "When creating new Keymesh blocks you can name them after index/n" 
-                    "(e.i. order they're created in), or after frame they were created on.",
+        description = "When creating new Keymesh blocks you can name them after index\n" 
+                    "(i.e. order they're created in), or after frame they were created on.",
         items = [('INDEX', 'Index', ''),
                 ('FRAME', 'Frame', ''),],
         default = 'FRAME',
@@ -67,14 +67,14 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     # experimental
     enable_edit_mode: bpy.props.BoolProperty(
         name = "Allow Inserting Keyframes in Edit Modes",
-        description = "Warning: Because of how Blender evaluates data inside Edit Modes, this feature might cause some data to be lost.\n"
-                    "You will not be able to see different Keymesh keyframes in Edit Mode regardless of what you choose",
+        description = "Warning: Because of how Blender evaluates data in edit modes, this might cause some data to be lost.\n"
+                    "You will not see Keymesh animation update in edit mode no matter if this is on or off",
         default = False,
     )
     enable_shape_keys: bpy.props.BoolProperty(
         name = "Allow Shape Keys Support",
-        description = "If disabled, Keymesh will delete all shape keys on the object. Enable if you want to mix shape keys and Keymesh animation./n"
-                    "But because shape keys are separate data-block, some issues and difficulties are expected./n"
+        description = "If disabled, Keymesh will delete shape keys on object. Enable if you want to mix shape keys and Keymesh animation.\n"
+                    "But because shape keys are separate data-block, some issues and difficulties are expected.\n"
                     "You may experience glitching when scrubbing the timeline. Read more in documentation",
         default = False,
     )

@@ -118,7 +118,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                 removed_blocks.append(block)
 
         # update_frame_handler
-        update_keymesh(bpy.context.scene)
+        update_keymesh(context.scene)
 
 
         # Info
@@ -149,7 +149,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
         return context.active_object in context.editable_objects
 
     def execute(self, context):
-        obj = bpy.context.object
+        obj = context.active_object
         obj_id = obj.get("Keymesh ID", None)
         if obj and obj_id is not None:
             block = obj.data
@@ -164,10 +164,10 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                             if keyframe.co_ui[1] == block_keymesh_data:
                                 fcurve.keyframe_points.remove(keyframe)
 
-                # Refresh Timeline
-                current_frame = bpy.context.scene.frame_current
-                bpy.context.scene.frame_set(current_frame + 1)
-                bpy.context.scene.frame_set(current_frame)
+                # refresh_timeline
+                current_frame = context.scene.frame_current
+                context.scene.frame_set(current_frame + 1)
+                context.scene.frame_set(current_frame)
 
                 # remove_from_block_registry
                 for index, mesh_ref in enumerate(obj.keymesh.blocks):

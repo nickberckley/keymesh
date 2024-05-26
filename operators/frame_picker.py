@@ -13,6 +13,7 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
     )
 
     def execute(self, context):
+        scene = context.scene
         obj = context.object
         data_type = obj_data_type(obj)
 
@@ -26,9 +27,9 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
 
         # Keyframe Block
         if obj in context.editable_objects:
-            if context.scene.keymesh.insert_on_selection:
+            if scene.keymesh.insert_on_selection:
                 obj["Keymesh Data"] = keymesh_block
-                obj.keyframe_insert(data_path='["Keymesh Data"]', frame=context.scene.frame_current)
+                obj.keyframe_insert(data_path='["Keymesh Data"]', frame=scene.frame_current)
 
             bpy.ops.object.mode_set(mode=current_mode)
         return {'FINISHED'}
