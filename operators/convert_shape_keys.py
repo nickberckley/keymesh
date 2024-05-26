@@ -109,13 +109,13 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
             # Assign Keymesh Data
             block_index = get_next_keymesh_index(context, obj)
-            new_block["Keymesh Data"] = block_index
+            new_block.keymesh["Data"] = block_index
 
             # delete_duplicates
             if self.delete_duplicates:
                 if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.keymesh.get("ID") == obj_km_id):
                     match = next((block for block in bpy.data.meshes if block.get("shape_key_value") == name), None)
-                    match_id = match.get("Keymesh Data")
+                    match_id = match.keymesh.get("Data")
                     bpy.data.meshes.remove(new_block)
                     obj["Keymesh Data"] = match_id
                 else:
@@ -264,7 +264,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                 dup_data = obj.data.copy()
                 dup_data.name + obj.data.name + "_frame_" + str(frame)
                 dup_obj.data = dup_data
-                del dup_data["Keymesh Data"]
+                del dup_data.keymesh["Data"]
                 del dup_data.keymesh["ID"]
 
                 # Move to Collection

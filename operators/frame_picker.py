@@ -23,7 +23,7 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
 
         # assign_keymesh_block_to_object
         obj.data = data_type[self.keymesh_index]
-        keymesh_block = context.object.data.get("Keymesh Data")
+        keymesh_block = context.object.data.keymesh.get("Data")
 
         # Keyframe Block
         if obj in context.editable_objects:

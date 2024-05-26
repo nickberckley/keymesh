@@ -49,7 +49,7 @@ def insert_keymesh_keyframe(context, obj):
 
         new_block.name = block_name
         new_block.keymesh["ID"] = obj_keymesh_id
-        new_block["Keymesh Data"] = block_index
+        new_block.keymesh["Data"] = block_index
 
         # Assign New Block to Object
         obj.data = new_block

@@ -46,7 +46,7 @@ def keymesh_block_usage_count(self, context, block):
     """Returns number of uses (keyframes) for each Keymesh block for object"""
 
     obj = context.object
-    value = block["Keymesh Data"]
+    value = block.keymesh["Data"]
     count = 0
 
     fcurve = get_keymesh_fcurve(context, obj)
@@ -88,7 +88,7 @@ def get_next_keymesh_block(context, obj, direction):
 
         for mesh in bpy.data.meshes:
             if mesh.keymesh.get("ID", None) and mesh.get("ID", None) == obj_id:
-                if mesh.get("Keymesh Data", None) == next_value:
+                if mesh.keymesh.get("Data", None) == next_value:
                     next_keymesh_block = mesh
 
     return next_keyframe, next_keymesh_block

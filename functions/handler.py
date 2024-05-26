@@ -21,7 +21,7 @@ def update_keymesh(scene):
                 continue
 
             block_km_id = block.keymesh["ID"]
-            block_km_data = block["Keymesh Data"]
+            block_km_data = block.keymesh["Data"]
 
             # is_not_objects_block
             if block_km_id != obj_keymesh_id:

@@ -36,7 +36,7 @@ def get_next_keymesh_index(context, obj):
         # find_the_largest_value_in_the_list
         largest_value = None
         for block in keymesh_blocks:
-            block_keymesh_data = block.get("Keymesh Data")
+            block_keymesh_data = block.keymesh.get("Data")
             if block_keymesh_data is not None:
                 if largest_value is None or block_keymesh_data > largest_value:
                     largest_value = block_keymesh_data

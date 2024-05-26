@@ -36,6 +36,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
 
 
 class DATA_PG_keymesh(bpy.types.PropertyGroup):
+    # DATA-level PROPERTIES
     pass
 
 
