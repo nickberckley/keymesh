@@ -5,7 +5,7 @@ import bpy
 
 class KeymeshBlocks(bpy.types.PropertyGroup):
     block: bpy.props.PointerProperty(
-        type = bpy.types.Mesh,
+        type = bpy.types.ID,
     )
 
 
@@ -13,6 +13,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     # OBJECT-level PROPERTIES
 
     blocks: bpy.props.CollectionProperty(
+        name = "Keymesh Blocks",
         type = KeymeshBlocks,
     )
 
