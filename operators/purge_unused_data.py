@@ -1,4 +1,5 @@
 import bpy
+from ..functions.object import list_block_users
 from ..functions.handler import update_keymesh
 from ..functions.poll import obj_data_type
 
@@ -57,6 +58,14 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         # purge_unused_blocks
         for block in delete_keymesh_blocks:
             block.use_fake_user = False
+
+            # remove_from_block_registry
+            users = list_block_users(block)
+            for user in users:
+                for index, mesh_ref in enumerate(user.keymesh.blocks):
+                    if mesh_ref.block == block:
+                        user.keymesh.blocks.remove(index)
+
             if block.users == 0:
                 if isinstance(block, bpy.types.Mesh):
                     bpy.data.meshes.remove(block)
@@ -97,6 +106,10 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
     bl_description = "Removes selected Keymesh block and deletes every keyframe associated with it"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        return context.active_object in context.editable_objects
+
     def execute(self, context):
         obj = bpy.context.object
         obj_id = obj.get("Keymesh ID", None)
@@ -117,6 +130,11 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                 current_frame = bpy.context.scene.frame_current
                 bpy.context.scene.frame_set(current_frame + 1)
                 bpy.context.scene.frame_set(current_frame)
+
+                # remove_from_block_registry
+                for index, mesh_ref in enumerate(obj.keymesh.blocks):
+                    if mesh_ref.block == block:
+                        obj.keymesh.blocks.remove(index)
 
                 # Purge
                 data_type = obj_data_type(obj)

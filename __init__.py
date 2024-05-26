@@ -17,6 +17,7 @@ from . import (
     properties,
     ui,
     functions,
+    versioning,
 )
 
 
@@ -36,6 +37,7 @@ def register():
     preferences.register()
     properties.register()
     ui.register()
+    versioning.register()
     operators_register()
 
     preferences.update_sidebar_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
@@ -64,6 +66,7 @@ def unregister():
     preferences.unregister()
     properties.unregister()
     ui.unregister()
+    versioning.unregister()
     operators_unregister()
 
     # HANDLERS

@@ -55,6 +55,8 @@ def insert_keymesh_keyframe(context, obj):
         obj.data = new_block
         obj.data.use_fake_user = True
         obj["Keymesh Data"] = block_index
+        block_registry = obj.keymesh.blocks.add()
+        block_registry.block = new_block
 
         # Insert Keyframe
         obj.keyframe_insert(data_path='["Keymesh Data"]',
@@ -104,8 +106,9 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
-            return is_candidate_object(context) and bpy.context.mode not in [
-                    'EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']
+            return (is_candidate_object(context) and context.active_object in context.editable_objects
+                    and bpy.context.mode not in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
+                                                 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE'])
 
     def execute(self, context):
         obj = context.active_object
