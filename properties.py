@@ -1,11 +1,24 @@
 import bpy
 
 
+#### ------------------------------ FUNCTIONS ------------------------------ ####
+
+def update_block_name(self, context):
+    if self.block:
+        self.block.name = self.name
+
+
+
 #### ------------------------------ PROPERTIES ------------------------------ ####
 
 class KeymeshBlocks(bpy.types.PropertyGroup):
     block: bpy.props.PointerProperty(
+        name = "Block",
         type = bpy.types.ID,
+    )
+    name: bpy.props.StringProperty(
+        name = "Name",
+        update = update_block_name,
     )
 
 
@@ -15,6 +28,10 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     blocks: bpy.props.CollectionProperty(
         name = "Keymesh Blocks",
         type = KeymeshBlocks,
+    )
+    block_active_index: bpy.props.IntProperty(
+        name = "Active Block Index",
+        default = -1,
     )
 
 
@@ -40,10 +57,6 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         name = "Keyframe Keymesh Blocks After Selection",
         description = "Automatically insert keyframe on current frame for Keymesh block when selecting it.",
         default = True,
-    )
-
-    keymesh_block_active_index: bpy.props.IntProperty(
-        default = -1,
     )
 
     def update_properties_from_preferences(self):

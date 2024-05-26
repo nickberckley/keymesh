@@ -65,10 +65,10 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         col = row.column()
         col.template_list("VIEW3D_UL_keymesh_blocks",
             list_id = "Keymesh Blocks",
-            dataptr = bpy.data,
-            propname = prop_type(obj),
-            active_dataptr = scene,
-            active_propname = "keymesh_block_active_index",
+            dataptr = obj.keymesh,
+            propname = "blocks",
+            active_dataptr = obj.keymesh,
+            active_propname = "block_active_index",
             rows = 6)
 
         # Buttons
@@ -114,9 +114,11 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     """List of Keymesh data-blocks for active object"""
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.object
+        # item = item.block
+
         obj_keymesh_data = obj.get("Keymesh Data")
-        block_keymesh_data = item.get("Keymesh Data")
-        usage_count = keymesh_block_usage_count(self, context, item)
+        block_keymesh_data = item.block.get("Keymesh Data")
+        usage_count = keymesh_block_usage_count(self, context, item.block)
 
         col = layout.column(align=True)
         row = col.row(align=True)
@@ -143,36 +145,22 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         row.label(text=str(usage_count))
 
     def filter_items(self, context, data, propname):
-        filtered = []
-        ordered = []
-
         items = getattr(data, propname)
-        filtered = [self.bitflag_filter_item] * len(items)
-        # ordered = self.make_sorted_indices_list(items, key=lambda item: item.get("Keymesh Data", 0), reverse=False)
 
-        filtered_items = self.get_props_filtered_items()
+        # search_filter
+        flags = []
+        if self.filter_name:
+            flags = bpy.types.UI_UL_list.filter_items_by_name(
+                self.filter_name, self.bitflag_filter_item, items, "name", reverse=self.use_filter_invert)
+        if not flags:
+            flags = [self.bitflag_filter_item] * len(items)
 
-        for i, item in enumerate(items):
-            if not item in filtered_items:
-                filtered[i] &= ~self.bitflag_filter_item
-        return filtered, ordered
+        # sort_by_name
+        indices = [i for i in range(len(items))]
+        if self.use_filter_sort_alpha:
+            indices = bpy.types.UI_UL_list.sort_items_by_name(items, "name")
 
-    # def make_sorted_indices_list(self, items, key, reverse):
-    #     # Note: Only works with unique items.
-    #     original_indices = {item: idx for idx, item in enumerate(items)}
-    #     sorted_items = sorted(items, key=key, reverse=reverse)
-        
-    #     return [original_indices[sorted_item] for sorted_item in sorted_items]
-
-    def get_props_filtered_items(self):
-        obj = bpy.context.object
-        obj_keymesh_id = bpy.context.object.get("Keymesh ID")
-        filter_type = obj_data_type(obj)
-
-        filtered_items = [
-            o for o in filter_type if o.get("Keymesh Data") and o.get("Keymesh ID") == obj_keymesh_id or o.get("Keymesh Data") == 0 and o.get("Keymesh ID") == obj_keymesh_id
-        ]
-        return filtered_items
+        return flags, indices
 
 
 

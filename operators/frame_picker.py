@@ -53,15 +53,15 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
 
 #     def execute(self, context):
 #         obj = context.object.data
-#         index = int(context.scene.keymesh_block_active_index)
+#         index = int(obj.keymesh.block_active_index)
 
 #         if self.direction == 'UP' and index > 0:
 #             obj.keymesh_blocks.move(index, index - 1)
-#             context.scene.keymesh_block_active_index -= 1
+#             obj.keymesh.block_active_index -= 1
 
 #         elif self.direction == 'DOWN' and (index + 1) < len(''): # length_should_be_of_full_list_of_items_in_ui_list
 #             obj.keymesh_blocks.move(index, index + 1)
-#             context.scene.keymesh_block_active_index += 1
+#             obj.keymesh.block_active_index += 1
 #         return {'FINISHED'}
 
 
