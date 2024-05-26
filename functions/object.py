@@ -21,7 +21,7 @@ def new_object_id(context):
 def get_next_keymesh_index(context, obj):
     """Get the appropriate index for the newly created Keymesh block"""
 
-    if obj.get("Keymesh Data") is None:
+    if obj.keymesh.get("Keymesh Data") is None:
         return 0
     else:
         obj_keymesh_id = obj.keymesh.get("ID")

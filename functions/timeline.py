@@ -12,7 +12,7 @@ def get_keymesh_fcurve(context, obj):
     if obj.keymesh.get("ID") is not None:
         if obj.animation_data is not None:
             for f in obj.animation_data.action.fcurves:
-                if f.data_path == '["Keymesh Data"]':
+                if f.data_path == 'keymesh["Keymesh Data"]':
                     fcurve = f
 
         # alternative_way
@@ -21,7 +21,7 @@ def get_keymesh_fcurve(context, obj):
         #         fcurves = action.fcurves
         #         if fcurves is not None:
         #             for f in fcurves:
-        #                 if f.data_path == '["Keymesh Data"]':
+        #                 if f.data_path == 'keymesh["Keymesh Data"]':
         #                     fcurve = f
 
     return fcurve

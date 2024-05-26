@@ -54,17 +54,17 @@ def insert_keymesh_keyframe(context, obj):
         # Assign New Block to Object
         obj.data = new_block
         obj.data.use_fake_user = True
-        obj["Keymesh Data"] = block_index
+        obj.keymesh["Keymesh Data"] = block_index
         block_registry = obj.keymesh.blocks.add()
         block_registry.block = new_block
         block_registry.name = new_block.name
 
         # Insert Keyframe
-        obj.keyframe_insert(data_path='["Keymesh Data"]',
+        obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
                             frame=context.scene.frame_current)
 
         for fcurve in obj.animation_data.action.fcurves:
-            if fcurve.data_path == '["Keymesh Data"]':
+            if fcurve.data_path == 'keymesh["Keymesh Data"]':
                 for kf in fcurve.keyframe_points:
                     kf.interpolation = 'CONSTANT'
 

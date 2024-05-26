@@ -8,11 +8,11 @@ from .poll import obj_data_type
 def update_keymesh(scene):
     for obj in bpy.data.objects:
         # is_not_keymesh_object
-        if obj.get("Keymesh Data") is None:
+        if obj.keymesh.get("Keymesh Data") is None:
             continue
 
         obj_keymesh_id = obj.keymesh["ID"]
-        obj_keymesh_data = obj["Keymesh Data"]
+        obj_keymesh_data = obj.keymesh["Keymesh Data"]
 
         final_block = None
         for block in obj_data_type(obj):

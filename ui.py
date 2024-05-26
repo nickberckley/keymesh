@@ -115,7 +115,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         obj = context.object
         # item = item.block
 
-        obj_keymesh_data = obj.get("Keymesh Data")
+        obj_keymesh_data = obj.keymesh.get("Keymesh Data")
         block_keymesh_data = item.block.keymesh.get("Data")
         usage_count = keymesh_block_usage_count(self, context, item.block)
 

@@ -8,7 +8,7 @@ from .functions.poll import obj_data_type
 def populate_keymesh_blocks(scene):
     for obj in bpy.data.objects:
         # is_not_keymesh_object
-        if obj.get("Keymesh Data") is None:
+        if obj.keymesh.get("Data") is None:
             continue
         obj_keymesh_id = obj.keymesh.get("ID")
 
