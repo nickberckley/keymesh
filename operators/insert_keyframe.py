@@ -25,11 +25,11 @@ def insert_keymesh_keyframe(context, obj):
 
 
         # Assign Keymesh ID
-        if obj.get("Keymesh ID") is None:
+        if obj.keymesh.get("ID") is None:
             if prefs.backup_original_data:
                 obj.data.use_fake_user = True
-            obj["Keymesh ID"] = new_object_id(context)
-        obj_keymesh_id = obj["Keymesh ID"]
+            obj.keymesh["ID"] = new_object_id(context)
+        obj_keymesh_id = obj.keymesh["ID"]
 
         # Get Block Index
         block_index = get_next_keymesh_index(context, obj)
@@ -48,23 +48,23 @@ def insert_keymesh_keyframe(context, obj):
             new_block = obj.data.copy()
 
         new_block.name = block_name
-        new_block["Keymesh ID"] = obj_keymesh_id
-        new_block["Keymesh Data"] = block_index
+        new_block.keymesh["ID"] = obj_keymesh_id
+        new_block.keymesh["Data"] = block_index
 
         # Assign New Block to Object
         obj.data = new_block
         obj.data.use_fake_user = True
-        obj["Keymesh Data"] = block_index
+        obj.keymesh["Keymesh Data"] = block_index
         block_registry = obj.keymesh.blocks.add()
         block_registry.block = new_block
         block_registry.name = new_block.name
 
         # Insert Keyframe
-        obj.keyframe_insert(data_path='["Keymesh Data"]',
+        obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
                             frame=context.scene.frame_current)
 
         for fcurve in obj.animation_data.action.fcurves:
-            if fcurve.data_path == '["Keymesh Data"]':
+            if fcurve.data_path == 'keymesh["Keymesh Data"]':
                 for kf in fcurve.keyframe_points:
                     kf.interpolation = 'CONSTANT'
 
@@ -123,7 +123,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
             else:
                 # when_forwarding_first_time
-                if obj.get("Keymesh ID") is None:
+                if obj.keymesh.get("ID") is None:
                     insert_keymesh_keyframe(context, obj)
                     return {'FINISHED'}
                 

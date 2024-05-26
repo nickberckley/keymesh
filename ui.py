@@ -53,7 +53,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.object is not None and context.object.get("Keymesh ID") is not None
+        return context.object is not None and context.object.keymesh.get("ID") is not None
 
     def draw(self, context):
         layout = self.layout
@@ -115,8 +115,8 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         obj = context.object
         # item = item.block
 
-        obj_keymesh_data = obj.get("Keymesh Data")
-        block_keymesh_data = item.block.get("Keymesh Data")
+        obj_keymesh_data = obj.keymesh.get("Keymesh Data")
+        block_keymesh_data = item.block.keymesh.get("Data")
         usage_count = keymesh_block_usage_count(self, context, item.block)
 
         col = layout.column(align=True)
@@ -126,7 +126,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         if context.scene.keymesh.insert_on_selection and obj in context.editable_objects:
             select_icon = 'PINNED' if block_keymesh_data == obj_keymesh_data else 'UNPINNED'
         else:
-            if block_keymesh_data == obj.data.get("Keymesh Data") and block_keymesh_data != obj_keymesh_data:
+            if block_keymesh_data == obj.data.keymesh.get("Data") and block_keymesh_data != obj_keymesh_data:
                 select_icon = 'VIEWZOOM'
             elif block_keymesh_data == obj_keymesh_data:
                 select_icon = 'PINNED'

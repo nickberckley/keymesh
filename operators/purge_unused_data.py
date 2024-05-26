@@ -27,10 +27,10 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         used_keymesh_blocks = {}
         objects = bpy.data.objects if self.all else [context.active_object]
         for obj in objects:
-            if obj.get("Keymesh ID") is None:
+            if obj.keymesh.get("ID") is None:
                 continue
 
-            obj_keymesh_id = obj.get("Keymesh ID")
+            obj_keymesh_id = obj.keymesh.get("ID")
             used_keymesh_blocks[obj_keymesh_id] = []
 
             fcurve = get_keymesh_fcurve(context, obj)
@@ -46,15 +46,15 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
             for data_collection in [bpy.data.meshes, bpy.data.curves, bpy.data.hair_curves, bpy.data.metaballs, bpy.data.volumes,
                                     bpy.data.lattices, bpy.data.lights, bpy.data.lightprobes, bpy.data.cameras, bpy.data.speakers]:
                 for block in data_collection:
-                    if block.get("Keymesh ID") is None:
+                    if block.keymesh.get("ID") is None:
                         continue
 
-                    block_keymesh_id = block.get("Keymesh ID")
+                    block_keymesh_id = block.keymesh.get("ID")
                     if block_keymesh_id not in used_keymesh_blocks:
                         delete_keymesh_blocks.append(block)
                         continue
 
-                    block_keymesh_data = block.get("Keymesh Data")
+                    block_keymesh_data = block.keymesh.get("Data")
                     if block_keymesh_data not in used_keymesh_blocks[block_keymesh_id]:
                         delete_keymesh_blocks.append(block)
                         continue
@@ -63,14 +63,14 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         else:
             obj = context.active_object
             for block in obj_data_type(obj):
-                if block.get("Keymesh ID") is None:
+                if block.keymesh.get("ID") is None:
                     continue
 
-                block_keymesh_id = block.get("Keymesh ID")
-                if block_keymesh_id != obj.get("Keymesh ID"):
+                block_keymesh_id = block.keymesh.get("ID")
+                if block_keymesh_id != obj.keymesh.get("ID"):
                     continue
 
-                block_keymesh_data = block.get("Keymesh Data")
+                block_keymesh_data = block.keymesh.get("Data")
                 if block_keymesh_data not in used_keymesh_blocks[block_keymesh_id]:
                     delete_keymesh_blocks.append(block)
                     continue
@@ -147,10 +147,10 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        obj_id = obj.get("Keymesh ID", None)
+        obj_id = obj.keymesh.get("ID", None)
         if obj and obj_id is not None:
             block = obj.data
-            block_keymesh_data = block.get("Keymesh Data")
+            block_keymesh_data = block.keymesh.get("Data")
 
             # Remove Keyframes
             fcurve = get_keymesh_fcurve(context, obj)

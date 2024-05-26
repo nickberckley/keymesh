@@ -9,10 +9,10 @@ def get_keymesh_fcurve(context, obj):
     if obj is None:
         obj = context.active_object
 
-    if obj.get("Keymesh ID") is not None:
+    if obj.keymesh.get("ID") is not None:
         if obj.animation_data is not None:
             for f in obj.animation_data.action.fcurves:
-                if f.data_path == '["Keymesh Data"]':
+                if f.data_path == 'keymesh["Keymesh Data"]':
                     fcurve = f
 
         # alternative_way
@@ -21,7 +21,7 @@ def get_keymesh_fcurve(context, obj):
         #         fcurves = action.fcurves
         #         if fcurves is not None:
         #             for f in fcurves:
-        #                 if f.data_path == '["Keymesh Data"]':
+        #                 if f.data_path == 'keymesh["Keymesh Data"]':
         #                     fcurve = f
 
     return fcurve
@@ -46,7 +46,7 @@ def keymesh_block_usage_count(self, context, block):
     """Returns number of uses (keyframes) for each Keymesh block for object"""
 
     obj = context.object
-    value = block["Keymesh Data"]
+    value = block.keymesh["Data"]
     count = 0
 
     fcurve = get_keymesh_fcurve(context, obj)
@@ -63,12 +63,12 @@ def get_next_keymesh_block(context, obj, direction):
     if obj is None:
         obj = context.active_object
 
-    obj_id = obj.get("Keymesh ID", None)
+    obj_id = obj.keymesh.get("ID", None)
     next_keyframe = None
     next_value = None
     next_keymesh_block = None
 
-    if obj.get("Keymesh ID") is not None:
+    if obj.keymesh.get("ID") is not None:
         current_frame = context.scene.frame_current
         fcurve = get_keymesh_fcurve(context, obj)
         keyframe_points = fcurve.keyframe_points
@@ -87,8 +87,8 @@ def get_next_keymesh_block(context, obj, direction):
                     break
 
         for mesh in bpy.data.meshes:
-            if mesh.get("Keymesh ID", None) and mesh.get("Keymesh ID", None) == obj_id:
-                if mesh.get("Keymesh Data", None) == next_value:
+            if mesh.keymesh.get("ID", None) and mesh.get("ID", None) == obj_id:
+                if mesh.keymesh.get("Data", None) == next_value:
                     next_keymesh_block = mesh
 
     return next_keyframe, next_keymesh_block

@@ -35,6 +35,11 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     )
 
 
+class DATA_PG_keymesh(bpy.types.PropertyGroup):
+    # DATA-level PROPERTIES
+    pass
+
+
 class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     # SCENE-level PROPERTIES
 
@@ -72,6 +77,7 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
 classes = [
     KeymeshBlocks,
     OBJECT_PG_keymesh,
+    DATA_PG_keymesh,
     SCENE_PG_keymesh,
 ]
 
@@ -82,6 +88,7 @@ def register():
     # PROPERTY
     bpy.types.Scene.keymesh = bpy.props.PointerProperty(type = SCENE_PG_keymesh, name="Keymesh")
     bpy.types.Object.keymesh = bpy.props.PointerProperty(type = OBJECT_PG_keymesh, name="Keymesh")
+    bpy.types.ID.keymesh = bpy.props.PointerProperty(type = DATA_PG_keymesh, name="Keymesh")
 
 def unregister():
     for cls in reversed(classes):
@@ -90,3 +97,4 @@ def unregister():
     # PROPERTY
     del bpy.types.Scene.keymesh
     del bpy.types.Object.keymesh
+    del bpy.types.ID.keymesh

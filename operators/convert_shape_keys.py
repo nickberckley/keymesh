@@ -81,11 +81,11 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             backup.hide_viewport = True
 
         # Assign Keymesh ID Property
-        if obj.get("Keymesh ID") is None:
-            obj["Keymesh ID"] = new_object_id(context)
+        if obj.keymesh.get("ID") is None:
+            obj.keymesh["ID"] = new_object_id(context)
             if prefs.backup_original_data:
                 original_data.use_fake_user = True
-        obj_km_id = obj["Keymesh ID"]
+        obj_km_id = obj.keymesh["ID"]
 
         initial_values = [key.value for key in shape_keys.key_blocks]
         for frame in range(frame_start, frame_end + 1):
@@ -97,7 +97,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             new_block = original_data.copy()
             new_block.name = obj.name + "_frame_" + str(frame)
             new_block.use_fake_user = True
-            new_block["Keymesh ID"] = obj_km_id
+            new_block.keymesh["ID"] = obj_km_id
             block_registry = obj.keymesh.blocks.add()
             block_registry.block = new_block
             block_registry.name = new_block.name
@@ -109,27 +109,27 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
             # Assign Keymesh Data
             block_index = get_next_keymesh_index(context, obj)
-            new_block["Keymesh Data"] = block_index
+            new_block.keymesh["Data"] = block_index
 
             # delete_duplicates
             if self.delete_duplicates:
-                if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.get("Keymesh ID") == obj_km_id):
+                if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.keymesh.get("ID") == obj_km_id):
                     match = next((block for block in bpy.data.meshes if block.get("shape_key_value") == name), None)
-                    match_id = match.get("Keymesh Data")
+                    match_id = match.keymesh.get("Data")
                     bpy.data.meshes.remove(new_block)
-                    obj["Keymesh Data"] = match_id
+                    obj.keymesh["Keymesh Data"] = match_id
                 else:
                     new_block["shape_key_value"] = name
-                    obj["Keymesh Data"] = block_index
+                    obj.keymesh["Keymesh Data"] = block_index
             else:
-                obj["Keymesh Data"] = block_index
+                obj.keymesh["Keymesh Data"] = block_index
 
             # animate_keymesh_data
             if current_values != initial_values:
-                obj.keyframe_insert(data_path='["Keymesh Data"]', frame=context.scene.frame_current)
+                obj.keyframe_insert(data_path='keymesh["Keymesh Data"]', frame=context.scene.frame_current)
                 initial_values = current_values
 
-        fcurve = obj.animation_data.action.fcurves.find('["Keymesh Data"]')
+        fcurve = obj.animation_data.action.fcurves.find('keymesh["Keymesh Data"]')
         for keyframe_point in fcurve.keyframe_points:
             keyframe_point.interpolation = 'CONSTANT'
 
@@ -213,7 +213,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and context.active_object.get("Keymesh ID")
+        return context.active_object is not None and context.active_object.keymesh.get("ID")
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -240,7 +240,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         move_axis_index = 'XYZ'.index(self.move_axis)
 
         # Get frame_start and end by keymesh data_block names or custom properties
-        animated_frames = [int(keyframe.co.x) for fcurve in obj.animation_data.action.fcurves for keyframe in fcurve.keyframe_points if fcurve.data_path == f'["Keymesh Data"]']
+        animated_frames = [int(keyframe.co.x) for fcurve in obj.animation_data.action.fcurves for keyframe in fcurve.keyframe_points if fcurve.data_path == f'keymesh["Keymesh Data"]']
         frame_start = min(animated_frames)
         frame_end = max(animated_frames)
 
@@ -250,7 +250,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         prev_obj = None
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
-            current_value = obj["Keymesh Data"]
+            current_value = obj.keymesh["Keymesh Data"]
 
             if current_value != previous_value:
                 # Duplicate Object
@@ -258,14 +258,14 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                 dup_obj.name = obj.name + "_frame_" + str(frame)
                 dup_obj.animation_data_clear()
                 context.collection.objects.link(dup_obj)
-                del dup_obj["Keymesh Data"]
-                del dup_obj["Keymesh ID"]
+                del dup_obj.keymesh["Keymesh Data"]
+                del dup_obj.keymesh["ID"]
 
                 dup_data = obj.data.copy()
                 dup_data.name + obj.data.name + "_frame_" + str(frame)
                 dup_obj.data = dup_data
-                del dup_data["Keymesh Data"]
-                del dup_data["Keymesh ID"]
+                del dup_data.keymesh["Data"]
+                del dup_data.keymesh["ID"]
 
                 # Move to Collection
                 duplicates_collection.objects.link(dup_obj)
