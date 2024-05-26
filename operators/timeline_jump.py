@@ -1,6 +1,6 @@
 import bpy
 from ..functions.poll import is_candidate_object
-from ..functions.timeline import get_object_keyframes
+from ..functions.timeline import get_keymesh_keyframes
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -19,7 +19,7 @@ class TIMELINE_OT_keymesh_frame_jump(bpy.types.Operator):
         return is_candidate_object(context) and context.active_object is not None
 
     def execute(self, context):
-        keyframes = get_object_keyframes(context, context.active_object)
+        keyframes = get_keymesh_keyframes(context, context.active_object)
 
         if self.path == "BACKWARD":
             if len(keyframes) > 0:

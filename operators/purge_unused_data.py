@@ -2,6 +2,7 @@ import bpy
 from ..functions.object import list_block_users
 from ..functions.handler import update_keymesh
 from ..functions.poll import obj_data_type
+from ..functions.timeline import get_keymesh_fcurve
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -32,15 +33,11 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
             obj_keymesh_id = obj.get("Keymesh ID")
             used_keymesh_blocks[obj_keymesh_id] = []
 
-            fcurves = obj.animation_data.action.fcurves
-            for fcurve in fcurves:
-                if fcurve.data_path != '["Keymesh Data"]':
-                    continue
-
-                keyframe_points = fcurve.keyframe_points
-                for item in keyframe_points:
-                    keyframe = item
-                    used_keymesh_blocks[obj_keymesh_id].append(keyframe.co.y)
+            fcurve = get_keymesh_fcurve(context, obj)
+            keyframe_points = fcurve.keyframe_points
+            for item in keyframe_points:
+                keyframe = item
+                used_keymesh_blocks[obj_keymesh_id].append(keyframe.co.y)
 
 
         # list_unused_keymesh_blocks (for_all_objects)
@@ -156,27 +153,24 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
             block_keymesh_data = block.get("Keymesh Data")
 
             # Remove Keyframes
-            anim_data = obj.animation_data
-            if anim_data is not None:
-                for fcurve in anim_data.action.fcurves:
-                    if fcurve.data_path == '["Keymesh Data"]':
-                        for keyframe in reversed(fcurve.keyframe_points.values()):
-                            if keyframe.co_ui[1] == block_keymesh_data:
-                                fcurve.keyframe_points.remove(keyframe)
+            fcurve = get_keymesh_fcurve(context, obj)
+            for keyframe in reversed(fcurve.keyframe_points.values()):
+                if keyframe.co_ui[1] == block_keymesh_data:
+                    fcurve.keyframe_points.remove(keyframe)
 
-                # refresh_timeline
-                current_frame = context.scene.frame_current
-                context.scene.frame_set(current_frame + 1)
-                context.scene.frame_set(current_frame)
+            # refresh_timeline
+            current_frame = context.scene.frame_current
+            context.scene.frame_set(current_frame + 1)
+            context.scene.frame_set(current_frame)
 
-                # remove_from_block_registry
-                for index, mesh_ref in enumerate(obj.keymesh.blocks):
-                    if mesh_ref.block == block:
-                        obj.keymesh.blocks.remove(index)
+            # remove_from_block_registry
+            for index, mesh_ref in enumerate(obj.keymesh.blocks):
+                if mesh_ref.block == block:
+                    obj.keymesh.blocks.remove(index)
 
-                # Purge
-                data_type = obj_data_type(obj)
-                data_type.remove(block)
+            # Purge
+            data_type = obj_data_type(obj)
+            data_type.remove(block)
 
         return {'FINISHED'}
 
