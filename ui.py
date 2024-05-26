@@ -76,9 +76,9 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         col.operator("object.keyframe_object_data", text="", icon='ADD')
         col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
         col.separator()
-        # col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').type = 'UP'
-        # col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').type = 'DOWN'
-        # col.separator()
+        col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').direction='UP'
+        col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').direction='DOWN'
+        col.separator()
         col.operator("object.purge_keymesh_data", text="", icon='TRASH')
 
         # Properties
