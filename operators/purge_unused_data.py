@@ -145,8 +145,13 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
         obj = context.active_object
         obj_id = obj.keymesh.get("ID", None)
         if obj and obj_id is not None:
-            block = obj.data
-            block_keymesh_data = block.keymesh.get("Data")
+            # get_active_block
+            if obj.keymesh.block_active_index is not None:
+                block = obj.keymesh.blocks[obj.keymesh.block_active_index].block
+                block_keymesh_data = block.keymesh.get("Data")
+            else:
+                block = obj.data
+                block_keymesh_data = block.keymesh.get("Data")
 
             # Remove Keyframes
             fcurve = get_keymesh_fcurve(context, obj)

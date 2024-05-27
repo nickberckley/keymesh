@@ -158,7 +158,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
 
         # Keymesh Name
         row.operator("object.keymesh_pick_frame", text="", icon=select_icon).keymesh_index = item.name
-        row.prop(item, "name", text="")
+        row.prop(item, "name", text="", emboss=False,)
 
         # Usage Count
         col = layout.column(align=True)
