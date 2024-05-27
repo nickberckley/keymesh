@@ -124,6 +124,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
                     obj.keymesh["Keymesh Data"] = block_index
             else:
                 obj.keymesh["Keymesh Data"] = block_index
+            obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
 
             # animate_keymesh_data
             if current_values != initial_values:

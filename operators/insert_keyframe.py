@@ -55,6 +55,7 @@ def insert_keymesh_keyframe(context, obj):
         obj.data = new_block
         obj.data.use_fake_user = True
         obj.keymesh["Keymesh Data"] = block_index
+        obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
         block_registry = obj.keymesh.blocks.add()
         block_registry.block = new_block
         block_registry.name = new_block.name
