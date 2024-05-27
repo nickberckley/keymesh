@@ -1,6 +1,7 @@
 import bpy
 from .. import __package__ as base_package
 from ..functions.object import new_object_id, get_next_keymesh_index
+from ..functions.timeline import insert_keyframe
 from ..functions.poll import is_candidate_object, is_not_linked
 from ..functions.handler import update_keymesh
 
@@ -50,24 +51,16 @@ def insert_keymesh_keyframe(context, obj):
         new_block.name = block_name
         new_block.keymesh["ID"] = obj_keymesh_id
         new_block.keymesh["Data"] = block_index
+        new_block.use_fake_user = True
 
         # Assign New Block to Object
-        obj.data = new_block
-        obj.data.use_fake_user = True
-        obj.keymesh["Keymesh Data"] = block_index
-        obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
         block_registry = obj.keymesh.blocks.add()
         block_registry.block = new_block
         block_registry.name = new_block.name
 
         # Insert Keyframe
-        obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
-                            frame=context.scene.frame_current)
-
-        for fcurve in obj.animation_data.action.fcurves:
-            if fcurve.data_path == 'keymesh["Keymesh Data"]':
-                for kf in fcurve.keyframe_points:
-                    kf.interpolation = 'CONSTANT'
+        obj.data = new_block
+        insert_keyframe(obj, block_index, context.scene.frame_current)
 
         # update_frame_handler
         update_keymesh(context.scene)
