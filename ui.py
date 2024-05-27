@@ -97,13 +97,36 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
+        obj = context.active_object
+        prefs = bpy.context.preferences.addons[__package__].preferences
+
         layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
         layout.operator("object.shape_keys_to_keymesh")
         layout.operator("object.keymesh_to_objects")
         layout.operator("scene.initialize_keymesh_handler", text="Initialize Frame Handler")
-        # layout.separator()
-        # layout.operator("object.keymesh_interpolate", text="INTERPOLATE")
+
+        # debug_tools
+        if prefs.debug and obj.keymesh.get("ID", None):
+            layout.separator()
+            header, panel = layout.panel("KEYMESH_PT_debug", default_closed=False)
+            header.label(text="Debug")
+
+            if panel:
+                    panel.prop(obj.keymesh, '["ID"]', text="object.id")
+                    if "Keymesh Data" in obj.keymesh:
+                        panel.prop(obj.keymesh, '["Keymesh Data"]', text="object.data")
+
+                    panel.separator()
+                    if "ID" in obj.data.keymesh:
+                        panel.prop(obj.data.keymesh, '["ID"]', text="block.id")
+                    if "Data" in obj.data.keymesh:
+                        panel.prop(obj.data.keymesh, '["Data"]', text="block.data")
+
+                    # panel.separator()
+                    # panel.operator("object.keymesh_interpolate", text="INTERPOLATE")
 
 
 

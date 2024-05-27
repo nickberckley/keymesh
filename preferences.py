@@ -79,6 +79,12 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         default = False,
     )
 
+    debug: bpy.props.BoolProperty(
+        name = "Debugging Tools",
+        description = "Will expose internal object and object data properties in UI for debugging purposes",
+        default = False,
+    )
+
 
     def draw(self, context):
         layout = self.layout
@@ -101,6 +107,8 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         col.prop(self, "category")
         col.prop(self, "enable_edit_mode")
         col.prop(self, "enable_shape_keys")
+        col.separator()
+        col.prop(self, "debug")
 
 
 
