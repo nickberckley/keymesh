@@ -1,5 +1,5 @@
 import bpy
-from ..functions.poll import obj_data_type
+from ..functions.poll import is_not_linked, obj_data_type
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -49,7 +49,7 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        return is_not_linked(context)
 
     def execute(self, context):
         obj = context.active_object
