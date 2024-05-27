@@ -136,6 +136,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     """List of Keymesh data-blocks for active object"""
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.active_object
+        action = obj.animation_data.action if obj.animation_data else None
         # item = item.block
 
         obj_keymesh_data = obj.keymesh.get("Keymesh Data")
@@ -146,7 +147,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         row = col.row(align=True)
 
         # insert_button_icon
-        if context.scene.keymesh.insert_on_selection and obj in context.editable_objects:
+        if context.scene.keymesh.insert_on_selection and obj in context.editable_objects and (action and action.library is None):
             select_icon = 'PINNED' if block_keymesh_data == obj_keymesh_data else 'UNPINNED'
         else:
             if block_keymesh_data == obj.data.keymesh.get("Data") and block_keymesh_data != obj_keymesh_data:

@@ -29,7 +29,14 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         # Keyframe Block
         if obj in context.editable_objects:
             if scene.keymesh.insert_on_selection:
-                insert_keyframe(obj, keymesh_block, scene.frame_current)
+                action = obj.animation_data.action
+                if action:
+                    if action.library is None:
+                        insert_keyframe(obj, keymesh_block, scene.frame_current)
+                    else:
+                        self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
+                else:
+                    insert_keyframe(obj, keymesh_block, scene.frame_current)
 
             bpy.ops.object.mode_set(mode=current_mode)
         return {'FINISHED'}
