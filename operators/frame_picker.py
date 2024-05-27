@@ -29,7 +29,13 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         if obj in context.editable_objects:
             if scene.keymesh.insert_on_selection:
                 obj.keymesh["Keymesh Data"] = keymesh_block
-                obj.keyframe_insert(data_path='keymesh["Keymesh Data"]', frame=scene.frame_current)
+                obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
+                                    frame=scene.frame_current)
+
+                for fcurve in obj.animation_data.action.fcurves:
+                    if fcurve.data_path == 'keymesh["Keymesh Data"]':
+                        for kf in fcurve.keyframe_points:
+                            kf.interpolation = 'CONSTANT'
 
             bpy.ops.object.mode_set(mode=current_mode)
         return {'FINISHED'}
