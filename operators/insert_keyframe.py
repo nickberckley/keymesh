@@ -2,7 +2,7 @@ import bpy
 from .. import __package__ as base_package
 from ..functions.object import new_object_id, get_next_keymesh_index
 from ..functions.timeline import insert_keyframe
-from ..functions.poll import is_candidate_object
+from ..functions.poll import is_candidate_object, is_not_linked
 from ..functions.handler import update_keymesh
 
 
@@ -101,7 +101,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
         if prefs.enable_edit_mode:
             return is_candidate_object(context)
         else:
-            return (is_candidate_object(context) and context.active_object in context.editable_objects
+            return (is_candidate_object(context) and is_not_linked(context)
                     and context.mode not in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
                                                  'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE'])
 

@@ -1,6 +1,7 @@
 import bpy
 from .. import __package__ as base_package
 from ..functions.object import new_object_id, get_next_keymesh_index
+from ..functions.poll import is_not_linked
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -41,7 +42,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return (context.active_object and context.active_object.type in ('MESH', 'CURVE', 'LATTICE')
-                and context.active_object.data.shape_keys is not None and context.active_object in context.editable_objects)
+                and context.active_object.data.shape_keys is not None and is_not_linked(context))
 
     # Naming Convention
     def naming_convention(self, key):
@@ -123,6 +124,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
                     obj.keymesh["Keymesh Data"] = block_index
             else:
                 obj.keymesh["Keymesh Data"] = block_index
+            obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
 
             # animate_keymesh_data
             if current_values != initial_values:

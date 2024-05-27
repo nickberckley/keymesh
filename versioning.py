@@ -20,6 +20,7 @@ def populate_keymesh_blocks(scene):
         obj_legacy_keymesh_data = obj.get("Keymesh Data", None)
         obj.keymesh["ID"] = new_id
         obj.keymesh["Keymesh Data"] = obj_legacy_keymesh_data
+        obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
         del obj["Keymesh ID"]
         del obj["Keymesh Data"]
         if obj.get("Keymesh Name") is not None:

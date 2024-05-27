@@ -11,6 +11,18 @@ def is_candidate_object(context):
                                                           'LATTICE', 'LIGHT', 'LIGHT_PROBE', 'CAMERA', 'SPEAKER']
 
 
+def is_not_linked(context, obj=None):
+    if context.active_object is None:
+        return False
+    else:
+        if not obj:
+            obj = context.active_object
+        if obj in context.editable_objects:
+            if not obj.library and not obj.override_library:
+                return True
+
+
+
 def obj_data_type(obj):
     supported_types = [
         ('MESH', bpy.data.meshes),

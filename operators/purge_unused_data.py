@@ -1,7 +1,7 @@
 import bpy
 from ..functions.object import list_block_users
 from ..functions.handler import update_keymesh
-from ..functions.poll import obj_data_type
+from ..functions.poll import obj_data_type, is_not_linked
 from ..functions.timeline import get_keymesh_fcurve
 
 
@@ -21,7 +21,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object and context.active_object in context.editable_objects
+        return context.active_object and is_not_linked(context)
 
     def execute(self, context):
         # List Used Keymesh Blocks
@@ -139,7 +139,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object in context.editable_objects
+        return is_not_linked(context)
 
     def execute(self, context):
         obj = context.active_object
