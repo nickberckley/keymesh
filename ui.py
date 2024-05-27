@@ -164,7 +164,8 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         col = layout.column(align=True)
         col.scale_x = 0.1
         row = col.row(align=True)
-        row.label(text=str(usage_count))
+        usage_count_label = str(usage_count) if usage_count is not None else "0"
+        row.label(text=usage_count_label)
 
     def filter_items(self, context, data, propname):
         items = getattr(data, propname)
