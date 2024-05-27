@@ -47,6 +47,7 @@ def populate_keymesh_blocks(scene):
         for block in unregistered_blocks:
             block_registry = obj.keymesh.blocks.add()
             block_registry.block = block
+            block_registry.name = block.name
 
 
         # Transfer Animation
