@@ -1,5 +1,6 @@
 import bpy
 from .functions.poll import obj_data_type
+from .functions.object import new_object_id
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -11,10 +12,12 @@ def populate_keymesh_blocks(scene):
         if obj.get("Keymesh ID") is None:
             continue
 
+        new_id = new_object_id(obj)
+
         # Convert Object Properties
         obj_legacy_keymesh_id = obj.get("Keymesh ID", None)
         obj_legacy_keymesh_data = obj.get("Keymesh Data", None)
-        obj.keymesh["ID"] = obj_legacy_keymesh_id
+        obj.keymesh["ID"] = new_id
         obj.keymesh["Keymesh Data"] = obj_legacy_keymesh_data
         del obj["Keymesh ID"]
         del obj["Keymesh Data"]
@@ -31,9 +34,8 @@ def populate_keymesh_blocks(scene):
                 unregistered_blocks.append(block)
 
                 # Convert Data Properties
-                block_legacy_keymesh_id = block.get("Keymesh ID", None)
                 block_legacy_keymesh_data = block.get("Keymesh Data", None)
-                block.keymesh["ID"] = block_legacy_keymesh_id
+                block.keymesh["ID"] = new_id
                 block.keymesh["Data"] = block_legacy_keymesh_data
                 del block["Keymesh ID"]
                 del block["Keymesh Data"]

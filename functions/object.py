@@ -1,21 +1,18 @@
-import bpy
+import bpy, random
 from .poll import obj_data_type
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def new_object_id(context):
-    """Returns lowest unused number to be used as ID"""
+    """Returns random unused number between 1-1000 to be used as Keymesh ID"""
 
-    max_id = 0
-    obj = context.active_object
-    for block in obj_data_type(obj):
-        if block.keymesh.get("ID") is not None:
-            obj_keymesh_id = block.keymesh["ID"]
-            if obj_keymesh_id > max_id:
-                max_id = obj_keymesh_id
+    id = random.randint(1, 1000)
+    used_ids = {o.keymesh.get("ID") for o in bpy.data.objects if o.keymesh.get("ID") is not None}
+    while id in used_ids:
+        id = random.randint(1, 1000)
 
-    return max_id + 1
+    return id
 
 
 def get_next_keymesh_index(context, obj):
