@@ -63,17 +63,12 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         # list_unused_keymesh_blocks (for_active_object)
         else:
             obj = context.active_object
-            for block in obj_data_type(obj):
-                if block.keymesh.get("ID") is None:
-                    continue
+            for block in obj.keymesh.blocks:
+                block_keymesh_id = block.block.keymesh.get("ID")
+                block_keymesh_data = block.block.keymesh.get("Data")
 
-                block_keymesh_id = block.keymesh.get("ID")
-                if block_keymesh_id != obj.keymesh.get("ID"):
-                    continue
-
-                block_keymesh_data = block.keymesh.get("Data")
                 if block_keymesh_data not in used_keymesh_blocks[block_keymesh_id]:
-                    delete_keymesh_blocks.append(block)
+                    delete_keymesh_blocks.append(block.block)
                     continue
 
 

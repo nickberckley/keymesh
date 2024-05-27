@@ -108,7 +108,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             obj.data = original_data
 
             # Assign Keymesh Data
-            block_index = get_next_keymesh_index(context, obj)
+            block_index = get_next_keymesh_index(obj)
             new_block.keymesh["Data"] = block_index
 
             # delete_duplicates

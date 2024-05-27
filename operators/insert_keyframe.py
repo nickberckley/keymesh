@@ -32,7 +32,7 @@ def insert_keymesh_keyframe(context, obj):
         obj_keymesh_id = obj.keymesh["ID"]
 
         # Get Block Index
-        block_index = get_next_keymesh_index(context, obj)
+        block_index = get_next_keymesh_index(obj)
         if prefs.naming_method == 'INDEX':
             block_name = obj.name_full + "_keymesh_" + str(block_index)
         elif prefs.naming_method == 'FRAME':

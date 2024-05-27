@@ -10,27 +10,16 @@ def update_keymesh(scene):
         # is_not_keymesh_object
         if obj.keymesh.get("Keymesh Data") is None:
             continue
-
-        obj_keymesh_id = obj.keymesh["ID"]
         obj_keymesh_data = obj.keymesh["Keymesh Data"]
 
+        # is_not_correct_block_for_current_frame
         final_block = None
-        for block in obj_data_type(obj):
-            # is_not_keymesh_block
-            if block.keymesh.get("ID") is None:
-                continue
-
-            block_keymesh_id = block.keymesh["ID"]
-            block_keymesh_data = block.keymesh["Data"]
-
-            # is_not_objects_block
-            if block_keymesh_id != obj_keymesh_id:
-                continue
-            # is_not_correct_for_this_frame
+        for block in obj.keymesh.blocks:
+            block_keymesh_data = block.block.keymesh["Data"]
             if block_keymesh_data != obj_keymesh_data:
                 continue
 
-            final_block = block
+            final_block = block.block
 
         if not final_block:
             continue
