@@ -28,7 +28,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         used_keymesh_blocks = {}
         objects = bpy.data.objects if self.all else [context.active_object]
         for obj in objects:
-            if obj.keymesh.get("ID") is None:
+            if obj.keymesh.animated is False:
                 continue
 
             obj_keymesh_id = obj.keymesh.get("ID")
@@ -143,8 +143,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        obj_id = obj.keymesh.get("ID", None)
-        if obj and obj_id is not None:
+        if obj and obj.keymesh.animated:
             # get_active_block
             if obj.keymesh.block_active_index is not None:
                 block = obj.keymesh.blocks[obj.keymesh.block_active_index].block

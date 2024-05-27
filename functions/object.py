@@ -36,7 +36,7 @@ def get_next_keymesh_index(obj):
 def list_block_users(block):
     users = []
     for obj in bpy.data.objects:
-        if obj.keymesh.get("ID", None):
+        if obj.keymesh.animated:
             if block.keymesh.get("ID") == obj.keymesh.get("ID"):
                 users.append(obj)
 

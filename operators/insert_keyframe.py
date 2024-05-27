@@ -26,10 +26,11 @@ def insert_keymesh_keyframe(context, obj):
 
 
         # Assign Keymesh ID
-        if obj.keymesh.get("ID") is None:
+        if obj.keymesh.animated is False:
             if prefs.backup_original_data:
                 obj.data.use_fake_user = True
             obj.keymesh["ID"] = new_object_id(context)
+            obj.keymesh.animated = True
         obj_keymesh_id = obj.keymesh["ID"]
 
         # Get Block Index
@@ -130,7 +131,8 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
                     if context.scene.keymesh.insert_keyframe_after_skip:
                         insert_keymesh_keyframe(context, obj)
-                        return {'FINISHED'}
+
+            return {'FINISHED'}
 
 
 

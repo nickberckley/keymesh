@@ -82,10 +82,11 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             backup.hide_viewport = True
 
         # Assign Keymesh ID Property
-        if obj.keymesh.get("ID") is None:
-            obj.keymesh["ID"] = new_object_id(context)
+        if obj.keymesh.animated is False:
             if prefs.backup_original_data:
                 original_data.use_fake_user = True
+            obj.keymesh["ID"] = new_object_id(context)
+            obj.keymesh.animated = True
         obj_keymesh_id = obj.keymesh["ID"]
 
         initial_values = [key.value for key in shape_keys.key_blocks]
@@ -215,7 +216,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and context.active_object.keymesh.get("ID")
+        return context.active_object is not None and context.active_object.keymesh.animated
 
     def invoke(self, context, event):
         wm = context.window_manager
