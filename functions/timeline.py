@@ -43,6 +43,19 @@ def get_keymesh_keyframes(context, obj):
     return keyframes
 
 
+def insert_keyframe(obj, keymesh_block, frame):
+    """Inserts keyframe on current frame for given block data"""
+
+    obj.keymesh["Keymesh Data"] = keymesh_block
+    obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
+                        frame=frame)
+
+    for fcurve in obj.animation_data.action.fcurves:
+        if fcurve.data_path == 'keymesh["Keymesh Data"]':
+            for kf in fcurve.keyframe_points:
+                kf.interpolation = 'CONSTANT'
+
+
 def keymesh_block_usage_count(self, context, block):
     """Returns number of uses (keyframes) for each Keymesh block for object"""
 

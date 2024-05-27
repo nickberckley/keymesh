@@ -1,6 +1,7 @@
 import bpy
 from .functions.poll import obj_data_type
 from .functions.object import new_object_id
+from .functions.timeline import insert_keyframe
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -59,9 +60,8 @@ def populate_keymesh_blocks(scene):
                     for keyframe in fcurve.keyframe_points:
                         frame = int(keyframe.co[0])
                         value = keyframe.co[1]
-                        
-                        obj.keymesh["Keymesh Data"] = value
-                        obj.keyframe_insert(data_path='keymesh["Keymesh Data"]', frame=frame)
+
+                        insert_keyframe(obj, value, frame)
 
             # transfer_keyframe_values
             for fcurve in anim_data.action.fcurves:
