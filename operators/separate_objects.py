@@ -1,9 +1,5 @@
 import bpy
-from .. import __package__ as base_package
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, create_back_up
-from ..functions.poll import is_not_linked, obj_data_type
 from ..functions.timeline import get_keymesh_keyframes
-from ..functions.handler import update_keymesh
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####

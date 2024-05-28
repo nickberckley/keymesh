@@ -22,7 +22,6 @@ def is_not_linked(context, obj=None):
                 return True
 
 
-
 def obj_data_type(obj):
     supported_types = [
         ('MESH', bpy.data.meshes),

@@ -1,6 +1,5 @@
 import bpy, random
 from .. import __package__ as base_package
-from .poll import obj_data_type
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -60,4 +59,3 @@ def create_back_up(context, obj, data):
     backup.name = obj.name + "_backup"
     backup.hide_render = True
     backup.hide_viewport = True
-    

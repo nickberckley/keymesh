@@ -44,7 +44,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         soft_min = 1, soft_max = 10,
         step = 1,
     )
-    insert_keyframe_after_skip: bpy.props.BoolProperty(
+    keyframe_after_skip: bpy.props.BoolProperty(
         name = "Insert Keyframe after Skip",
         description = "When enabled, skipping frames forward or backwards will also keyframe the object data",
         default = True,
@@ -95,7 +95,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         row = column.row(align=True)
         row.prop(self, "frame_skip_count", text="Default Frame Step")
         row.separator()
-        row.prop(self, "insert_keyframe_after_skip", text="")
+        row.prop(self, "keyframe_after_skip", text="")
 
         row = column.row(align=True)
         row.prop(self, "naming_method", expand=True)

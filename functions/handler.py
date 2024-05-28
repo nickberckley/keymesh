@@ -1,5 +1,4 @@
 import bpy, threading
-from .poll import obj_data_type
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####

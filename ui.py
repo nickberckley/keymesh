@@ -25,7 +25,7 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         row = column.row(align=False)
         row.prop(scene, "frame_skip_count", text="Frame Step")
         row.separator()
-        row.prop(scene, "insert_keyframe_after_skip", text="")
+        row.prop(scene, "keyframe_after_skip", text="")
         if not is_not_linked(context, obj):
             row.enabled = False
 
@@ -33,7 +33,7 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         column = layout.column()
         row = column.row(align=False)
         row.alignment = 'EXPAND'
-        if scene.insert_keyframe_after_skip and is_not_linked(context, obj):
+        if scene.keyframe_after_skip and is_not_linked(context, obj):
             row.operator("object.keyframe_object_data", text="Insert", icon_value=6).path="BACKWARD"
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
             row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path="FORWARD"
@@ -109,35 +109,34 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
         layout.operator("scene.initialize_keymesh_handler", text="Initialize Frame Handler")
 
         # debug_tools
-        if prefs.debug and obj.keymesh.get("ID", None):
+        if prefs.debug and (obj is not None and obj.keymesh.get("ID", None)):
             layout.separator()
             header, panel = layout.panel("KEYMESH_PT_debug", default_closed=False)
             header.label(text="Debug")
 
             if panel:
-                    panel.prop(obj.keymesh, '["ID"]', text="object.id")
-                    if "Keymesh Data" in obj.keymesh:
-                        panel.prop(obj.keymesh, '["Keymesh Data"]', text="object.data")
+                panel.prop(obj.keymesh, '["ID"]', text="object.id")
+                if "Keymesh Data" in obj.keymesh:
+                    panel.prop(obj.keymesh, '["Keymesh Data"]', text="object.data")
 
-                    panel.separator()
-                    if "ID" in obj.data.keymesh:
-                        panel.prop(obj.data.keymesh, '["ID"]', text="block.id")
-                    if "Data" in obj.data.keymesh:
-                        panel.prop(obj.data.keymesh, '["Data"]', text="block.data")
+                panel.separator()
+                if "ID" in obj.data.keymesh:
+                    panel.prop(obj.data.keymesh, '["ID"]', text="block.id")
+                if "Data" in obj.data.keymesh:
+                    panel.prop(obj.data.keymesh, '["Data"]', text="block.data")
 
-                    # panel.separator()
-                    # panel.operator("object.keymesh_interpolate", text="INTERPOLATE")
+                # panel.separator()
+                # panel.operator("object.keymesh_interpolate", text="INTERPOLATE")
 
 
 
-#### ------------------------------ list ------------------------------ ####
+#### ------------------------------ /ui_list/ ------------------------------ ####
 
 class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     """List of Keymesh data-blocks for active object"""
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.active_object
         action = obj.animation_data.action if obj.animation_data else None
-        # item = item.block
 
         obj_keymesh_data = obj.keymesh.get("Keymesh Data")
         block_keymesh_data = item.block.keymesh.get("Data")
@@ -157,7 +156,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
             else:
                 select_icon = 'UNPINNED'
 
-        # Keymesh Name
+        # Name
         row.operator("object.keymesh_pick_frame", text="", icon=select_icon).keymesh_index = item.name
         row.prop(item, "name", text="", emboss=False,)
 

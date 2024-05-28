@@ -58,11 +58,7 @@ def insert_keymesh_keyframe(context, obj):
         # Insert Keyframe
         obj.data = new_block
         insert_keyframe(obj, context.scene.frame_current, block_index)
-
-        # update_frame_handler
         update_keymesh(context.scene)
-        bpy.app.handlers.frame_change_post.remove(update_keymesh)
-        bpy.app.handlers.frame_change_post.append(update_keymesh)
 
 
         # restore_inpersistent_data_for_Mesh
@@ -125,7 +121,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
                     elif self.path == "BACKWARD":
                         context.scene.frame_current -= step
 
-                    if context.scene.keymesh.insert_keyframe_after_skip:
+                    if context.scene.keymesh.keyframe_after_skip:
                         insert_keymesh_keyframe(context, obj)
 
             return {'FINISHED'}

@@ -77,9 +77,6 @@ def keymesh_block_usage_count(self, context, block):
 def get_next_keymesh_block(context, obj, direction):
     """Returns next and previous Keymesh block in timeline"""
 
-    if obj is None:
-        obj = context.active_object
-
     obj_id = obj.keymesh.get("ID", None)
     next_keyframe = None
     next_value = None
