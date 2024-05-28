@@ -20,6 +20,14 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         default = "PRINT",
     )
 
+    naming_convention: bpy.props.EnumProperty(
+        name = "Naming Convention",
+        description = "Choose how newly created objects are named",
+        items = [("FRAMES", "Frames", "Objects will be named after frame on which they're created"),
+                ("BLOCKS", "Keymesh Blocks", "Objects will be named after the Keymesh block they represent")],
+        default = 'FRAMES',
+    )
+
     keep_position: bpy.props.BoolProperty(
         name = "Keep Position",
         description = "If enabled new objects will be in the same position as original. If disabled they'll be moved along the selected axis",
@@ -56,6 +64,9 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         layout.prop(self, "workflow", expand=True)
         layout.separator()
 
+        layout.prop(self, "naming_convention")
+        layout.separator()
+
         # position
         if self.workflow == "PRINT":
             layout.prop(self, "keep_position")
@@ -90,7 +101,10 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
             if current_value != previous_value:
                 # Duplicate Object
                 dup_obj = obj.copy()
-                dup_obj.name = obj.name + "_frame_" + str(frame)
+                if self.naming_convention == "FRAMES":
+                    dup_obj.name = obj.name + "_frame_" + str(frame)
+                elif self.naming_convention == "BLOCKS":
+                    dup_obj.name = obj.data.name
                 dup_obj.animation_data_clear()
                 context.collection.objects.link(dup_obj)
 
@@ -119,6 +133,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                                             frame=frame)
                     dup_obj.keyframe_insert(data_path='hide_render',
                                             frame=frame)
+
                     if prev_obj is not None:
                         # keyframe_previous_object
                         prev_obj.hide_viewport = True
