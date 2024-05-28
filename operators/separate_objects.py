@@ -163,6 +163,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                 previous_value = current_value
 
         obj.select_set(False)
+        obj.hide_set(True)
         context.scene.frame_set(initial_frame)
         return {'FINISHED'}
 
