@@ -10,9 +10,11 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
     bl_description = "Creates new object for each Keymesh block"
     bl_options = {"REGISTER", "UNDO"}
 
-    back_up: bpy.props.BoolProperty(
-        name = "Backup Active Object",
-        description = "Keymesh object will be kept alongside new objects",
+    animate_visibility: bpy.props.BoolProperty(
+        name = "Animate Object Visibility",
+        description = "Each new objects visibility will be animated so they only appear on frames on which they were on.\n"
+                    "This allows to keep the final animation while using separate objects instead of Keymesh blocks.\n"
+                    "Can be used when regular Keymesh animation is misbehaving in render, or is sent to render farm",
         default = True,
     )
 
@@ -49,11 +51,15 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(self, "keep_position")
-        col = layout.column(align=False)
-        row = col.row(align=True)
-        row.prop(self, "move_axis", expand=True)
-        col.prop(self, "offset_distance")
+        layout.prop(self, "animate_visibility")
+
+        # position
+        if self.animate_visibility == False:
+            layout.prop(self, "keep_position")
+            col = layout.column(align=False)
+            row = col.row(align=True)
+            row.prop(self, "move_axis", expand=True)
+            col.prop(self, "offset_distance")
 
         if self.keep_position:
             col.enabled = False
@@ -104,11 +110,37 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                     if coll != duplicates_collection:
                         coll.objects.unlink(dup_obj)
 
-                # Offset Duplicates
-                if not self.keep_position:
+                # Animate Visibility
+                if self.animate_visibility:
+                    dup_obj.keyframe_insert(data_path='hide_viewport',
+                                            frame=frame)
+                    dup_obj.keyframe_insert(data_path='hide_render',
+                                            frame=frame)
                     if prev_obj is not None:
-                        dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
+                        # keyframe_previous_object
+                        prev_obj.hide_viewport = True
+                        prev_obj.hide_render = True
+                        prev_obj.keyframe_insert(data_path='hide_viewport',
+                                            frame=frame)
+                        prev_obj.keyframe_insert(data_path='hide_render',
+                                                frame=frame)
+
+                        # keyframe_active_object_off
+                        context.scene.frame_set(context.scene.frame_current-1)
+                        dup_obj.hide_viewport = True
+                        dup_obj.hide_render = True
+                        dup_obj.keyframe_insert(data_path='hide_viewport',
+                                                frame=frame-1)
+                        dup_obj.keyframe_insert(data_path='hide_render',
+                                                frame=frame-1)
                     prev_obj = dup_obj
+
+                else:
+                    # Offset Duplicates
+                    if not self.keep_position:
+                        if prev_obj is not None:
+                            dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
+                        prev_obj = dup_obj
 
                 previous_value = current_value
 
