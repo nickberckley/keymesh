@@ -18,7 +18,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
         name = "Delete Duplicates",
         description = "Operator will detect if object has same exact shape on two or more frames.\n"
                     "Duplicates will be deleted and instead it will instance one block on every frame that was the same.",
-        default = True,
+        default = False,
     )
 
     follow_scene_range: bpy.props.BoolProperty(
@@ -179,119 +179,10 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
 
 
-class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
-    bl_idname = "object.keymesh_to_objects"
-    bl_label = "Convert to Separate Objects"
-    bl_description = "Creates object for each Keymesh frame. Animation will be lost"
-    bl_options = {"REGISTER", "UNDO"}
-
-    back_up: bpy.props.BoolProperty(
-        name = "Backup Active Object",
-        description = "Active object with shape keys will be duplicated and hidden as back-up",
-        default = True,
-    )
-
-    keep_position: bpy.props.BoolProperty(
-        name = "Keep Position",
-        description = "If enabled new objects will be in the same position as original. If disabled they'll be moved along the selected axis",
-        default = False,
-    )
-    offset_distance: bpy.props.FloatProperty(
-        name = "Offset",
-        description = "Distance to move each object by",
-        subtype = 'DISTANCE', unit = 'LENGTH',
-        default = 2.0,
-    )
-    move_axis: bpy.props.EnumProperty(
-        name = "Move on Axis",
-        description = "Axis to move the duplicated objects on",
-        items = [("X", "X", "Move on X axis"),
-                ("Y", "Y", "Move on Y axis"),
-                ("Z", "Z", "Move on Z axis")],
-        default = 'X',
-    )
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None and context.active_object.keymesh.animated
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        layout.prop(self, "keep_position")
-        col = layout.column(align=False)
-        row = col.row(align=True)
-        row.prop(self, "move_axis", expand=True)
-        col.prop(self, "offset_distance")
-
-        if self.keep_position:
-            col.enabled = False
-
-    def execute(self, context):
-        obj = context.active_object
-        duplicates_collection = bpy.data.collections.new(obj.name + "_duplicates")
-        context.scene.collection.children.link(duplicates_collection)
-        move_axis_index = 'XYZ'.index(self.move_axis)
-
-        # Get frame_start and end by keymesh data_block names or custom properties
-        animated_frames = [int(keyframe.co.x) for fcurve in obj.animation_data.action.fcurves for keyframe in fcurve.keyframe_points if fcurve.data_path == f'keymesh["Keymesh Data"]']
-        frame_start = min(animated_frames)
-        frame_end = max(animated_frames)
-
-        initial_frame = context.scene.frame_current
-
-        previous_value = None
-        prev_obj = None
-        for frame in range(frame_start, frame_end + 1):
-            context.scene.frame_set(frame)
-            current_value = obj.keymesh["Keymesh Data"]
-
-            if current_value != previous_value:
-                # Duplicate Object
-                dup_obj = obj.copy()
-                dup_obj.name = obj.name + "_frame_" + str(frame)
-                dup_obj.animation_data_clear()
-                context.collection.objects.link(dup_obj)
-                del dup_obj.keymesh["Keymesh Data"]
-                del dup_obj.keymesh["ID"]
-
-                dup_data = obj.data.copy()
-                dup_data.name + obj.data.name + "_frame_" + str(frame)
-                dup_obj.data = dup_data
-                del dup_data.keymesh["Data"]
-                del dup_data.keymesh["ID"]
-
-                # Move to Collection
-                duplicates_collection.objects.link(dup_obj)
-                for coll in dup_obj.users_collection:
-                    if coll != duplicates_collection:
-                        coll.objects.unlink(dup_obj)
-
-                # Offset Duplicates
-                if not self.keep_position:
-                    if prev_obj is not None:
-                        dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
-                    prev_obj = dup_obj
-
-                previous_value = current_value
-
-        context.scene.frame_set(initial_frame)
-
-        return {'FINISHED'}
-
-
-
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
     OBJECT_OT_shape_keys_to_keymesh,
-    OBJECT_OT_keymesh_to_objects,
 ]
 
 def register():

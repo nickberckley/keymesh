@@ -6,6 +6,7 @@ from . import (
     initialize_handler,
     insert_keyframe,
     purge_unused_data,
+    separate_objects,
     timeline_jump,
 
     # interpolate,
@@ -20,6 +21,7 @@ def register():
     initialize_handler.register()
     insert_keyframe.register()
     purge_unused_data.register()
+    separate_objects.register()
     timeline_jump.register()
 
     # interpolate.register()
@@ -30,6 +32,7 @@ def unregister():
     initialize_handler.unregister()
     insert_keyframe.unregister()
     purge_unused_data.unregister()
+    separate_objects.unregister()
     timeline_jump.unregister()
 
     # interpolate.unregister()
