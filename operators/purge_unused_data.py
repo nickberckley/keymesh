@@ -34,7 +34,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
             obj_keymesh_id = obj.keymesh.get("ID")
             used_keymesh_blocks[obj_keymesh_id] = []
 
-            fcurve = get_keymesh_fcurve(context, obj)
+            fcurve = get_keymesh_fcurve(obj)
             keyframe_points = fcurve.keyframe_points
             for item in keyframe_points:
                 keyframe = item
@@ -153,7 +153,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                 block_keymesh_data = block.keymesh.get("Data")
 
             # Remove Keyframes
-            fcurve = get_keymesh_fcurve(context, obj)
+            fcurve = get_keymesh_fcurve(obj)
             for keyframe in reversed(fcurve.keyframe_points.values()):
                 if keyframe.co_ui[1] == block_keymesh_data:
                     fcurve.keyframe_points.remove(keyframe)

@@ -13,12 +13,13 @@ def populate_keymesh_blocks(scene):
         if obj.get("Keymesh ID") is None:
             continue
 
-        new_id = new_object_id(obj)
+        new_id = new_object_id()
 
         # Convert Object Properties
         obj_legacy_keymesh_id = obj.get("Keymesh ID", None)
         obj_legacy_keymesh_data = obj.get("Keymesh Data", None)
         obj.keymesh["ID"] = new_id
+        obj.keymesh.animated = True
         obj.keymesh["Keymesh Data"] = obj_legacy_keymesh_data
         obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
         del obj["Keymesh ID"]
@@ -62,7 +63,7 @@ def populate_keymesh_blocks(scene):
                         frame = int(keyframe.co[0])
                         value = keyframe.co[1]
 
-                        insert_keyframe(obj, value, frame)
+                        insert_keyframe(obj, frame, value)
 
             # transfer_keyframe_values
             for fcurve in anim_data.action.fcurves:

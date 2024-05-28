@@ -1,7 +1,9 @@
 import bpy
 from .. import __package__ as base_package
-from ..functions.object import new_object_id, get_next_keymesh_index
-from ..functions.poll import is_not_linked
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, create_back_up
+from ..functions.poll import is_not_linked, obj_data_type
+from ..functions.timeline import insert_keyframe
+from ..functions.handler import update_keymesh
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -9,13 +11,13 @@ from ..functions.poll import is_not_linked
 class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
     bl_idname = "object.shape_keys_to_keymesh"
     bl_label = "Shape Keys to Keymesh"
-    bl_description = "Converts shape key animations into Keymesh and removes shape keys"
+    bl_description = "Converts shape key animation into Keymesh blocks (removes shape keys)"
     bl_options = {'REGISTER', 'UNDO'}
 
     delete_duplicates: bpy.props.BoolProperty(
         name = "Delete Duplicates",
-        description = "When enabled, if object has same exact shape on two or more frames, operator will delete duplicates\n"
-                    "and instead it will instance one Keymesh block on each frame.",
+        description = "Operator will detect if object has same exact shape on two or more frames.\n"
+                    "Duplicates will be deleted and instead it will instance one block on every frame that was the same.",
         default = True,
     )
 
@@ -35,7 +37,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
     back_up: bpy.props.BoolProperty(
         name = "Backup Active Object",
-        description = "Active object will be duplicated and hidden from viewport and render, with Shape Keys still on it",
+        description = "Active object will be duplicated and hidden from viewport and render with shape keys still on it",
         default = True,
     )
 
@@ -57,13 +59,12 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             return f"{integer_part}{decimal_part}"
 
     def execute(self, context):
-        prefs = bpy.context.preferences.addons[base_package].preferences
         obj = context.active_object
         original_data = obj.data
         shape_keys = original_data.shape_keys
-        data_type = type(obj.data)
+        obj_type = obj_data_type(obj)
 
-        # Define Frame Range
+        # define_frame_range
         initial_frame = context.scene.frame_current
         if self.follow_scene_range == True:
             frame_start = context.scene.frame_start
@@ -74,79 +75,78 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
         # Create Back-up
         if self.back_up:
-            backup = obj.copy()
-            context.collection.objects.link(backup)
-            backup.data = original_data
-            backup.name = obj.name + "_backup"
-            backup.hide_render = True
-            backup.hide_viewport = True
+            create_back_up(context, obj, original_data)
 
-        # Assign Keymesh ID Property
-        if obj.keymesh.animated is False:
-            if prefs.backup_original_data:
-                original_data.use_fake_user = True
-            obj.keymesh["ID"] = new_object_id(context)
-            obj.keymesh.animated = True
+        # Assign Keymesh ID
+        assign_keymesh_id(obj)
         obj_keymesh_id = obj.keymesh["ID"]
 
-        initial_values = [key.value for key in shape_keys.key_blocks]
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
-            current_values = [key.value for key in shape_keys.key_blocks]
-            name = ''.join([self.naming_convention(key) for key in shape_keys.key_blocks if key.name != 'Basis'])
+            name = ''.join([self.naming_convention(key) for key in shape_keys.key_blocks if key.name != "Basis"])
 
-            # create_new_block
+            # Create new Block
+            block_index = get_next_keymesh_index(obj)
             new_block = original_data.copy()
             new_block.name = obj.name + "_frame_" + str(frame)
-            new_block.use_fake_user = True
             new_block.keymesh["ID"] = obj_keymesh_id
+            new_block.keymesh["Data"] = block_index
+            new_block.use_fake_user = True
+
+            # Assign New Block to Object
             block_registry = obj.keymesh.blocks.add()
             block_registry.block = new_block
             block_registry.name = new_block.name
 
-            # apply_shape_keys
+            # Apply Shape Keys
             obj.data = new_block
             bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
             obj.data = original_data
 
-            # Assign Keymesh Data
-            block_index = get_next_keymesh_index(obj)
-            new_block.keymesh["Data"] = block_index
-
-            # delete_duplicates
+            # Delete Duplicates
             if self.delete_duplicates:
-                if any(block.get("shape_key_value") == name for block in bpy.data.meshes if block.keymesh.get("ID") == obj_keymesh_id):
-                    match = next((block for block in bpy.data.meshes if block.get("shape_key_value") == name), None)
-                    match_id = match.keymesh.get("Data")
-                    bpy.data.meshes.remove(new_block)
-                    obj.keymesh["Keymesh Data"] = match_id
+                match = None
+                index = None
+                for i, block in enumerate(obj.keymesh.blocks):
+                    # find_match
+                    if block.block.get("shape_key_value") == name:
+                        match = block.block.keymesh.get("Data")
+                    # get_duplicates_index
+                    if block.name == new_block.name:
+                        index = i
+                    if all(v is not None for v in (match, index)):
+                        break
+
+                # remove_duplicate_block
+                if match is not None:
+                    obj.keymesh.blocks.remove(index)
+                    obj_type.remove(new_block)
+                    obj.keymesh["Keymesh Data"] = match
                 else:
                     new_block["shape_key_value"] = name
                     obj.keymesh["Keymesh Data"] = block_index
             else:
                 obj.keymesh["Keymesh Data"] = block_index
+
+            # Insert Keyframe
             obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
+            insert_keyframe(obj, context.scene.frame_current)
 
-            # animate_keymesh_data
-            if current_values != initial_values:
-                obj.keyframe_insert(data_path='keymesh["Keymesh Data"]', frame=context.scene.frame_current)
-                initial_values = current_values
+        # delete_temporary_property
+        for block in obj.keymesh.blocks:
+            if block.block.get("shape_key_value"):
+                del block.block["shape_key_value"]
 
-        fcurve = obj.animation_data.action.fcurves.find('keymesh["Keymesh Data"]')
-        for keyframe_point in fcurve.keyframe_points:
-            keyframe_point.interpolation = 'CONSTANT'
-
-        bpy.ops.scene.initialize_keymesh_handler()
+        update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
         return {'FINISHED'}
-
 
     def invoke(self, context, event):
         obj = context.active_object
         shape_keys = obj.data.shape_keys
 
         if obj.type not in ('MESH', 'CURVE', 'LATTICE'):
-            self.report({'ERROR'}, "Active object type cant have shape keys. Only Mesh, Curve, and Lattice object types are supported")
+            self.report({'ERROR'}, "Active object type can't have shape keys. Only Mesh, Curve, and Lattice objects are supported")
             return {'CANCELLED'}
 
         if not shape_keys:
@@ -154,7 +154,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             return {'CANCELLED'}
 
         if not shape_keys.animation_data:
-            self.report({'ERROR'}, "Shape keys are not animated")
+            self.report({'ERROR'}, "Shape keys on active object are not animated")
             return {'CANCELLED'}
 
         return context.window_manager.invoke_props_dialog(self)
@@ -163,9 +163,6 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-
-        # delete_duplicates
-        layout.prop(self, "delete_duplicates")
 
         # frame_range
         layout.prop(self, "follow_scene_range")
@@ -176,8 +173,8 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
         if self.follow_scene_range:
             col.enabled = False
 
-        # backup
         layout.separator()
+        layout.prop(self, "delete_duplicates")
         layout.prop(self, 'back_up')
 
 

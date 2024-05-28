@@ -1,10 +1,11 @@
 import bpy, random
+from .. import __package__ as base_package
 from .poll import obj_data_type
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-def new_object_id(context):
+def new_object_id():
     """Returns random unused number between 1-1000 to be used as Keymesh ID"""
 
     id = random.randint(1, 1000)
@@ -41,3 +42,22 @@ def list_block_users(block):
                 users.append(obj)
 
     return users
+
+
+def assign_keymesh_id(obj):
+    prefs = bpy.context.preferences.addons[base_package].preferences
+    if obj.keymesh.animated is False:
+        if prefs.backup_original_data:
+            obj.data.use_fake_user = True
+        obj.keymesh["ID"] = new_object_id()
+        obj.keymesh.animated = True
+
+
+def create_back_up(context, obj, data):
+    backup = obj.copy()
+    context.collection.objects.link(backup)
+    backup.data = data
+    backup.name = obj.name + "_backup"
+    backup.hide_render = True
+    backup.hide_viewport = True
+    

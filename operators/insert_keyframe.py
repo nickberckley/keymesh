@@ -1,6 +1,6 @@
 import bpy
 from .. import __package__ as base_package
-from ..functions.object import new_object_id, get_next_keymesh_index
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id
 from ..functions.timeline import insert_keyframe
 from ..functions.poll import is_candidate_object, is_not_linked
 from ..functions.handler import update_keymesh
@@ -26,14 +26,10 @@ def insert_keymesh_keyframe(context, obj):
 
 
         # Assign Keymesh ID
-        if obj.keymesh.animated is False:
-            if prefs.backup_original_data:
-                obj.data.use_fake_user = True
-            obj.keymesh["ID"] = new_object_id(context)
-            obj.keymesh.animated = True
+        assign_keymesh_id(obj)
         obj_keymesh_id = obj.keymesh["ID"]
 
-        # Get Block Index
+        # get_block_index
         block_index = get_next_keymesh_index(obj)
         if prefs.naming_method == 'INDEX':
             block_name = obj.name_full + "_keymesh_" + str(block_index)
@@ -61,7 +57,7 @@ def insert_keymesh_keyframe(context, obj):
 
         # Insert Keyframe
         obj.data = new_block
-        insert_keyframe(obj, block_index, context.scene.frame_current)
+        insert_keyframe(obj, context.scene.frame_current, block_index)
 
         # update_frame_handler
         update_keymesh(context.scene)

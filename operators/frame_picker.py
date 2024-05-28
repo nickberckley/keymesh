@@ -32,11 +32,11 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
                 action = obj.animation_data.action
                 if action:
                     if action.library is None:
-                        insert_keyframe(obj, keymesh_block, scene.frame_current)
+                        insert_keyframe(obj, scene.frame_current, keymesh_block)
                     else:
                         self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
                 else:
-                    insert_keyframe(obj, keymesh_block, scene.frame_current)
+                    insert_keyframe(obj, scene.frame_current, keymesh_block)
 
             bpy.ops.object.mode_set(mode=current_mode)
         return {'FINISHED'}

@@ -3,11 +3,8 @@ import bpy
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-def get_keymesh_fcurve(context, obj):
+def get_keymesh_fcurve(obj):
     """Returns the Keymesh f-curve for active object"""
-
-    if obj is None:
-        obj = context.active_object
 
     if obj.keymesh.animated:
         if obj.animation_data is not None:
@@ -27,11 +24,11 @@ def get_keymesh_fcurve(context, obj):
         #                     fcurve = f
 
 
-def get_keymesh_keyframes(context, obj):
+def get_keymesh_keyframes(obj):
     """Get all Keymesh keyframes associated with the active object"""
 
     keyframes = []
-    fcurve = get_keymesh_fcurve(context, obj)
+    fcurve = get_keymesh_fcurve(obj)
     if fcurve:
         keyframe_points = fcurve.keyframe_points
         for keyframe in keyframe_points:
@@ -43,17 +40,22 @@ def get_keymesh_keyframes(context, obj):
     return keyframes
 
 
-def insert_keyframe(obj, keymesh_block, frame):
+def insert_keyframe(obj, frame, block=None):
     """Inserts keyframe on current frame for given block data"""
 
-    obj.keymesh["Keymesh Data"] = keymesh_block
+    # assign_value
+    if block is not None:
+        obj.keymesh["Keymesh Data"] = block
+
+    # insert_keyframe
     obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
                         frame=frame)
 
-    for fcurve in obj.animation_data.action.fcurves:
-        if fcurve.data_path == 'keymesh["Keymesh Data"]':
-            for kf in fcurve.keyframe_points:
-                kf.interpolation = 'CONSTANT'
+    # set_constant_interpolation
+    fcurve = get_keymesh_fcurve(obj)
+    if fcurve:
+        for kf in fcurve.keyframe_points:
+            kf.interpolation = 'CONSTANT'
 
 
 def keymesh_block_usage_count(self, context, block):
@@ -63,7 +65,7 @@ def keymesh_block_usage_count(self, context, block):
     value = block.keymesh["Data"]
     count = 0
 
-    fcurve = get_keymesh_fcurve(context, obj)
+    fcurve = get_keymesh_fcurve(obj)
     if fcurve:
         for keyframe in fcurve.keyframe_points:
             if keyframe.co[1] == value:
@@ -85,7 +87,7 @@ def get_next_keymesh_block(context, obj, direction):
 
     if obj.keymesh.animated:
         current_frame = context.scene.frame_current
-        fcurve = get_keymesh_fcurve(context, obj)
+        fcurve = get_keymesh_fcurve(obj)
         keyframe_points = fcurve.keyframe_points
 
         if direction == "NEXT":
@@ -111,7 +113,7 @@ def get_next_keymesh_block(context, obj, direction):
 
 # def get_object_key_values(context, obj):
 #     values = []
-#     fcurve = get_keymesh_fcurve(context, obj)
+#     fcurve = get_keymesh_fcurve(obj)
 #     keyframe_points = fcurve.keyframe_points
 
 #     for item in keyframe_points:
