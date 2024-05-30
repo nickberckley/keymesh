@@ -130,13 +130,14 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
             if current_value != previous_value:
                 if not (self.handle_duplicates and current_value in unused_values):
-                    # Duplicate Object
+                    # Create New Object
                     dup_obj = self.create_object(context, obj, obj.data.copy(), frame, duplicates_collection)
                     unused_values.append(current_value)
                     uniques[dup_obj] = current_value
 
                 else:
                     if self.workflow == "RENDER" and self.handle_duplicates:
+                        # find_match_for_duplicate
                         match = None
                         for unique, value in uniques.items():
                             if value == current_value:
@@ -145,6 +146,12 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                         # Create Instance Object
                         if self.handling_method == "INSTANCE":
                             dup_obj = self.create_object(context, match, match.data, frame, duplicates_collection, instance=True)
+                            dup_obj.hide_viewport = False
+                            dup_obj.hide_render = False
+
+                        # Reuse Same Object for Animation
+                        if self.handling_method == "REUSE":
+                            dup_obj = match
                             dup_obj.hide_viewport = False
                             dup_obj.hide_render = False
 
