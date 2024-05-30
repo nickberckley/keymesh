@@ -1,5 +1,5 @@
 import bpy
-from ..functions.timeline import get_keymesh_keyframes
+from ..functions.timeline import get_keymesh_keyframes, keymesh_block_usage_count
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -18,6 +18,21 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                                         "This allows to keep the final animation while using separate objects instead of Keymesh blocks.\n"
                                         "Can be used when regular Keymesh animation is misbehaving in render, or is sent to render farm."))],
         default = "PRINT",
+    )
+
+    handle_duplicates: bpy.props.BoolProperty(
+        name = "Handle Duplicates",
+        description = "If disabled, duplicates will be ignored and new object will be created for every frame that is different from previous",
+        default = False,
+    )
+    handling_method: bpy.props.EnumProperty(
+        name = "Duplicate Handling Method",
+        description = "How to handle Keymesh blocks that are used more than one time in animation",
+        items = [("INSTANCE", "Instance Object-Data", ("Single object data (i.e. mesh, curve...) will be created for each Keymesh block,\n"
+                                                    "and instanced by new object on every frame it is keyframed on.")),
+                ("REUSE", "Reuse Single Object", ("Single object will be created for each block regardless of how many times it is used in animation.\n"
+                                                "It's visibility will be animated so that it's visible on every frame that Keymesh block was visible on."))],
+        default = "REUSE",
     )
 
     naming_convention: bpy.props.EnumProperty(
@@ -64,6 +79,16 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         layout.prop(self, "workflow", expand=True)
         layout.separator()
 
+        # handle_duplicates
+        if self.workflow == "RENDER":
+            column = layout.column(heading="Ignore Duplicates")
+            row = column.row(align=False)
+            row.prop(self, "handle_duplicates", text="")
+            row.separator()
+            row.prop(self, "handling_method", text="")
+        elif self.workflow == "PRINT":
+            layout.prop(self, "handle_duplicates", text="Delete Duplicates")
+
         layout.prop(self, "naming_convention")
         layout.separator()
 
@@ -94,38 +119,47 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
         prev_obj = None
         previous_value = None
+        unused_values = []
+        duplicates = []
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
             current_value = obj.keymesh["Keymesh Data"]
 
             if current_value != previous_value:
-                # Duplicate Object
-                dup_obj = obj.copy()
-                if self.naming_convention == "FRAMES":
-                    dup_obj.name = obj.name + "_frame_" + str(frame)
-                elif self.naming_convention == "BLOCKS":
-                    dup_obj.name = obj.data.name
-                dup_obj.animation_data_clear()
-                context.collection.objects.link(dup_obj)
+                if not (self.handle_duplicates and current_value in unused_values):
+                    # Duplicate Object
+                    dup_obj = obj.copy()
+                    if self.naming_convention == "FRAMES":
+                        dup_obj.name = obj.name + "_frame_" + str(frame)
+                    elif self.naming_convention == "BLOCKS":
+                        dup_obj.name = obj.data.name
+                    dup_obj.animation_data_clear()
+                    context.collection.objects.link(dup_obj)
 
-                dup_data = obj.data.copy()
-                dup_data.name + dup_obj.name
-                dup_obj.data = dup_data
+                    dup_data = obj.data.copy()
+                    dup_data.name + dup_obj.name
+                    dup_obj.data = dup_data
 
-                # remove_keymesh_data
-                dup_obj.keymesh.animated = False
-                del dup_obj.keymesh["Keymesh Data"]
-                del dup_obj.keymesh["ID"]
-                dup_obj.keymesh.blocks.clear()
+                    # remove_keymesh_data
+                    dup_obj.keymesh.animated = False
+                    del dup_obj.keymesh["Keymesh Data"]
+                    del dup_obj.keymesh["ID"]
+                    dup_obj.keymesh.blocks.clear()
 
-                del dup_data.keymesh["Data"]
-                del dup_data.keymesh["ID"]
+                    del dup_data.keymesh["Data"]
+                    del dup_data.keymesh["ID"]
 
-                # move_to_collection
-                duplicates_collection.objects.link(dup_obj)
-                for coll in dup_obj.users_collection:
-                    if coll != duplicates_collection:
-                        coll.objects.unlink(dup_obj)
+                    # move_to_collection
+                    duplicates_collection.objects.link(dup_obj)
+                    for coll in dup_obj.users_collection:
+                        if coll != duplicates_collection:
+                            coll.objects.unlink(dup_obj)
+
+                    unused_values.append(current_value)
+                else:
+                    prev_obj = None
+                    duplicates.append(obj.data)
+
 
                 if self.workflow == "RENDER":
                     # Animate Visibility
@@ -161,6 +195,14 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                         prev_obj = dup_obj
 
                 previous_value = current_value
+
+        # Print about Duplicates
+        if self.handle_duplicates:
+            self.report({'INFO'}, "Duplicates were removed. Read console for more information")
+            if self.workflow == "PRINT":
+                for duplicate in duplicates:
+                    usage, frames = keymesh_block_usage_count(self, context, duplicate)
+                    print(duplicate.name + " was used " + str(usage) + " times on frames: " + str(frames))
 
         obj.select_set(False)
         obj.hide_set(True)
