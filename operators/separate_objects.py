@@ -8,16 +8,16 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
     bl_idname = "object.keymesh_to_objects"
     bl_label = "Convert Keymesh Animation into Separate Objects"
     bl_description = "Creates new object for each Keymesh block"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {'REGISTER', 'UNDO'}
 
     workflow: bpy.props.EnumProperty(
         name = "Workflow",
-        items = [("PRINT", "3D Printing", ("Each new object can be offsetted from previous objects position and they're not animated.\n"
+        items = [('PRINT', "3D Printing", ("Each new object can be offsetted from previous objects position and they're not animated.\n"
                                             "Useful for preparing replacement parts that should be exported and 3D printed for stop-motion.")),
-                ("RENDER", "Rendering", ("Each new objects visibility will be animated so they only appear on frames on which they were on.\n"
+                ('RENDER', "Rendering", ("Each new objects visibility will be animated so they only appear on frames on which they were on.\n"
                                         "This allows to keep the final animation while using separate objects instead of Keymesh blocks.\n"
                                         "Can be used when regular Keymesh animation is misbehaving in render, or is sent to render farm."))],
-        default = "PRINT",
+        default = 'PRINT',
     )
 
     handle_duplicates: bpy.props.BoolProperty(
@@ -28,19 +28,19 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
     handling_method: bpy.props.EnumProperty(
         name = "Duplicate Handling Method",
         description = "How to handle Keymesh blocks that are used more than one time in animation",
-        items = [("INSTANCE", "Instance Object-Data", ("Single object data (i.e. mesh, curve...) will be created for each Keymesh block,\n"
-                                                    "and instanced by new object on every frame it is keyframed on.")),
-                ("REUSE", "Reuse Single Object", ("Single object will be created for each block regardless of how many times it is used in animation.\n"
-                                                "It's visibility will be animated so that it's visible on every frame that Keymesh block was visible on."))],
-        default = "REUSE",
+        items = [('REUSE', "Reuse Single Object", ("Single object will be created for each block regardless of how many times it is used in animation.\n"
+                                                    "It's visibility will be animated so that it's visible on every frame that Keymesh block was visible on.")),
+                ('INSTANCE', "Instance Object-Data", ("Single object data (i.e. mesh, curve...) will be created for each Keymesh block,\n"
+                                                    "and instanced by new object on every frame it is keyframed on."))],
+        default = 'REUSE',
     )
 
     naming_convention: bpy.props.EnumProperty(
         name = "Naming Convention",
         description = "Choose how newly created objects are named",
-        items = [("FRAMES", "Frames", "Objects will be named after frame on which they're created"),
-                ("BLOCKS", "Keymesh Blocks", "Objects will be named after the Keymesh block they represent")],
-        default = 'FRAMES',
+        items = [('BLOCKS', "Keymesh Blocks", "Objects will be named after the Keymesh block they represent"),
+                ('FRAMES', "Frames", "Objects will be named after the frame on which they're created")],
+        default = 'BLOCKS',
     )
 
     keep_position: bpy.props.BoolProperty(
@@ -57,9 +57,9 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
     move_axis: bpy.props.EnumProperty(
         name = "Move on Axis",
         description = "Axis to move the duplicated objects on",
-        items = [("X", "X", "Move on X axis"),
-                ("Y", "Y", "Move on Y axis"),
-                ("Z", "Z", "Move on Z axis")],
+        items = [('X', "X", "Move on X axis"),
+                ('Y', "Y", "Move on Y axis"),
+                ('Z', "Z", "Move on Z axis")],
         default = 'X',
     )
 
@@ -68,16 +68,16 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         return context.active_object is not None and context.active_object.keymesh.animated
 
     def animate_visibility(self, obj, frame):
-        obj.keyframe_insert(data_path='hide_viewport',
+        obj.keyframe_insert(data_path="hide_viewport",
                                 frame=frame)
-        obj.keyframe_insert(data_path='hide_render',
+        obj.keyframe_insert(data_path="hide_render",
                                 frame=frame)
-        
+
     def create_object(self, context, obj, data, frame, collection, instance=False):
         dup_obj = obj.copy()
-        if self.naming_convention == "FRAMES":
+        if self.naming_convention == 'FRAMES':
             dup_obj.name = obj.name + "_frame_" + str(frame)
-        elif self.naming_convention == "BLOCKS":
+        elif self.naming_convention == 'BLOCKS':
             dup_obj.name = obj.data.name
         dup_obj.animation_data_clear()
         context.collection.objects.link(dup_obj)
@@ -119,24 +119,20 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         frame_end = max(keyframes)
 
         uniques = {}
-
-        prev_obj = None
         previous_value = None
-        unused_values = []
         duplicates = []
+        prev_obj = None
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
             current_value = obj.keymesh["Keymesh Data"]
 
             if current_value != previous_value:
-                if not (self.handle_duplicates and current_value in unused_values):
+                if not (self.handle_duplicates and current_value in uniques.values()):
                     # Create New Object
                     dup_obj = self.create_object(context, obj, obj.data.copy(), frame, duplicates_collection)
-                    unused_values.append(current_value)
                     uniques[dup_obj] = current_value
-
                 else:
-                    if self.workflow == "RENDER" and self.handle_duplicates:
+                    if self.workflow == 'RENDER' and self.handle_duplicates:
                         # find_match_for_duplicate
                         match = None
                         for unique, value in uniques.items():
@@ -144,23 +140,24 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                                 match = unique
 
                         # Create Instance Object
-                        if self.handling_method == "INSTANCE":
+                        if self.handling_method == 'INSTANCE':
                             dup_obj = self.create_object(context, match, match.data, frame, duplicates_collection, instance=True)
-                            dup_obj.hide_viewport = False
-                            dup_obj.hide_render = False
-
                         # Reuse Same Object for Animation
-                        if self.handling_method == "REUSE":
+                        if self.handling_method == 'REUSE':
                             dup_obj = match
-                            dup_obj.hide_viewport = False
-                            dup_obj.hide_render = False
+
+                        dup_obj.hide_viewport = False
+                        dup_obj.hide_render = False
+                    else:
+                        prev_obj = None
 
                     if obj.data not in duplicates:
                         duplicates.append(obj.data)
 
+                previous_value = current_value
 
                 # Animate Visibility
-                if self.workflow == "RENDER":
+                if self.workflow == 'RENDER':
                     self.animate_visibility(dup_obj, frame)
 
                     if prev_obj is not None:
@@ -174,15 +171,14 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                         dup_obj.hide_render = True
                         self.animate_visibility(dup_obj, frame-1)
 
-                if self.workflow == "PRINT":
+                if self.workflow == 'PRINT':
                     # Offset Duplicates
                     if not self.keep_position:
                         if prev_obj is not None:
                             dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
                         prev_obj = dup_obj
-
-                prev_obj = dup_obj
-                previous_value = current_value
+                else:
+                    prev_obj = dup_obj
 
 
         # Print about Duplicates
@@ -190,10 +186,10 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
             self.report({'INFO'}, "Duplicates were detected. Read console for more information")
             for duplicate in duplicates:
                 usage, frames = keymesh_block_usage_count(self, context, duplicate)
-                if self.workflow == "RENDER":
-                    if self.handling_method == "INSTANCE":
+                if self.workflow == 'RENDER':
+                    if self.handling_method == 'INSTANCE':
                         print("Object data '" + duplicate.name + "' is instanced " + str(usage) + " times on frames: " + str(frames))
-                if self.workflow == "PRINT":
+                if self.workflow == 'PRINT':
                     print(duplicate.name + " was used " + str(usage) + " times on frames: " + str(frames))
 
         obj.select_set(False)
@@ -214,20 +210,20 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         layout.separator()
 
         # handle_duplicates
-        if self.workflow == "RENDER":
-            column = layout.column(heading="Ignore Duplicates")
+        if self.workflow == 'RENDER':
+            column = layout.column(heading="Handle Duplicates")
             row = column.row(align=False)
             row.prop(self, "handle_duplicates", text="")
             row.separator()
             row.prop(self, "handling_method", text="")
-        elif self.workflow == "PRINT":
+        elif self.workflow == 'PRINT':
             layout.prop(self, "handle_duplicates", text="Delete Duplicates")
 
         layout.prop(self, "naming_convention")
         layout.separator()
 
         # position
-        if self.workflow == "PRINT":
+        if self.workflow == 'PRINT':
             layout.prop(self, "keep_position")
             col = layout.column(align=False)
             row = col.row(align=True)
