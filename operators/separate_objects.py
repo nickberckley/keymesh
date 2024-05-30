@@ -72,6 +72,37 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                                 frame=frame)
         obj.keyframe_insert(data_path='hide_render',
                                 frame=frame)
+        
+    def create_object(self, context, obj, data, frame, collection, instance=False):
+        dup_obj = obj.copy()
+        if self.naming_convention == "FRAMES":
+            dup_obj.name = obj.name + "_frame_" + str(frame)
+        elif self.naming_convention == "BLOCKS":
+            dup_obj.name = obj.data.name
+        dup_obj.animation_data_clear()
+        context.collection.objects.link(dup_obj)
+
+        dup_data = data
+        dup_data.name = dup_obj.name
+        dup_obj.data = data
+
+        # remove_keymesh_data
+        if instance == False:
+            dup_obj.keymesh.animated = False
+            del dup_obj.keymesh["Keymesh Data"]
+            del dup_obj.keymesh["ID"]
+            dup_obj.keymesh.blocks.clear()
+
+            del data.keymesh["Data"]
+            del data.keymesh["ID"]
+
+        # move_to_collection
+        collection.objects.link(dup_obj)
+        for coll in dup_obj.users_collection:
+            if coll != collection:
+                coll.objects.unlink(dup_obj)
+
+        return dup_obj
 
     def execute(self, context):
         obj = context.active_object
@@ -87,6 +118,8 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         frame_start = min(keyframes)
         frame_end = max(keyframes)
 
+        uniques = {}
+
         prev_obj = None
         previous_value = None
         unused_values = []
@@ -98,41 +131,28 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
             if current_value != previous_value:
                 if not (self.handle_duplicates and current_value in unused_values):
                     # Duplicate Object
-                    dup_obj = obj.copy()
-                    if self.naming_convention == "FRAMES":
-                        dup_obj.name = obj.name + "_frame_" + str(frame)
-                    elif self.naming_convention == "BLOCKS":
-                        dup_obj.name = obj.data.name
-                    dup_obj.animation_data_clear()
-                    context.collection.objects.link(dup_obj)
-
-                    dup_data = obj.data.copy()
-                    dup_data.name + dup_obj.name
-                    dup_obj.data = dup_data
-
-                    # remove_keymesh_data
-                    dup_obj.keymesh.animated = False
-                    del dup_obj.keymesh["Keymesh Data"]
-                    del dup_obj.keymesh["ID"]
-                    dup_obj.keymesh.blocks.clear()
-
-                    del dup_data.keymesh["Data"]
-                    del dup_data.keymesh["ID"]
-
-                    # move_to_collection
-                    duplicates_collection.objects.link(dup_obj)
-                    for coll in dup_obj.users_collection:
-                        if coll != duplicates_collection:
-                            coll.objects.unlink(dup_obj)
-
+                    dup_obj = self.create_object(context, obj, obj.data.copy(), frame, duplicates_collection)
                     unused_values.append(current_value)
+                    uniques[dup_obj] = current_value
+
                 else:
-                    prev_obj = None
+                    if self.workflow == "RENDER" and self.handle_duplicates:
+                        match = None
+                        for unique, value in uniques.items():
+                            if value == current_value:
+                                match = unique
+
+                        # Create Instance Object
+                        if self.handling_method == "INSTANCE":
+                            dup_obj = self.create_object(context, match, match.data, frame, duplicates_collection, instance=True)
+                            dup_obj.hide_viewport = False
+                            dup_obj.hide_render = False
+
                     duplicates.append(obj.data)
 
 
+                # Animate Visibility
                 if self.workflow == "RENDER":
-                    # Animate Visibility
                     self.animate_visibility(dup_obj, frame)
 
                     if prev_obj is not None:
@@ -146,16 +166,17 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                         dup_obj.hide_render = True
                         self.animate_visibility(dup_obj, frame-1)
 
-                    prev_obj = dup_obj
 
-                elif self.workflow == "PRINT":
+                if self.workflow == "PRINT":
                     # Offset Duplicates
                     if not self.keep_position:
                         if prev_obj is not None:
                             dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
                         prev_obj = dup_obj
 
+                prev_obj = dup_obj
                 previous_value = current_value
+
 
         # Print about Duplicates
         if self.handle_duplicates:
