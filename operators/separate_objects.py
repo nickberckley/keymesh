@@ -126,7 +126,6 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
             context.scene.frame_set(frame)
             current_value = obj.keymesh["Keymesh Data"]
 
-            # if current_value != previous_value:
             if not (self.handle_duplicates and current_value in uniques.values()):
                 # Create New Object
                 dup_obj = self.create_object(context, obj, obj.data.copy(), frame, duplicates_collection)
@@ -145,12 +144,11 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                     # Reuse Same Object for Animation
                     if self.handling_method == 'REUSE':
                         dup_obj = match
-
                     dup_obj.hide_viewport = False
                     dup_obj.hide_render = False
-                else:
-                    prev_obj = None
 
+                if self.workflow == 'PRINT':
+                    prev_obj = None
                 if obj.data not in duplicates:
                     duplicates.append(obj.data)
 
@@ -160,7 +158,6 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                     continue
                 else:
                     self.animate_visibility(dup_obj, frame)
-
                     if prev_obj is not None:
                         # keyframe_previous_object
                         prev_obj.hide_viewport = True
@@ -177,9 +174,8 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                 if not self.keep_position:
                     if prev_obj is not None:
                         dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
-                    prev_obj = dup_obj
-            else:
-                prev_obj = dup_obj
+
+            prev_obj = dup_obj
             previous_value = current_value
 
 
