@@ -62,16 +62,18 @@ def keymesh_block_usage_count(self, context, block):
     """Returns number of uses (keyframes) for each Keymesh block for object"""
 
     obj = context.active_object
-    value = block.keymesh["Data"]
-    count = 0
-
     fcurve = get_keymesh_fcurve(obj)
+    value = block.keymesh["Data"]
+
+    count = 0
+    frames = []
     if fcurve:
         for keyframe in fcurve.keyframe_points:
             if keyframe.co[1] == value:
                 count += 1
+                frames.append(int(keyframe.co[0]))
 
-        return count
+        return count, frames
 
 
 def get_next_keymesh_block(context, obj, direction):
