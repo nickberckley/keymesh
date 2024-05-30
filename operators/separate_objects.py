@@ -126,38 +126,39 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
             context.scene.frame_set(frame)
             current_value = obj.keymesh["Keymesh Data"]
 
-            if current_value != previous_value:
-                if not (self.handle_duplicates and current_value in uniques.values()):
-                    # Create New Object
-                    dup_obj = self.create_object(context, obj, obj.data.copy(), frame, duplicates_collection)
-                    uniques[dup_obj] = current_value
+            # if current_value != previous_value:
+            if not (self.handle_duplicates and current_value in uniques.values()):
+                # Create New Object
+                dup_obj = self.create_object(context, obj, obj.data.copy(), frame, duplicates_collection)
+                uniques[dup_obj] = current_value
+            else:
+                if self.workflow == 'RENDER' and self.handle_duplicates:
+                    # find_match_for_duplicate
+                    match = None
+                    for unique, value in uniques.items():
+                        if value == current_value:
+                            match = unique
+
+                    # Create Instance Object
+                    if self.handling_method == 'INSTANCE':
+                        dup_obj = self.create_object(context, match, match.data, frame, duplicates_collection, instance=True)
+                    # Reuse Same Object for Animation
+                    if self.handling_method == 'REUSE':
+                        dup_obj = match
+
+                    dup_obj.hide_viewport = False
+                    dup_obj.hide_render = False
                 else:
-                    if self.workflow == 'RENDER' and self.handle_duplicates:
-                        # find_match_for_duplicate
-                        match = None
-                        for unique, value in uniques.items():
-                            if value == current_value:
-                                match = unique
+                    prev_obj = None
 
-                        # Create Instance Object
-                        if self.handling_method == 'INSTANCE':
-                            dup_obj = self.create_object(context, match, match.data, frame, duplicates_collection, instance=True)
-                        # Reuse Same Object for Animation
-                        if self.handling_method == 'REUSE':
-                            dup_obj = match
+                if obj.data not in duplicates:
+                    duplicates.append(obj.data)
 
-                        dup_obj.hide_viewport = False
-                        dup_obj.hide_render = False
-                    else:
-                        prev_obj = None
-
-                    if obj.data not in duplicates:
-                        duplicates.append(obj.data)
-
-                previous_value = current_value
-
-                # Animate Visibility
-                if self.workflow == 'RENDER':
+            # Animate Visibility
+            if self.workflow == 'RENDER':
+                if (self.handle_duplicates and self.handling_method == 'REUSE') and current_value == previous_value:
+                    continue
+                else:
                     self.animate_visibility(dup_obj, frame)
 
                     if prev_obj is not None:
@@ -171,14 +172,15 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                         dup_obj.hide_render = True
                         self.animate_visibility(dup_obj, frame-1)
 
-                if self.workflow == 'PRINT':
-                    # Offset Duplicates
-                    if not self.keep_position:
-                        if prev_obj is not None:
-                            dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
-                        prev_obj = dup_obj
-                else:
+            if self.workflow == 'PRINT':
+                # Offset Duplicates
+                if not self.keep_position:
+                    if prev_obj is not None:
+                        dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
                     prev_obj = dup_obj
+            else:
+                prev_obj = dup_obj
+            previous_value = current_value
 
 
         # Print about Duplicates
