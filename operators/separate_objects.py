@@ -155,7 +155,8 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                             dup_obj.hide_viewport = False
                             dup_obj.hide_render = False
 
-                    duplicates.append(obj.data)
+                    if obj.data not in duplicates:
+                        duplicates.append(obj.data)
 
 
                 # Animate Visibility
@@ -173,7 +174,6 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                         dup_obj.hide_render = True
                         self.animate_visibility(dup_obj, frame-1)
 
-
                 if self.workflow == "PRINT":
                     # Offset Duplicates
                     if not self.keep_position:
@@ -186,11 +186,14 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
 
         # Print about Duplicates
-        if self.handle_duplicates:
-            self.report({'INFO'}, "Duplicates were removed. Read console for more information")
-            if self.workflow == "PRINT":
-                for duplicate in duplicates:
-                    usage, frames = keymesh_block_usage_count(self, context, duplicate)
+        if self.handle_duplicates and len(duplicates) >= 1:
+            self.report({'INFO'}, "Duplicates were detected. Read console for more information")
+            for duplicate in duplicates:
+                usage, frames = keymesh_block_usage_count(self, context, duplicate)
+                if self.workflow == "RENDER":
+                    if self.handling_method == "INSTANCE":
+                        print("Object data '" + duplicate.name + "' is instanced " + str(usage) + " times on frames: " + str(frames))
+                if self.workflow == "PRINT":
                     print(duplicate.name + " was used " + str(usage) + " times on frames: " + str(frames))
 
         obj.select_set(False)
