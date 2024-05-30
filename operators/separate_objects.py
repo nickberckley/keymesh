@@ -67,41 +67,11 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
     def poll(cls, context):
         return context.active_object is not None and context.active_object.keymesh.animated
 
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-
-        layout.prop(self, "workflow", expand=True)
-        layout.separator()
-
-        # handle_duplicates
-        if self.workflow == "RENDER":
-            column = layout.column(heading="Ignore Duplicates")
-            row = column.row(align=False)
-            row.prop(self, "handle_duplicates", text="")
-            row.separator()
-            row.prop(self, "handling_method", text="")
-        elif self.workflow == "PRINT":
-            layout.prop(self, "handle_duplicates", text="Delete Duplicates")
-
-        layout.prop(self, "naming_convention")
-        layout.separator()
-
-        # position
-        if self.workflow == "PRINT":
-            layout.prop(self, "keep_position")
-            col = layout.column(align=False)
-            row = col.row(align=True)
-            row.prop(self, "move_axis", expand=True)
-            col.prop(self, "offset_distance")
-
-        if self.keep_position:
-            col.enabled = False
+    def animate_visibility(self, obj, frame):
+        obj.keyframe_insert(data_path='hide_viewport',
+                                frame=frame)
+        obj.keyframe_insert(data_path='hide_render',
+                                frame=frame)
 
     def execute(self, context):
         obj = context.active_object
@@ -163,28 +133,19 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
                 if self.workflow == "RENDER":
                     # Animate Visibility
-                    dup_obj.keyframe_insert(data_path='hide_viewport',
-                                            frame=frame)
-                    dup_obj.keyframe_insert(data_path='hide_render',
-                                            frame=frame)
+                    self.animate_visibility(dup_obj, frame)
 
                     if prev_obj is not None:
                         # keyframe_previous_object
                         prev_obj.hide_viewport = True
                         prev_obj.hide_render = True
-                        prev_obj.keyframe_insert(data_path='hide_viewport',
-                                            frame=frame)
-                        prev_obj.keyframe_insert(data_path='hide_render',
-                                                frame=frame)
+                        self.animate_visibility(prev_obj, frame)
 
                         # keyframe_active_object_off
-                        context.scene.frame_set(context.scene.frame_current-1)
                         dup_obj.hide_viewport = True
                         dup_obj.hide_render = True
-                        dup_obj.keyframe_insert(data_path='hide_viewport',
-                                                frame=frame-1)
-                        dup_obj.keyframe_insert(data_path='hide_render',
-                                                frame=frame-1)
+                        self.animate_visibility(dup_obj, frame-1)
+
                     prev_obj = dup_obj
 
                 elif self.workflow == "PRINT":
@@ -208,6 +169,42 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         obj.hide_set(True)
         context.scene.frame_set(initial_frame)
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.prop(self, "workflow", expand=True)
+        layout.separator()
+
+        # handle_duplicates
+        if self.workflow == "RENDER":
+            column = layout.column(heading="Ignore Duplicates")
+            row = column.row(align=False)
+            row.prop(self, "handle_duplicates", text="")
+            row.separator()
+            row.prop(self, "handling_method", text="")
+        elif self.workflow == "PRINT":
+            layout.prop(self, "handle_duplicates", text="Delete Duplicates")
+
+        layout.prop(self, "naming_convention")
+        layout.separator()
+
+        # position
+        if self.workflow == "PRINT":
+            layout.prop(self, "keep_position")
+            col = layout.column(align=False)
+            row = col.row(align=True)
+            row.prop(self, "move_axis", expand=True)
+            col.prop(self, "offset_distance")
+
+        if self.keep_position:
+            col.enabled = False
 
 
 
