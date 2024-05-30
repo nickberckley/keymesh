@@ -10,10 +10,22 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
     bl_description = "Creates new object for each Keymesh block"
     bl_options = {"REGISTER", "UNDO"}
 
-    back_up: bpy.props.BoolProperty(
-        name = "Backup Active Object",
-        description = "Keymesh object will be kept alongside new objects",
-        default = True,
+    workflow: bpy.props.EnumProperty(
+        name = "Workflow",
+        items = [("PRINT", "3D Printing", ("Each new object can be offsetted from previous objects position and they're not animated.\n"
+                                            "Useful for preparing replacement parts that should be exported and 3D printed for stop-motion.")),
+                ("RENDER", "Rendering", ("Each new objects visibility will be animated so they only appear on frames on which they were on.\n"
+                                        "This allows to keep the final animation while using separate objects instead of Keymesh blocks.\n"
+                                        "Can be used when regular Keymesh animation is misbehaving in render, or is sent to render farm."))],
+        default = "PRINT",
+    )
+
+    naming_convention: bpy.props.EnumProperty(
+        name = "Naming Convention",
+        description = "Choose how newly created objects are named",
+        items = [("FRAMES", "Frames", "Objects will be named after frame on which they're created"),
+                ("BLOCKS", "Keymesh Blocks", "Objects will be named after the Keymesh block they represent")],
+        default = 'FRAMES',
     )
 
     keep_position: bpy.props.BoolProperty(
@@ -49,11 +61,19 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.prop(self, "keep_position")
-        col = layout.column(align=False)
-        row = col.row(align=True)
-        row.prop(self, "move_axis", expand=True)
-        col.prop(self, "offset_distance")
+        layout.prop(self, "workflow", expand=True)
+        layout.separator()
+
+        layout.prop(self, "naming_convention")
+        layout.separator()
+
+        # position
+        if self.workflow == "PRINT":
+            layout.prop(self, "keep_position")
+            col = layout.column(align=False)
+            row = col.row(align=True)
+            row.prop(self, "move_axis", expand=True)
+            col.prop(self, "offset_distance")
 
         if self.keep_position:
             col.enabled = False
@@ -81,7 +101,10 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
             if current_value != previous_value:
                 # Duplicate Object
                 dup_obj = obj.copy()
-                dup_obj.name = obj.name + "_frame_" + str(frame)
+                if self.naming_convention == "FRAMES":
+                    dup_obj.name = obj.name + "_frame_" + str(frame)
+                elif self.naming_convention == "BLOCKS":
+                    dup_obj.name = obj.data.name
                 dup_obj.animation_data_clear()
                 context.collection.objects.link(dup_obj)
 
@@ -104,15 +127,43 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                     if coll != duplicates_collection:
                         coll.objects.unlink(dup_obj)
 
-                # Offset Duplicates
-                if not self.keep_position:
+                if self.workflow == "RENDER":
+                    # Animate Visibility
+                    dup_obj.keyframe_insert(data_path='hide_viewport',
+                                            frame=frame)
+                    dup_obj.keyframe_insert(data_path='hide_render',
+                                            frame=frame)
+
                     if prev_obj is not None:
-                        dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
+                        # keyframe_previous_object
+                        prev_obj.hide_viewport = True
+                        prev_obj.hide_render = True
+                        prev_obj.keyframe_insert(data_path='hide_viewport',
+                                            frame=frame)
+                        prev_obj.keyframe_insert(data_path='hide_render',
+                                                frame=frame)
+
+                        # keyframe_active_object_off
+                        context.scene.frame_set(context.scene.frame_current-1)
+                        dup_obj.hide_viewport = True
+                        dup_obj.hide_render = True
+                        dup_obj.keyframe_insert(data_path='hide_viewport',
+                                                frame=frame-1)
+                        dup_obj.keyframe_insert(data_path='hide_render',
+                                                frame=frame-1)
                     prev_obj = dup_obj
+
+                elif self.workflow == "PRINT":
+                    # Offset Duplicates
+                    if not self.keep_position:
+                        if prev_obj is not None:
+                            dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
+                        prev_obj = dup_obj
 
                 previous_value = current_value
 
         obj.select_set(False)
+        obj.hide_set(True)
         context.scene.frame_set(initial_frame)
         return {'FINISHED'}
 
