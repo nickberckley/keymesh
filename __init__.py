@@ -31,11 +31,16 @@ def update_properties_from_preferences():
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
+modules = [
+    preferences,
+    properties,
+    ui,
+    versioning,
+]
+
 def register():
-    preferences.register()
-    properties.register()
-    ui.register()
-    versioning.register()
+    for module in modules:
+        module.register()
     operators_register()
 
     preferences.update_sidebar_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
@@ -47,10 +52,8 @@ def register():
 
 
 def unregister():
-    preferences.unregister()
-    properties.unregister()
-    ui.unregister()
-    versioning.unregister()
+    for module in reversed(modules):
+        module.unregister()
     operators_unregister()
 
     # HANDLERS
