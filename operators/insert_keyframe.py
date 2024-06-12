@@ -100,35 +100,32 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        step = context.scene.keymesh.frame_skip_count
+        settings = context.scene.keymesh
+        step = settings.frame_skip_count
 
         if obj is not None:
             # when_no_direction
-            if not self.path:
+            if not self.path or obj.keymesh.animated == False and settings.keyframe_after_skip:
                 insert_keymesh_keyframe(context, obj)
                 return {'FINISHED'}
 
+            # when_forwarding
             else:
-                # when_forwarding_first_time
-                if obj.keymesh.get("ID") is None:
-                    insert_keymesh_keyframe(context, obj)
-                    return {'FINISHED'}
-                
-                # when_forwarding
-                else:
-                    if self.path == "FORWARD":
-                        context.scene.frame_current += step
-                    elif self.path == "BACKWARD":
-                        context.scene.frame_current -= step
+                if self.path == "FORWARD":
+                    context.scene.frame_current += step
+                elif self.path == "BACKWARD":
+                    context.scene.frame_current -= step
 
-                    if context.scene.keymesh.keyframe_after_skip:
-                        insert_keymesh_keyframe(context, obj)
+                if settings.keyframe_after_skip:
+                    insert_keymesh_keyframe(context, obj)
 
             return {'FINISHED'}
 
 
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
+
+addon_keymaps = []
 
 classes = [
     OBJECT_OT_keymesh_insert,
@@ -138,6 +135,22 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
+    # KEYMAP
+    addon = bpy.context.window_manager.keyconfigs.addon
+    km = addon.keymaps.new(name="3D View", space_type="VIEW_3D")
+    kmi = km.keymap_items.new("object.keyframe_object_data", type='PAGE_UP', value='PRESS', ctrl=True)
+    kmi.properties.path="FORWARD"
+    kmi = km.keymap_items.new("object.keyframe_object_data", type='PAGE_DOWN', value='PRESS', ctrl=True)
+    kmi.properties.path="BACKWARD"
+    kmi.active = True
+    addon_keymaps.append(km)
+
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    # KEYMAP
+    for km in addon_keymaps:
+        for kmi in km.keymap_items:
+            km.keymap_items.remove(kmi)
+    addon_keymaps.clear()

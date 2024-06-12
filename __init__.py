@@ -31,8 +31,6 @@ def update_properties_from_preferences():
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
-addon_keymaps = []
-
 def register():
     preferences.register()
     properties.register()
@@ -47,20 +45,6 @@ def register():
     bpy.app.handlers.load_post.append(functions.handler.update_keymesh)
     bpy.app.handlers.frame_change_post.append(functions.handler.update_keymesh)
 
-    # KEYMAP
-    addon = bpy.context.window_manager.keyconfigs.addon
-    km = addon.keymaps.new(name="3D View", space_type="VIEW_3D")
-    kmi = km.keymap_items.new("object.keyframe_object_data", type="PAGE_UP", value="PRESS", ctrl=True)
-    kmi.properties.path="FORWARD"
-    kmi = km.keymap_items.new("object.keyframe_object_data", type="PAGE_DOWN", value="PRESS", ctrl=True)
-    kmi.properties.path="BACKWARD"
-    kmi = km.keymap_items.new("timeline.keymesh_frame_jump", type="PAGE_UP", value="PRESS")
-    kmi.properties.path="FORWARD"
-    kmi = km.keymap_items.new("timeline.keymesh_frame_jump", type="PAGE_DOWN", value="PRESS")
-    kmi.properties.path="BACKWARD"
-    kmi.active = True
-    addon_keymaps.append(km)
-
 
 def unregister():
     preferences.unregister()
@@ -72,12 +56,6 @@ def unregister():
     # HANDLERS
     bpy.app.handlers.load_post.remove(functions.handler.update_keymesh)
     bpy.app.handlers.frame_change_post.remove(functions.handler.update_keymesh)
-
-    # KEYMAP
-    for km in addon_keymaps:
-        for kmi in km.keymap_items:
-            km.keymap_items.remove(kmi)
-    addon_keymaps.clear()
 
 
 if __name__ == "__main__":

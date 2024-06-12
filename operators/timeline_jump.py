@@ -49,6 +49,8 @@ class TIMELINE_OT_keymesh_frame_jump(bpy.types.Operator):
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
+addon_keymaps = []
+
 classes = [
     TIMELINE_OT_keymesh_frame_jump,
 ]
@@ -57,6 +59,22 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
+    # KEYMAP
+    addon = bpy.context.window_manager.keyconfigs.addon
+    km = addon.keymaps.new(name="Frames")
+    kmi = km.keymap_items.new("timeline.keymesh_frame_jump", type='PAGE_UP', value='PRESS')
+    kmi.properties.path="FORWARD"
+    kmi = km.keymap_items.new("timeline.keymesh_frame_jump", type='PAGE_DOWN', value='PRESS')
+    kmi.properties.path="BACKWARD"
+    kmi.active = True
+    addon_keymaps.append(km)
+
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    # KEYMAP
+    for km in addon_keymaps:
+        for kmi in km.keymap_items:
+            km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
