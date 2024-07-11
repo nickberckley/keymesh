@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Keymesh",
     "author": "Pablo Dobarro, Aldrin Mathew, Nika Kutsniashvili (version 2.0)",
-    "version": (2, 2, 0),
+    "version": (2, 2, 1),
     "blender": (4, 0, 0),
     "location": "3D Viewport (Sidebar) > Animate > Keymesh",
     "category": "Animation",

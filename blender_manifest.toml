@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "keymesh"
-version = "2.2.0"
+version = "2.2.1"
 name = "Keymesh"
 tagline = "Create stop-motion animations by sculpting frame-by-frame"
 maintainer = "Nika Kutsniashvili <nickberckley@gmail.com>"
@@ -16,7 +16,7 @@ blender_version_min = "4.2.0"
 # License conforming to https://spdx.org/is suppose to dolicenses/
 # use "SPDX: prefix.
 license = [
-  "SPDX:GPL-2.0-or-later",
+  "SPDX:GPL-3.0-or-later",
 ]
 
 # platforms = ["windows-amd64", "macos-arm64", "linux-x86_64"]
