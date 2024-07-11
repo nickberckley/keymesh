@@ -110,7 +110,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
         if obj is not None:
             # when_no_direction
-            if (self.path == 'STILL' or obj.keymesh.animated == False) and settings.keyframe_after_skip:
+            if (self.path == 'STILL' or obj.keymesh.animated == False):
                 insert_keymesh_keyframe(context, obj)
                 return {'FINISHED'}
 
@@ -121,8 +121,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
                 elif self.path == 'BACKWARD':
                     context.scene.frame_current -= step
 
-                if settings.keyframe_after_skip:
-                    insert_keymesh_keyframe(context, obj)
+                insert_keymesh_keyframe(context, obj)
 
             return {'FINISHED'}
 

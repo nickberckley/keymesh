@@ -140,15 +140,10 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     )
     keyframe_after_skip: bpy.props.BoolProperty(
         name = "Insert Keyframe after Skip",
-        description = "When enabled, skipping frames forward or backwards will also keyframe the object data",
+        description = "When enabled, skipping frames forward or backwards from UI will also keyframe the object data",
         default = True,
     )
 
-    backup_original_data: bpy.props.BoolProperty(
-        name = "Backup Original Object Data (Set Fake User)",
-        description = "When enabled original object data will be preserved by fake user when first Keymesh frame is created",
-        default = False,
-    )
     naming_method: bpy.props.EnumProperty(
         name = "Name Keymesh Blocks After...",
         description = "When creating new Keymesh blocks you can name them after index\n" 
@@ -162,7 +157,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         description = "By default remesh and symmetry properties are saved separate for each Keymesh block.\n"
                     "Enabling this will ensure settings are stored on object-level, and remain when changing frames.\n"
                     "NOTE: This might have slight performance impact.",
-        default = True,
+        default = False,
     )
 
     # experimental
@@ -207,8 +202,6 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
 
         row = column.row(align=True)
         row.prop(self, "naming_method", expand=True)
-        row = column.row(align=True)
-        row.prop(self, "backup_original_data")
         row = column.row(align=True)
         row.prop(self, "persistent_settings")
         layout.separator()

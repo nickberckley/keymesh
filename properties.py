@@ -60,7 +60,7 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     )
     keyframe_after_skip: bpy.props.BoolProperty(
         name = "Insert Keyframe",
-        description = ("When enabled, skipping frames forward or backwards will also keyframe the object data\n"
+        description = ("When enabled, skipping frames forward or backwards from UI will also keyframe the object data\n"
                     "WARNING: jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
         default = True,
     )

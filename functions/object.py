@@ -46,8 +46,6 @@ def list_block_users(block):
 def assign_keymesh_id(obj):
     prefs = bpy.context.preferences.addons[base_package].preferences
     if obj.keymesh.animated is False:
-        if prefs.backup_original_data:
-            obj.data.use_fake_user = True
         obj.keymesh["ID"] = new_object_id()
         obj.keymesh.animated = True
 
