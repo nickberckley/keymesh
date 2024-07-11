@@ -45,7 +45,7 @@ def insert_keyframe(obj, frame, block=None):
 
     # assign_value
     if block is not None:
-        obj.keymesh["Keymesh Data"] = block
+        obj.keymesh["Keymesh Data"] = int(block)
 
     # insert_keyframe
     obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',

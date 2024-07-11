@@ -9,44 +9,76 @@ from .functions.timeline import insert_keyframe
 @bpy.app.handlers.persistent
 def populate_keymesh_blocks(scene):
     prefs = bpy.context.preferences.addons[__package__].preferences
-    if prefs.versioning:
+    if prefs.versioning == True:
         for obj in bpy.data.objects:
             # is_not_legacy_keymesh_object
-            if obj.get("Keymesh ID") is None:
+            if (not obj.get("km_id")) and (not obj.get("Keymesh ID")):
                 continue
 
             new_id = new_object_id()
 
             # Convert Object Properties
-            obj_legacy_keymesh_id = obj.get("Keymesh ID", None)
-            obj_legacy_keymesh_data = obj.get("Keymesh Data", None)
+            if obj.get("km_id", None):
+                obj_legacy_keymesh_id = obj.get("km_id", None)
+            else:
+                obj_legacy_keymesh_id = obj.get("Keymesh ID", None)
+
+            if obj.get("km_datablock", None):
+                obj_legacy_keymesh_data = obj.get("km_datablock", None)
+            else:
+                obj_legacy_keymesh_data = obj.get("Keymesh Data", None)
+
             obj.keymesh["ID"] = new_id
             obj.keymesh.animated = True
             obj.keymesh["Keymesh Data"] = obj_legacy_keymesh_data
             obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
-            del obj["Keymesh ID"]
-            del obj["Keymesh Data"]
+
+            # delete_old_properties
+            if obj.get("km_id", None):
+                del obj["km_id"]
+            elif obj.get("Keymesh ID", None):
+                del obj["Keymesh ID"]
+
+            if obj.get("km_datablock", None):
+                del obj["km_datablock"]
+            elif obj.get("Keymesh Data", None):
+                del obj["Keymesh Data"]
+
             if obj.get("Keymesh Name") is not None:
                 del obj["Keymesh Name"]
+
 
             # list_objects_blocks
             unregistered_blocks = []
             for block in obj_data_type(obj):
-                if block.get("Keymesh ID") is None:
+                if (not block.get("km_id")) and (not block.get("Keymesh ID")):
                     continue
 
-                if block.get("Keymesh ID") == obj_legacy_keymesh_id:
+                if (block.get("Keymesh ID") == obj_legacy_keymesh_id) or (block.get("km_id") == obj_legacy_keymesh_id):
                     unregistered_blocks.append(block)
 
                     # Convert Data Properties
-                    block_legacy_keymesh_data = block.get("Keymesh Data", None)
+                    if block.get("km_datablock", None):
+                        block_legacy_keymesh_data = block.get("km_datablock", None)
+                    elif block.get("Keymesh Data", None):
+                        block_legacy_keymesh_data = block.get("Keymesh Data", None)
+
                     block.keymesh["ID"] = new_id
                     block.keymesh["Data"] = block_legacy_keymesh_data
-                    del block["Keymesh ID"]
-                    del block["Keymesh Data"]
+
+                    # delete_old_properties
+                    if block.get("km_id", None):
+                        del block["km_id"]
+                    elif block.get("Keymesh ID", None):
+                        del block["Keymesh ID"]
+                    
+                    if block.get("km_datablock", None):
+                        del block["km_datablock"]
+                    elif block.get("Keymesh Data", None):
+                        del block["Keymesh Data"]
+
                     if block.get("Keymesh Name") is not None:
                         del block["Keymesh Name"]
-
 
             # Register to Object
             for block in unregistered_blocks:
@@ -59,7 +91,7 @@ def populate_keymesh_blocks(scene):
             anim_data = obj.animation_data
             if anim_data:
                 for fcurve in anim_data.action.fcurves:
-                    if fcurve.data_path == '["Keymesh Data"]':
+                    if (fcurve.data_path == '["Keymesh Data"]') or (fcurve.data_path == '["km_datablock"]'):
                         original_fcurve = fcurve
                         for keyframe in fcurve.keyframe_points:
                             frame = int(keyframe.co[0])
@@ -84,7 +116,7 @@ def populate_keymesh_blocks(scene):
 
                 # remove_legacy_fcurve
                 for fcurve in anim_data.action.fcurves:
-                    if fcurve.data_path == '["Keymesh Data"]':
+                    if (fcurve.data_path == '["Keymesh Data"]') or (fcurve.data_path == '["km_datablock"]'):
                         obj.animation_data.action.fcurves.remove(fcurve)
 
 
