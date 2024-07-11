@@ -67,11 +67,44 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
     def poll(cls, context):
         return context.active_object is not None and context.active_object.keymesh.animated
 
+
     def animate_visibility(self, obj, frame):
         obj.keyframe_insert(data_path="hide_viewport",
                                 frame=frame)
         obj.keyframe_insert(data_path="hide_render",
                                 frame=frame)
+
+
+    def count_duplicate_usage(self, obj, frames, holds):
+        """Returns list of frames on which block was used, including durations of holds"""
+
+        # check_if_keyframe_frame_also_in_holds
+        # if_true,_output_hold_duration_instead_of_that_frame
+        final_frames = []
+        for frame in frames:
+            found_in_hold = False
+            for obj.data, hold_periods in holds.items():
+                for period in hold_periods:
+                    if frame in period['frames']:
+                        if period['frames'] not in final_frames:
+                            final_frames.append(period['frames'])
+                        found_in_hold = True
+                        break
+                if found_in_hold:
+                    break
+            if not found_in_hold:
+                final_frames.append([frame])
+        
+        # formatting_(show_min_and_max_frames_only)
+        output_frames = []
+        for frames in final_frames:
+            if len(frames) > 1:
+                output_frames.append(f"{min(frames)}-{max(frames)}")
+            else:
+                output_frames.append(str(frames[0]))
+
+        return output_frames
+
 
     def create_object(self, context, obj, data, frame, collection, instance=False):
         dup_obj = obj.copy()
@@ -104,6 +137,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
         return dup_obj
 
+
     def execute(self, context):
         obj = context.active_object
         initial_frame = context.scene.frame_current
@@ -119,8 +153,10 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         frame_end = max(keyframes)
 
         uniques = {}
-        previous_value = None
         duplicates = []
+        holds = {} # DICT: {data_block: {'count': hold_count, 'frames': [list_of_frames]}}
+
+        previous_value = None
         prev_obj = None
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
@@ -144,13 +180,27 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                     # Reuse Same Object for Animation
                     if self.handling_method == 'REUSE':
                         dup_obj = match
+
                     dup_obj.hide_viewport = False
                     dup_obj.hide_render = False
 
                 if self.workflow == 'PRINT':
                     prev_obj = None
+
                 if obj.data not in duplicates:
                     duplicates.append(obj.data)
+                if current_value == previous_value:
+                    if obj.data in holds:
+                        # check_if_the_current_frame_continues_last_period
+                        period = holds[obj.data][-1]
+                        if period['frames'][-1] == frame - 1:
+                            period['count'] += 1
+                            period['frames'].append(frame)
+                        else:
+                            holds[obj.data].append({'count': 2, 'frames': [frame-1, frame]})
+                    else:
+                        holds[obj.data] = [{'count': 2, 'frames': [frame-1, frame]}]
+
 
             # Animate Visibility
             if self.workflow == 'RENDER':
@@ -169,8 +219,9 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
                         dup_obj.hide_render = True
                         self.animate_visibility(dup_obj, frame-1)
 
+
+            # Offset Duplicates
             if self.workflow == 'PRINT':
-                # Offset Duplicates
                 if not self.keep_position:
                     if prev_obj is not None:
                         dup_obj.location[move_axis_index] = prev_obj.location[move_axis_index] + self.offset_distance
@@ -182,13 +233,16 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         # Print about Duplicates
         if self.handle_duplicates and len(duplicates) >= 1:
             self.report({'INFO'}, "Duplicates were detected. Read console for more information")
+
             for duplicate in duplicates:
                 usage, frames = keymesh_block_usage_count(self, context, duplicate)
+                output_frames = self.count_duplicate_usage(obj, frames, holds)
+
                 if self.workflow == 'RENDER':
                     if self.handling_method == 'INSTANCE':
-                        print("Object data '" + duplicate.name + "' is instanced " + str(usage) + " times on frames: " + str(frames))
+                        print("Object data '" + duplicate.name + "' is instanced " + str(usage) + " times on frames: " + str(output_frames))
                 if self.workflow == 'PRINT':
-                    print(duplicate.name + " was used " + str(usage) + " times on frames: " + str(frames))
+                    print(duplicate.name + " was used " + str(usage) + " times on frames: " + str(output_frames))
 
         obj.select_set(False)
         obj.hide_set(True)
