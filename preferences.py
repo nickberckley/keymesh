@@ -222,8 +222,8 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         # insert_shortcuts
         kmi = []
         km = kc.keymaps["3D View"]
-        kmi.append(get_hotkey_entry_item(km, "object.keyframe_object_data", 'path', "FORWARD"))
-        kmi.append(get_hotkey_entry_item(km, "object.keyframe_object_data", 'path', "BACKWARD"))
+        kmi.append(get_hotkey_entry_item(km, "object.keyframe_object_data", 'path', 'FORWARD'))
+        kmi.append(get_hotkey_entry_item(km, "object.keyframe_object_data", 'path', 'BACKWARD'))
         for kmi in kmi:
             if kmi:
                 box.context_pointer_set("keymap", km)
@@ -232,8 +232,8 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         # jump_shortcuts
         kmi = []
         km = kc.keymaps["Frames"]
-        kmi.append(get_hotkey_entry_item(km, "timeline.keymesh_frame_jump", 'path', "FORWARD"))
-        kmi.append(get_hotkey_entry_item(km, "timeline.keymesh_frame_jump", 'path', "BACKWARD"))
+        kmi.append(get_hotkey_entry_item(km, "timeline.keymesh_frame_jump", 'path', 'FORWARD'))
+        kmi.append(get_hotkey_entry_item(km, "timeline.keymesh_frame_jump", 'path', 'BACKWARD'))
         for kmi in kmi:
             if kmi:
                 box.context_pointer_set("keymap", km)

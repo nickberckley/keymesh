@@ -29,7 +29,7 @@ class ANIM_OT_keymesh_interpolate(bpy.types.Operator):
 
             # create_new_keymesh_block
             context.scene.frame_current = current_frame
-            bpy.ops.object.keyframe_object_data()
+            bpy.ops.object.keyframe_object_data().path='STILL'
 
             # create_attributes
             current_mesh = obj.data

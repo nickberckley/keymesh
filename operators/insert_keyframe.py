@@ -85,7 +85,12 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
                     "Object data gets tied to the frame. You can edit it while previous one is kept on previous frame")
     bl_options = {'UNDO'}
 
-    path: bpy.props.StringProperty(
+    path: bpy.props.EnumProperty(
+        name = "Direction",
+        items = (('STILL', "Still", "Insert keyframe on current frame"),
+                ('FORWARD', "Forward", "Insert keyframe forward by number of frames specified"),
+                ('BACKWARD', "Backward", "Insert keyframe backward by number of frames specified")),
+        default = 'STILL',
     )
 
     @classmethod
@@ -105,15 +110,15 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
         if obj is not None:
             # when_no_direction
-            if not self.path or obj.keymesh.animated == False and settings.keyframe_after_skip:
+            if (self.path == 'STILL' or obj.keymesh.animated == False) and settings.keyframe_after_skip:
                 insert_keymesh_keyframe(context, obj)
                 return {'FINISHED'}
 
             # when_forwarding
             else:
-                if self.path == "FORWARD":
+                if self.path == 'FORWARD':
                     context.scene.frame_current += step
-                elif self.path == "BACKWARD":
+                elif self.path == 'BACKWARD':
                     context.scene.frame_current -= step
 
                 if settings.keyframe_after_skip:
@@ -139,9 +144,9 @@ def register():
     addon = bpy.context.window_manager.keyconfigs.addon
     km = addon.keymaps.new(name="3D View", space_type="VIEW_3D")
     kmi = km.keymap_items.new("object.keyframe_object_data", type='PAGE_UP', value='PRESS', ctrl=True)
-    kmi.properties.path="FORWARD"
+    kmi.properties.path='FORWARD'
     kmi = km.keymap_items.new("object.keyframe_object_data", type='PAGE_DOWN', value='PRESS', ctrl=True)
-    kmi.properties.path="BACKWARD"
+    kmi.properties.path='BACKWARD'
     kmi.active = True
     addon_keymaps.append(km)
 

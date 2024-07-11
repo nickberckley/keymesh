@@ -34,13 +34,13 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         row = column.row(align=False)
         row.alignment = 'EXPAND'
         if scene.keyframe_after_skip and is_not_linked(context, obj):
-            row.operator("object.keyframe_object_data", text="Insert", icon_value=6).path="BACKWARD"
-            row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
-            row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path="FORWARD"
+            row.operator("object.keyframe_object_data", text="Insert", icon_value=6).path='BACKWARD'
+            row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME').path='STILL'
+            row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path='FORWARD'
         else:
-            row.operator("timeline.keymesh_frame_jump", text="Jump", icon='FRAME_PREV').path="BACKWARD"
-            row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME')
-            row.operator("timeline.keymesh_frame_jump", text="Jump", icon='FRAME_NEXT').path="FORWARD"
+            row.operator("timeline.keymesh_frame_jump", text="Jump", icon='FRAME_PREV').path='BACKWARD'
+            row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME').path='STILL'
+            row.operator("timeline.keymesh_frame_jump", text="Jump", icon='FRAME_NEXT').path='FORWARD'
 
 
 class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
@@ -74,7 +74,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
         # Buttons
         col = row.column(align=True)
-        col.operator("object.keyframe_object_data", text="", icon='ADD')
+        col.operator("object.keyframe_object_data", text="", icon='ADD').path='STILL'
         col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
         col.operator("object.purge_keymesh_data", text="", icon='TRASH')
         col.separator()
