@@ -51,9 +51,20 @@ def assign_keymesh_id(obj):
 
 
 def create_back_up(context, obj, data):
+    """Creates hidden copy of object and appends to object collections"""
+
     backup = obj.copy()
-    context.collection.objects.link(backup)
     backup.data = data
     backup.name = obj.name + "_backup"
     backup.hide_render = True
     backup.hide_viewport = True
+
+    # add_backup_to_obj_collections
+    target_colls = obj.users_collection
+    for collection in target_colls:
+        collection.objects.link(backup)
+
+    # remove_backup_from_other_collections
+    for coll in backup.users_collection:
+        if coll not in target_colls:
+            coll.objects.unlink(backup)

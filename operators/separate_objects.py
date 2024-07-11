@@ -113,7 +113,6 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         elif self.naming_convention == 'BLOCKS':
             dup_obj.name = obj.data.name
         dup_obj.animation_data_clear()
-        context.collection.objects.link(dup_obj)
 
         dup_data = data
         dup_data.name = dup_obj.name
