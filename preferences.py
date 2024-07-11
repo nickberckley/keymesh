@@ -157,6 +157,13 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
                 ('FRAME', 'Frame', ''),],
         default = 'FRAME',
     )
+    persistent_settings: bpy.props.BoolProperty(
+        name = "Persistent Sculpt Mode Settings",
+        description = "By default remesh and symmetry properties are saved separate for each Keymesh block.\n"
+                    "Enabling this will ensure settings are stored on object-level, and remain when changing frames.\n"
+                    "NOTE: This might have slight performance impact.",
+        default = True,
+    )
 
     # experimental
     enable_edit_mode: bpy.props.BoolProperty(
@@ -202,6 +209,8 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         row.prop(self, "naming_method", expand=True)
         row = column.row(align=True)
         row.prop(self, "backup_original_data")
+        row = column.row(align=True)
+        row.prop(self, "persistent_settings")
         layout.separator()
 
         col = layout.column()

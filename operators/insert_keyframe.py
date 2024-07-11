@@ -61,13 +61,13 @@ def insert_keymesh_keyframe(context, obj):
         update_keymesh(context.scene)
 
 
-        # restore_inpersistent_data_for_Mesh
+        # restore_inpersistent_data
         if obj.type == 'MESH':
             obj.data.remesh_voxel_size = remesh_voxel_size
             obj.data.remesh_voxel_adaptivity = remesh_voxel_adaptivity
-            context.object.data.use_mirror_x = symmetry_x
-            context.object.data.use_mirror_y = symmetry_y
-            context.object.data.use_mirror_z = symmetry_z
+            obj.data.use_mirror_x = symmetry_x
+            obj.data.use_mirror_y = symmetry_y
+            obj.data.use_mirror_z = symmetry_z
 
         # restore_object_mode
         if object_mode in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']:
