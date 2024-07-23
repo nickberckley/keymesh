@@ -135,7 +135,10 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
                 else:
                     icon = 'DECORATE_ANIMATE'
             if not obj in context.editable_objects:
-                icon = 'VIEWZOOM'
+                if obj.keymesh.blocks[active_index].block != obj.data:
+                    icon = 'VIEWZOOM'
+                else:
+                    icon = 'PINNED'
 
             row.operator("object.keymesh_block_set_active", text="Previous", icon='BACK').direction='PREVIOUS'
             row.operator("object.keymesh_pick_frame", text="", icon=icon).keymesh_index = active_block.name
