@@ -31,15 +31,18 @@ def keymesh_blocks_coll_update(self, context):
 class KeymeshBlocks(bpy.types.PropertyGroup):
     block: bpy.props.PointerProperty(
         name = "Block",
+        options = {'HIDDEN'},
         type = bpy.types.ID,
     )
     name: bpy.props.StringProperty(
         name = "Name",
+        options = {'HIDDEN'},
         update = update_block_name,
     )
     thumbnail: bpy.props.StringProperty(
         name = "Thumbnail",
         subtype = 'FILE_PATH',
+        override = {"LIBRARY_OVERRIDABLE"},
         options = {'HIDDEN'},
     )
 
@@ -49,6 +52,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
 
     animated: bpy.props.BoolProperty(
         name = "Has Keymesh Animation",
+        options = {'HIDDEN'},
         default = False,
     )
 
@@ -56,14 +60,17 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     blocks: bpy.props.CollectionProperty(
         name = "Keymesh Blocks",
         type = KeymeshBlocks,
+        options = {'HIDDEN'},
     )
     blocks_grid: bpy.props.EnumProperty(
         name = "Keymesh Blocks",
+        options = {'HIDDEN', 'LIBRARY_EDITABLE'},
         items = keymesh_blocks_enum_items,
         update = keymesh_blocks_enum_update,
     )
     blocks_active_index: bpy.props.IntProperty(
         name = "Active Block Index",
+        options = {'HIDDEN'},
         override = {"LIBRARY_OVERRIDABLE"},
         update = keymesh_blocks_coll_update,
         default = -1,
@@ -91,11 +98,13 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         name = "Insert Keyframe",
         description = ("When enabled, skipping frames forward or backwards from UI will also keyframe the object data\n"
                     "WARNING: jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
+        options = {'HIDDEN'},
         default = True,
     )
     insert_on_selection: bpy.props.BoolProperty(
         name = "Keyframe Keymesh Blocks After Selection",
         description = "Automatically insert keyframe on current frame for Keymesh block when selecting it.",
+        options = {'HIDDEN'},
         default = True,
     )
 
@@ -108,6 +117,7 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     sync_with_timeline: bpy.props.BoolProperty(
         name = "Synchronize with Timeline",
         description = "Make active Keymesh block also active item in frame picker UI when scrubbing timeline",
+        options = {'HIDDEN'},
         default = True,
     )
 
