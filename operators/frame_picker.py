@@ -85,10 +85,6 @@ class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
         default = 'NEXT'
     )
 
-    @classmethod
-    def poll(cls, context):
-        return is_not_linked(context)
-
     def execute(self, context):
         obj = context.active_object
         index = int(obj.keymesh.blocks_active_index)

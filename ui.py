@@ -119,12 +119,13 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             fcurve = get_keymesh_fcurve(obj)
             is_keyframed = False
             is_active = False
-            for keyframe in fcurve.keyframe_points:
-                if keyframe.co.x == context.scene.frame_current:
-                    is_keyframed = True
-                    if int(keyframe.co.y) == obj.keymesh.blocks[int(obj.keymesh.blocks_grid)].block.keymesh["Data"]:
-                        is_active = True
-                    break
+            if fcurve:
+                for keyframe in fcurve.keyframe_points:
+                    if keyframe.co.x == context.scene.frame_current:
+                        is_keyframed = True
+                        if int(keyframe.co.y) == obj.keymesh.blocks[int(obj.keymesh.blocks_grid)].block.keymesh["Data"]:
+                            is_active = True
+                        break
 
             if is_active:
                 icon = 'DECORATE_KEYFRAME'
@@ -133,8 +134,8 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
                     icon = 'ANIM'
                 else:
                     icon = 'DECORATE_ANIMATE'
-            # else:
-            #     icon = 'DECORATE_KEYFRAME'
+            if not obj in context.editable_objects:
+                icon = 'VIEWZOOM'
 
             row.operator("object.keymesh_block_set_active", text="Previous", icon='BACK').direction='PREVIOUS'
             row.operator("object.keymesh_pick_frame", text="", icon=icon).keymesh_index = active_block.name

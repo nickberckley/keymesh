@@ -66,12 +66,13 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     blocks_grid: bpy.props.EnumProperty(
         name = "Keymesh Blocks",
         options = {'HIDDEN', 'LIBRARY_EDITABLE'},
+        override = {"LIBRARY_OVERRIDABLE"},
         items = keymesh_blocks_enum_items,
         update = keymesh_blocks_enum_update,
     )
     blocks_active_index: bpy.props.IntProperty(
         name = "Active Block Index",
-        options = {'HIDDEN'},
+        options = {'HIDDEN', 'LIBRARY_EDITABLE'},
         override = {"LIBRARY_OVERRIDABLE"},
         update = keymesh_blocks_coll_update,
         default = -1,
