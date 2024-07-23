@@ -68,3 +68,15 @@ def create_back_up(context, obj, data):
     for coll in backup.users_collection:
         if coll not in target_colls:
             coll.objects.unlink(backup)
+
+
+def get_active_block_index(obj):
+    """Returns index for active Keymesh block (current object data)"""
+    """NOTE: Necessary to get with iterations since no direct way to access index for CollectionProperty items"""
+
+    active_block_index = None
+    for i, block in enumerate(obj.keymesh.blocks):
+        if block.name == obj.data.name:
+            active_block_index = i
+    
+    return active_block_index

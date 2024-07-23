@@ -1,5 +1,6 @@
 import bpy, threading
 from .. import __package__ as base_package
+from .object import get_active_block_index
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -42,6 +43,22 @@ def update_keymesh(scene):
             obj.data.use_mirror_x = symmetry_x
             obj.data.use_mirror_y = symmetry_y
             obj.data.use_mirror_z = symmetry_z
+
+
+        # Update Active Index
+        scene = bpy.context.scene.keymesh
+        if scene.sync_with_timeline:
+            active_index = obj.keymesh.blocks_active_index
+
+            # find_index_of_active_keymesh_block
+            active_block_index = get_active_block_index(obj)
+
+            if (active_index != active_block_index) and (active_block_index >= 0):
+                if bpy.context.scene.keymesh.grid_view:
+                    obj.keymesh.blocks_grid = str(active_block_index)
+                else:
+                    obj.keymesh.blocks_active_index = int(active_block_index)
+
 
 
 # @bpy.app.handlers.persistent

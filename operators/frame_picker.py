@@ -60,15 +60,49 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        index = int(obj.keymesh.block_active_index)
+        index = int(obj.keymesh.blocks_active_index)
 
         if self.direction == 'UP' and index > 0:
             obj.keymesh.blocks.move(index, index - 1)
-            obj.keymesh.block_active_index -= 1
+            obj.keymesh.blocks_active_index -= 1
 
         elif self.direction == 'DOWN' and (index + 1) < len(obj.keymesh.blocks):
             obj.keymesh.blocks.move(index, index + 1)
-            obj.keymesh.block_active_index += 1
+            obj.keymesh.blocks_active_index += 1
+        return {'FINISHED'}
+
+
+class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
+    bl_idname = "object.keymesh_block_set_active"
+    bl_label = "Change Active Keymesh Block"
+    bl_description = "Change active keymesh block in grid view of frame picker"
+    bl_options = {'UNDO'}
+
+    direction: bpy.props.EnumProperty(
+        name = "Direction",
+        items = [('NEXT', "Next", "Change to next Keymesh block in the grid"),
+                ('PREVIOUS', "Previous", "Change to previous Keymesh block in the grid"),],
+        default = 'NEXT'
+    )
+
+    def execute(self, context):
+        obj = context.active_object
+        index = int(obj.keymesh.blocks_active_index)
+
+        # set_`blocks_active_index`_if_it_is_not_set_(-1)
+        if index < 0:
+            obj.keymesh.blocks_active_index = int(obj.keymesh.blocks_grid)
+
+        if self.direction == 'PREVIOUS':
+            if index > 0:
+                obj.keymesh.blocks_active_index -= 1
+
+        if self.direction == 'NEXT':
+            if (index + 1) < len(obj.keymesh.blocks):
+                obj.keymesh.blocks_active_index += 1
+
+        obj.keymesh.blocks_grid = str(obj.keymesh.blocks_active_index)
+
         return {'FINISHED'}
 
 
@@ -78,6 +112,7 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
 classes = [
     OBJECT_OT_keymesh_pick_frame,
     OBJECT_OT_keymesh_block_move,
+    OBJECT_OT_keymesh_block_set_active,
 ]
 
 def register():
