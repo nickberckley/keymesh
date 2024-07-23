@@ -1,5 +1,4 @@
 import bpy
-from .functions.object import get_active_block_index
 from .functions.poll import is_not_linked, prop_type, obj_data_type
 from .functions.timeline import get_keymesh_fcurve, keymesh_block_usage_count
 
@@ -105,7 +104,6 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         else:
             active_index = obj.keymesh.blocks_active_index
             active_block = obj.keymesh.blocks[active_index]
-            active_block_index = get_active_block_index(obj)
 
             layout.template_icon_view(obj.keymesh, "blocks_grid", show_labels=True, scale=6)
             layout.prop(active_block, "thumbnail", text="")
@@ -118,20 +116,25 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             row.alignment = 'EXPAND'
 
             # get_keyframe_icon_based_on_animation_state
-            if active_index != active_block_index:
-                fcurve = get_keymesh_fcurve(obj)
-                is_keyframed = False
-                for keyframe in fcurve.keyframe_points:
-                    if keyframe.co.x == context.scene.frame_current:
-                        is_keyframed = True
-                        break
+            fcurve = get_keymesh_fcurve(obj)
+            is_keyframed = False
+            is_active = False
+            for keyframe in fcurve.keyframe_points:
+                if keyframe.co.x == context.scene.frame_current:
+                    is_keyframed = True
+                    if int(keyframe.co.y) == obj.keymesh.blocks[int(obj.keymesh.blocks_grid)].block.keymesh["Data"]:
+                        is_active = True
+                    break
 
+            if is_active:
+                icon = 'DECORATE_KEYFRAME'
+            else:
                 if is_keyframed:
                     icon = 'ANIM'
                 else:
                     icon = 'DECORATE_ANIMATE'
-            else:
-                icon = 'DECORATE_KEYFRAME'
+            # else:
+            #     icon = 'DECORATE_KEYFRAME'
 
             row.operator("object.keymesh_block_set_active", text="Previous", icon='BACK').direction='PREVIOUS'
             row.operator("object.keymesh_pick_frame", text="", icon=icon).keymesh_index = active_block.name
