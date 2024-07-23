@@ -1,4 +1,5 @@
 import bpy
+from .functions.thumbnail import keymesh_blocks_enum_items
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -6,6 +7,22 @@ import bpy
 def update_block_name(self, context):
     if self.block:
         self.block.name = self.name
+
+
+def keymesh_blocks_enum_update(self, context):
+    """Make active EnumProperty item active Keymesh block."""
+    """NOTE: To make this work all enum_item id names should be str(i)."""
+
+    if context.scene.keymesh.grid_view == True:
+        self.blocks_active_index = int(self.blocks_grid)
+
+
+def keymesh_blocks_coll_update(self, context):
+    """Set blocks_active_index from active blocks_grid EnumProperty item."""
+    """NOTE: To make this work all enum_item id names should be str(i)."""
+
+    if context.scene.keymesh.grid_view == False:
+        self.blocks_grid = str(self.blocks_active_index)
 
 
 
@@ -20,6 +37,11 @@ class KeymeshBlocks(bpy.types.PropertyGroup):
         name = "Name",
         update = update_block_name,
     )
+    thumbnail: bpy.props.StringProperty(
+        name = "Thumbnail",
+        subtype = 'FILE_PATH',
+        options = {'HIDDEN'},
+    )
 
 
 class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
@@ -30,13 +52,20 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
         default = False,
     )
 
+    # keymesh_blocks_registry
     blocks: bpy.props.CollectionProperty(
         name = "Keymesh Blocks",
         type = KeymeshBlocks,
     )
-    block_active_index: bpy.props.IntProperty(
+    blocks_grid: bpy.props.EnumProperty(
+        name = "Keymesh Blocks",
+        items = keymesh_blocks_enum_items,
+        update = keymesh_blocks_enum_update,
+    )
+    blocks_active_index: bpy.props.IntProperty(
         name = "Active Block Index",
         override = {"LIBRARY_OVERRIDABLE"},
+        update = keymesh_blocks_coll_update,
         default = -1,
     )
 
@@ -70,6 +99,18 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         default = True,
     )
 
+    grid_view: bpy.props.BoolProperty(
+        name = "Frame Picker Grid View",
+        description = "Use grid view for frame picker instead of list view",
+        options = {'HIDDEN'},
+        default = False,
+    )
+    sync_with_timeline: bpy.props.BoolProperty(
+        name = "Synchronize with Timeline",
+        description = "Make active Keymesh block also active item in frame picker UI when scrubbing timeline",
+        default = True,
+    )
+
     def update_properties_from_preferences(self):
         prefs = bpy.context.preferences.addons[__package__].preferences
         if prefs:
@@ -95,6 +136,7 @@ def register():
     bpy.types.Scene.keymesh = bpy.props.PointerProperty(type = SCENE_PG_keymesh, name="Keymesh")
     bpy.types.Object.keymesh = bpy.props.PointerProperty(type = OBJECT_PG_keymesh, name="Keymesh")
     bpy.types.ID.keymesh = bpy.props.PointerProperty(type = DATA_PG_keymesh, name="Keymesh")
+
 
 def unregister():
     for cls in reversed(classes):

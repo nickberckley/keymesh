@@ -11,7 +11,9 @@ bl_info = {
 }
 
 import bpy
+
 from .operators import register as operators_register, unregister as operators_unregister
+from .functions import register as functions_register, unregister as functions_unregister
 from . import (
     preferences,
     properties,
@@ -41,7 +43,9 @@ modules = [
 def register():
     for module in modules:
         module.register()
+
     operators_register()
+    functions_register()
 
     preferences.update_sidebar_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
     bpy.app.timers.register(update_properties_from_preferences)
@@ -54,7 +58,9 @@ def register():
 def unregister():
     for module in reversed(modules):
         module.unregister()
+
     operators_unregister()
+    functions_unregister()
 
     # HANDLERS
     bpy.app.handlers.load_post.remove(functions.handler.update_keymesh)

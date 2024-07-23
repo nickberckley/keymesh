@@ -145,8 +145,8 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
         obj = context.active_object
         if obj and obj.keymesh.animated:
             # get_active_block
-            if obj.keymesh.block_active_index is not None:
-                block = obj.keymesh.blocks[obj.keymesh.block_active_index].block
+            if obj.keymesh.blocks_active_index is not None:
+                block = obj.keymesh.blocks[obj.keymesh.blocks_active_index].block
                 block_keymesh_data = block.keymesh.get("Data")
             else:
                 block = obj.data
