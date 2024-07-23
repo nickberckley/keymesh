@@ -6,13 +6,15 @@ import bpy
 def get_keymesh_fcurve(obj):
     """Returns the Keymesh f-curve for active object"""
 
+    fcurve = None
     if obj.keymesh.animated:
         if obj.animation_data is not None:
             if obj.animation_data.action is not None:
                 for f in obj.animation_data.action.fcurves:
                     if f.data_path == 'keymesh["Keymesh Data"]':
                         fcurve = f
-                        return fcurve
+
+    return fcurve
 
         # alternative_way
         # for action in bpy.data.actions:
@@ -73,7 +75,7 @@ def keymesh_block_usage_count(self, context, block):
                 count += 1
                 frames.append(int(keyframe.co[0]))
 
-        return count, frames
+    return count, frames
 
 
 def get_next_keymesh_block(context, obj, direction):
