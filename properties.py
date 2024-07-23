@@ -22,7 +22,8 @@ def keymesh_blocks_coll_update(self, context):
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
     if context.scene.keymesh.grid_view == False:
-        self.blocks_grid = str(self.blocks_active_index)
+        if self.blocks_active_index >= 0:
+            self.blocks_grid = str(self.blocks_active_index)
 
 
 
