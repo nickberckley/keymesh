@@ -147,6 +147,9 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             col = layout.column(align=True)
             col.prop(scene, "sync_with_timeline", text="Synchronize Active with Timeline")
 
+            layout.separator()
+            layout.operator("object.keymesh_thumbnails_generate")
+
 
 class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_keymesh_tools"
