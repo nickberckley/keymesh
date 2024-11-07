@@ -32,6 +32,10 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
     )
 
 
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.active_object.keymesh.animated
+
     def get_missing_thumbnails(self, obj, directory):
         '''Returns Keymesh blocks that don't have thumbnail property, or they have but can't be found'''
 
@@ -63,6 +67,8 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "directory", text="")
+        layout.label(text="Thumbnails are rendered w/ active viewport shading", icon='INFO')
+        layout.separator()
 
         layout.use_property_split = True
         layout.prop(self, "selection", expand=True)
@@ -102,21 +108,30 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
                         viewport.region_3d.view_rotation.copy())
         initial_shading = viewport.shading.type
         initial_overlays = viewport.overlay.show_overlays
+        initial_transparency = context.scene.render.film_transparent
         initial_resolution_x = context.scene.render.resolution_x
         initial_resolution_y = context.scene.render.resolution_y
         initial_file_format = context.scene.render.image_settings.file_format
         initial_filepath = context.scene.render.filepath
         initial_block = obj.data
+        initial_mode = obj.mode
 
         # Prepare Scene
         viewport.shading.type = 'SOLID'
         viewport.overlay.show_overlays = False
+        context.scene.render.film_transparent = False
         context.scene.render.resolution_x = context.scene.render.resolution_y = 512
         context.scene.render.filepath = directory
         context.scene.render.image_settings.file_format = 'JPEG'
+        if initial_mode == 'EDIT':
+            bpy.ops.object.mode_set(mode='OBJECT')
 
         if self.perspective == 'CAMERA':
-            viewport.region_3d.view_perspective = 'CAMERA'
+            if context.scene.camera:
+                viewport.region_3d.view_perspective = 'CAMERA'
+            else:
+                self.report({'INFO'}, "No active camera in the scene. Using viewport perspective instead")
+                self.calibrate_viewport(area)
         elif self.perspective == 'VIEWPORT':
             self.calibrate_viewport(area)
 
@@ -140,6 +155,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         viewport.region_3d.view_rotation = rot
         viewport.shading.type = initial_shading
         viewport.overlay.show_overlays = initial_overlays
+        context.scene.render.film_transparent = initial_transparency
         context.scene.render.resolution_x = initial_resolution_x
         context.scene.render.resolution_y = initial_resolution_y
         context.scene.render.image_settings.file_format = initial_file_format
@@ -148,6 +164,8 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
 
         if self.perspective == 'CAMERA':
             viewport.region_3d.view_perspective = 'PERSP'
+        if initial_mode == 'EDIT':
+            bpy.ops.object.mode_set(mode=initial_mode)
 
         return {'FINISHED'}
 

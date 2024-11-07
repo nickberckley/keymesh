@@ -105,8 +105,9 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             active_index = obj.keymesh.blocks_active_index
             active_block = obj.keymesh.blocks[active_index]
 
-            layout.template_icon_view(obj.keymesh, "blocks_grid", show_labels=True, scale=6)
-            layout.prop(active_block, "thumbnail", text="")
+            col = layout.column(align=True)
+            col.template_icon_view(obj.keymesh, "blocks_grid", show_labels=True, scale=6)
+            col.prop(active_block, "thumbnail", text="")
 
             # buttons
             col = layout.column()
