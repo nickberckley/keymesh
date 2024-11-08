@@ -144,18 +144,17 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
     def execute(self, context):
         obj = context.active_object
         if obj and obj.keymesh.animated:
+            initial_index = obj.keymesh.blocks_active_index
+
             # get_active_block
-            if obj.keymesh.blocks_active_index is not None:
-                block = obj.keymesh.blocks[obj.keymesh.blocks_active_index].block
-                block_keymesh_data = block.keymesh.get("Data")
-            else:
-                block = obj.data
-                block_keymesh_data = block.keymesh.get("Data")
+            if (initial_index is None) or (initial_index > len(obj.keymesh.blocks) - 1):
+                return {'CANCELLED'}
+            block = obj.keymesh.blocks[initial_index].block
 
             # Remove Keyframes
             fcurve = get_keymesh_fcurve(obj)
             for keyframe in reversed(fcurve.keyframe_points.values()):
-                if keyframe.co_ui[1] == block_keymesh_data:
+                if keyframe.co_ui[1] == block.keymesh.get("Data"):
                     fcurve.keyframe_points.remove(keyframe)
 
             # refresh_timeline
@@ -167,6 +166,13 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
             for index, mesh_ref in enumerate(obj.keymesh.blocks):
                 if mesh_ref.block == block:
                     obj.keymesh.blocks.remove(index)
+
+            # make_previous_block_active
+            previous_block_index = initial_index - 1
+            if previous_block_index > -1:
+                obj.keymesh.blocks_active_index = previous_block_index
+            else:
+                obj.keymesh.blocks_active_index = 0
 
             # Purge
             data_type = obj_data_type(obj)
