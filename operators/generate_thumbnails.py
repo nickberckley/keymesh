@@ -169,10 +169,16 @@ class OBJECT_OT_keymesh_offer_render(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_split = True
+        layout.use_property_decorate = False
         col = layout.column(align=True)
         col.label(text="Keymesh blocks don't have thumbnails, or they're missing", icon='INFO')
         col.label(text="Do you want to generate them?", icon='QUESTION')
+        col.separator()
+
+        box = col.box()
+        row = box.row()
+        row.alignment = 'RIGHT'
+        row.prop(context.object.keymesh, "ignore_missing_thumbnails", text="Don't Ask Me Again")
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=350, title="Missing Thumbnails", confirm_text="Yes")
