@@ -133,7 +133,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
             # assign_thumbnail
             image_path = os.path.join(directory, block.name + ".jpg")
             if os.path.isfile(image_path):
-                block.thumbnail = image_path
+                block.thumbnail = bpy.path.relpath(image_path)
 
 
         # restore_values
@@ -207,6 +207,7 @@ class OBJECT_OT_keymesh_thumbnails_refresh(bpy.types.Operator):
             previews_register()
 
         return {'FINISHED'}
+
 
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
