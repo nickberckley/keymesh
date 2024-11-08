@@ -58,14 +58,8 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
     def draw_header_preset(self, context):
         layout = self.layout
-        scene = context.scene.keymesh
-
-        if scene.grid_view == True:
-            icon = "LINENUMBERS_ON"
-        else:
-            icon = "IMGDISPLAY"
-
-        layout.prop(scene, "grid_view", text="", icon=icon, emboss=False, toggle=False)
+        obj = context.object
+        layout.prop(obj.keymesh, "grid_view", text="", icon='LINENUMBERS_ON' if obj.keymesh.grid_view else 'IMGDISPLAY', emboss=False, toggle=False)
 
     def draw(self, context):
         layout = self.layout
@@ -73,7 +67,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         obj = context.active_object
 
         # List View
-        if scene.grid_view == False:
+        if obj.keymesh.grid_view == False:
             row = layout.row()
             col = row.column()
             col.template_list("VIEW3D_UL_keymesh_blocks",
@@ -147,9 +141,6 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
             col = layout.column(align=True)
             col.prop(scene, "sync_with_timeline", text="Synchronize Active with Timeline")
-
-            layout.separator()
-            layout.operator("object.keymesh_thumbnails_generate")
 
 
 class VIEW3D_PT_keymesh_tools(bpy.types.Panel):

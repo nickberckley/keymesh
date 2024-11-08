@@ -1,5 +1,5 @@
 import bpy
-from .functions.thumbnail import keymesh_blocks_enum_items
+from .functions.thumbnail import keymesh_blocks_enum_items, get_missing_thumbnails
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -13,18 +13,31 @@ def keymesh_blocks_enum_update(self, context):
     """Make active EnumProperty item active Keymesh block."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if context.scene.keymesh.grid_view == True:
-        self.blocks_active_index = int(self.blocks_grid)
+    if context.active_object:
+        if context.active_object.keymesh.grid_view:
+            self.blocks_active_index = int(self.blocks_grid)
 
 
 def keymesh_blocks_coll_update(self, context):
     """Set blocks_active_index from active blocks_grid EnumProperty item."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if context.scene.keymesh.grid_view == False:
-        if self.blocks_active_index >= 0:
-            self.blocks_grid = str(self.blocks_active_index)
+    if context.active_object:
+        if context.active_object.keymesh.grid_view == False:
+            if self.blocks_active_index >= 0:
+                self.blocks_grid = str(self.blocks_active_index)
 
+
+def thumbnails_render_offer(self, context):
+    '''Detects when there are Keymesh blocks with no/missing thumbnails and calls for pop-up that offers to render it'''
+
+    obj = self.id_data
+    if self.grid_view:
+        missing_thumbnails = get_missing_thumbnails(obj)
+        if len(missing_thumbnails) != 0:
+            bpy.ops.object.keymesh_offer_render('INVOKE_DEFAULT')
+
+    return
 
 
 #### ------------------------------ PROPERTIES ------------------------------ ####
@@ -78,6 +91,15 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
         default = -1,
     )
 
+    # ui
+    grid_view: bpy.props.BoolProperty(
+        name = "Frame Picker Grid View",
+        description = "Display Keymesh blocks as grid represented by thumbnails",
+        options = {'HIDDEN'},
+        update = thumbnails_render_offer,
+        default = False,
+    )
+
 
 class DATA_PG_keymesh(bpy.types.PropertyGroup):
     # DATA-level PROPERTIES
@@ -108,13 +130,6 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         description = "Automatically insert keyframe on current frame for Keymesh block when selecting it.",
         options = {'HIDDEN'},
         default = True,
-    )
-
-    grid_view: bpy.props.BoolProperty(
-        name = "Frame Picker Grid View",
-        description = "Use grid view for frame picker instead of list view",
-        options = {'HIDDEN'},
-        default = False,
     )
     sync_with_timeline: bpy.props.BoolProperty(
         name = "Synchronize with Timeline",

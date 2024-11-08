@@ -40,6 +40,20 @@ def keymesh_blocks_enum_items(self, context):
     return enum_items
 
 
+def get_missing_thumbnails(obj):
+    '''Returns list of Keymesh blocks that either don't have thumbnail property, or can't be found'''
+
+    missing_thumbnails = []
+    for block in obj.keymesh.blocks:
+        if block.thumbnail != "":
+            if os.path.isfile(block.thumbnail):
+                continue
+
+        missing_thumbnails.append(block)
+
+    return missing_thumbnails
+
+
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 

@@ -1,4 +1,5 @@
 import bpy, os, mathutils
+from ..functions.thumbnail import get_missing_thumbnails
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -36,19 +37,6 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
     def poll(cls, context):
         return context.active_object is not None and context.active_object.keymesh.animated
 
-    def get_missing_thumbnails(self, obj, directory):
-        '''Returns Keymesh blocks that don't have thumbnail property, or they have but can't be found'''
-
-        missing_thumbnails = []
-        for block in obj.keymesh.blocks:
-            if block.thumbnail != "":
-                if os.path.isfile(block.thumbnail):
-                    continue
-
-            missing_thumbnails.append(block)
-
-        return missing_thumbnails
-    
     def calibrate_viewport(self, area):
         '''Tries to better center objects in the frame so that they're not too tiny in the image'''
         '''It's needed because viewports that are in 'landscape' mode zoom out in gl_render to accomodate height pixels, and vice versa'''
@@ -63,11 +51,10 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
                     forward_vector = space.region_3d.view_rotation @ mathutils.Vector((0, 0, -1))
                     space.region_3d.view_location += forward_vector * difference * 0.005
 
-
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "directory", text="")
-        layout.label(text="Thumbnails are rendered w/ active viewport shading", icon='INFO')
+        layout.label(text="Thumbnails will be rendered with current viewport shading", icon='INFO')
         layout.separator()
 
         layout.use_property_split = True
@@ -75,7 +62,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         layout.prop(self, "perspective")
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return context.window_manager.invoke_props_dialog(self, width=350, confirm_text="Generate")
 
     def execute(self, context):
         obj = context.active_object
@@ -92,7 +79,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         if self.selection == 'ALL':
             filtered_blocks = obj.keymesh.blocks
         elif self.selection == 'MISSING':
-            filtered_blocks = self.get_missing_thumbnails(obj, directory)
+            filtered_blocks = get_missing_thumbnails(obj)
             if len(filtered_blocks) == 0:
                 self.report({'INFO'}, "All Keymesh blocks already have thumbnails")
                 return {'CANCELLED'}
@@ -167,6 +154,28 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         if initial_mode == 'EDIT':
             bpy.ops.object.mode_set(mode=initial_mode)
 
+        self.report({'INFO'}, "Thumbnails successfully generated for Keymesh blocks")
+        return {'FINISHED'}
+
+
+class OBJECT_OT_keymesh_offer_render(bpy.types.Operator):
+    bl_idname = 'object.keymesh_offer_render'
+    bl_label = 'Generate Thumbnails'
+    bl_description = "Test"
+    bl_options = {'INTERNAL'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        col = layout.column(align=True)
+        col.label(text="Keymesh blocks don't have thumbnails, or they're missing", icon='INFO')
+        col.label(text="Do you want to generate them?", icon='QUESTION')
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=350, title="Missing Thumbnails", confirm_text="Yes")
+
+    def execute(self, context):
+        bpy.ops.object.keymesh_thumbnails_generate('INVOKE_DEFAULT')
         return {'FINISHED'}
 
 
@@ -175,6 +184,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
 
 classes = [
     OBJECT_OT_keymesh_thumbnails_generate,
+    OBJECT_OT_keymesh_offer_render,
 ]
 
 def register():
