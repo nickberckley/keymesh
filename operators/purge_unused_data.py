@@ -144,39 +144,42 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
     def execute(self, context):
         obj = context.active_object
         if obj and obj.keymesh.animated:
-            initial_index = obj.keymesh.blocks_active_index
-
-            # get_active_block
-            if (initial_index is None) or (initial_index > len(obj.keymesh.blocks) - 1):
-                return {'CANCELLED'}
-            block = obj.keymesh.blocks[initial_index].block
-
-            # Remove Keyframes
-            fcurve = get_keymesh_fcurve(obj)
-            for keyframe in reversed(fcurve.keyframe_points.values()):
-                if keyframe.co_ui[1] == block.keymesh.get("Data"):
-                    fcurve.keyframe_points.remove(keyframe)
-
-            # refresh_timeline
-            current_frame = context.scene.frame_current
-            context.scene.frame_set(current_frame + 1)
-            context.scene.frame_set(current_frame)
-
-            # remove_from_block_registry
-            for index, mesh_ref in enumerate(obj.keymesh.blocks):
-                if mesh_ref.block == block:
-                    obj.keymesh.blocks.remove(index)
-
-            # make_previous_block_active
-            previous_block_index = initial_index - 1
-            if previous_block_index > -1:
-                obj.keymesh.blocks_active_index = previous_block_index
+            if len(obj.keymesh.blocks) <= 1:
+                bpy.data.objects.remove(obj)
             else:
-                obj.keymesh.blocks_active_index = 0
+                initial_index = obj.keymesh.blocks_active_index
 
-            # Purge
-            data_type = obj_data_type(obj)
-            data_type.remove(block)
+                # get_active_block
+                if (initial_index is None) or (initial_index > len(obj.keymesh.blocks) - 1):
+                    return {'CANCELLED'}
+                block = obj.keymesh.blocks[initial_index].block
+
+                # Remove Keyframes
+                fcurve = get_keymesh_fcurve(obj)
+                for keyframe in reversed(fcurve.keyframe_points.values()):
+                    if keyframe.co_ui[1] == block.keymesh.get("Data"):
+                        fcurve.keyframe_points.remove(keyframe)
+
+                # refresh_timeline
+                current_frame = context.scene.frame_current
+                context.scene.frame_set(current_frame + 1)
+                context.scene.frame_set(current_frame)
+
+                # remove_from_block_registry
+                for index, mesh_ref in enumerate(obj.keymesh.blocks):
+                    if mesh_ref.block == block:
+                        obj.keymesh.blocks.remove(index)
+
+                # make_previous_block_active
+                previous_block_index = initial_index - 1
+                if previous_block_index > -1:
+                    obj.keymesh.blocks_active_index = previous_block_index
+                else:
+                    obj.keymesh.blocks_active_index = 0
+
+                # Purge
+                data_type = obj_data_type(obj)
+                data_type.remove(block)
 
         return {'FINISHED'}
 
