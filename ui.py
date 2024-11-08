@@ -101,7 +101,10 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
             col = layout.column(align=True)
             col.template_icon_view(obj.keymesh, "blocks_grid", show_labels=True, scale=6)
-            col.prop(active_block, "thumbnail", text="")
+
+            row = col.row(align=True)
+            row.prop(active_block, "thumbnail", text="")
+            row.operator("object.keymesh_thumbnails_refresh", text="", icon='FILE_REFRESH')
 
             # buttons
             col = layout.column()

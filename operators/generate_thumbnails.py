@@ -1,5 +1,5 @@
 import bpy, os, mathutils
-from ..functions.thumbnail import get_missing_thumbnails
+from ..functions.thumbnail import get_missing_thumbnails, previews_register, previews_unregister
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -154,6 +154,10 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         if initial_mode == 'EDIT':
             bpy.ops.object.mode_set(mode=initial_mode)
 
+        # refresh_thumbnails
+        previews_unregister()
+        previews_register()
+
         self.report({'INFO'}, "Thumbnails successfully generated for Keymesh blocks")
         return {'FINISHED'}
 
@@ -161,7 +165,6 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
 class OBJECT_OT_keymesh_offer_render(bpy.types.Operator):
     bl_idname = 'object.keymesh_offer_render'
     bl_label = 'Generate Thumbnails'
-    bl_description = "Test"
     bl_options = {'INTERNAL'}
 
     def draw(self, context):
@@ -179,12 +182,39 @@ class OBJECT_OT_keymesh_offer_render(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class OBJECT_OT_keymesh_thumbnails_refresh(bpy.types.Operator):
+    bl_idname = 'object.keymesh_thumbnails_refresh'
+    bl_label = 'Refresh Keymesh Thumbnails'
+    bl_description = ("Refresh thumbnails for Keymesh blocks to reflect updated images in UI.\n"
+                      "Shift-Click to regenerate thumbnails (render new images)")
+    bl_options = {'INTERNAL'}
+
+    regenerate: bpy.props.BoolProperty(
+        name = "Regenerate Thumbnails",
+        description = "Start operator for generating thumbnils to render new images",
+        default = False,
+    )
+
+    def invoke(self, context, event):
+        self.regenerate = event.shift
+        return self.execute(context)
+
+    def execute(self, context):
+        if self.regenerate:
+            bpy.ops.object.keymesh_thumbnails_generate('INVOKE_DEFAULT')
+        else:
+            previews_unregister()
+            previews_register()
+
+        return {'FINISHED'}
+
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
     OBJECT_OT_keymesh_thumbnails_generate,
     OBJECT_OT_keymesh_offer_render,
+    OBJECT_OT_keymesh_thumbnails_refresh,
 ]
 
 def register():
