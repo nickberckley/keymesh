@@ -3,6 +3,7 @@ import bpy
 from . import (
     convert_shape_keys,
     frame_picker,
+    generate_thumbnails,
     initialize_handler,
     insert_keyframe,
     purge_unused_data,
@@ -17,6 +18,7 @@ from . import (
 modules = [
     convert_shape_keys,
     frame_picker,
+    generate_thumbnails,
     initialize_handler,
     insert_keyframe,
     purge_unused_data,

@@ -28,9 +28,12 @@ def keymesh_blocks_enum_items(self, context):
             thumbnail = pcoll[block.thumbnail].icon_id
         else:
             if block.thumbnail != "":
-                thumbnail = pcoll.load(block.thumbnail, bpy.path.abspath(block.thumbnail), 'IMAGE').icon_id
+                if os.path.isfile(bpy.path.abspath(block.thumbnail)) or os.path.isfile(bpy.path.relpath(block.thumbnail)):
+                    thumbnail = pcoll.load(block.thumbnail, bpy.path.abspath(block.thumbnail), 'IMAGE').icon_id
+                else:
+                    thumbnail = 'LIBRARY_DATA_BROKEN'
             else:
-                thumbnail = 'DECORATE'
+                thumbnail = 'IMAGE'
 
         enum_items.append(_make_enum_item(str(i), block.name, "", thumbnail, i))
 
@@ -38,6 +41,20 @@ def keymesh_blocks_enum_items(self, context):
     enum_items.sort(key=lambda item: item[4])
 
     return enum_items
+
+
+def get_missing_thumbnails(obj):
+    '''Returns list of Keymesh blocks that either don't have thumbnail property, or can't be found'''
+
+    missing_thumbnails = []
+    for block in obj.keymesh.blocks:
+        if block.thumbnail != "":
+            if os.path.isfile(bpy.path.abspath(block.thumbnail)) or os.path.isfile(bpy.path.relpath(block.thumbnail)):
+                continue
+
+        missing_thumbnails.append(block)
+
+    return missing_thumbnails
 
 
 
