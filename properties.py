@@ -165,6 +165,19 @@ classes = [
     SCENE_PG_keymesh,
 ]
 
+data_types = [
+    bpy.types.Mesh,
+    bpy.types.Curve,
+    bpy.types.Curves,
+    bpy.types.MetaBall,
+    bpy.types.Volume,
+    bpy.types.Lattice,
+    bpy.types.Light,
+    bpy.types.LightProbe,
+    bpy.types.Camera,
+    bpy.types.Speaker
+]
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
@@ -172,7 +185,8 @@ def register():
     # PROPERTY
     bpy.types.Scene.keymesh = bpy.props.PointerProperty(type=SCENE_PG_keymesh, name="Keymesh")
     bpy.types.Object.keymesh = bpy.props.PointerProperty(type=OBJECT_PG_keymesh, name="Keymesh", override={"LIBRARY_OVERRIDABLE"})
-    bpy.types.ID.keymesh = bpy.props.PointerProperty(type=DATA_PG_keymesh, name="Keymesh")
+    for type in data_types:
+        type.keymesh = bpy.props.PointerProperty(type=DATA_PG_keymesh, name="Keymesh")
 
 
 def unregister():
@@ -182,4 +196,5 @@ def unregister():
     # PROPERTY
     del bpy.types.Scene.keymesh
     del bpy.types.Object.keymesh
-    del bpy.types.ID.keymesh
+    for type in data_types:
+        del type.keymesh
