@@ -41,24 +41,25 @@ def thumbnails_render_offer(self, context):
     return
 
 
+
 #### ------------------------------ PROPERTIES ------------------------------ ####
 
 class KeymeshBlocks(bpy.types.PropertyGroup):
     block: bpy.props.PointerProperty(
         name = "Block",
-        options = {'HIDDEN'},
+        options = set(),
         type = bpy.types.ID,
     )
     name: bpy.props.StringProperty(
         name = "Name",
-        options = {'HIDDEN'},
+        options = set(),
         update = update_block_name,
     )
     thumbnail: bpy.props.StringProperty(
         name = "Thumbnail",
         subtype = 'FILE_PATH',
+        options = set(),
         override = {"LIBRARY_OVERRIDABLE"},
-        options = {'HIDDEN'},
     )
 
 
@@ -67,7 +68,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
 
     animated: bpy.props.BoolProperty(
         name = "Has Keymesh Animation",
-        options = {'HIDDEN'},
+        options = set(),
         default = False,
     )
 
@@ -75,19 +76,19 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     blocks: bpy.props.CollectionProperty(
         name = "Keymesh Blocks",
         type = KeymeshBlocks,
-        options = {'HIDDEN'},
+        options = set(),
+        override = {"LIBRARY_OVERRIDABLE"},
     )
     blocks_grid: bpy.props.EnumProperty(
         name = "Keymesh Blocks",
+        items = keymesh_blocks_enum_items,
         options = {'HIDDEN', 'LIBRARY_EDITABLE'},
         override = {"LIBRARY_OVERRIDABLE"},
-        items = keymesh_blocks_enum_items,
         update = keymesh_blocks_enum_update,
     )
     blocks_active_index: bpy.props.IntProperty(
         name = "Active Block Index",
-        options = {'HIDDEN', 'LIBRARY_EDITABLE'},
-        override = {"LIBRARY_OVERRIDABLE"},
+        options = set(),
         update = keymesh_blocks_coll_update,
         default = -1,
     )
@@ -96,13 +97,15 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     grid_view: bpy.props.BoolProperty(
         name = "Frame Picker Grid View",
         description = "Display Keymesh blocks as grid represented by thumbnails",
-        options = {'HIDDEN'},
+        options = {'HIDDEN', 'LIBRARY_EDITABLE'},
+        override = {"LIBRARY_OVERRIDABLE"},
         update = thumbnails_render_offer,
         default = False,
     )
     ignore_missing_thumbnails: bpy.props.BoolProperty(
         name = "Ignore Missing Thumbnails",
         description = "Don't show pop-up when switching to grid view if block thumbnails are missing",
+        options = set(),
         default = False,
     )
 
@@ -122,6 +125,7 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         min = 1, max = 2**31-1,
         soft_min = 1, soft_max = 100,
         step = 1,
+        options = set(),
         default = 2,
     )
     keyframe_after_skip: bpy.props.BoolProperty(
@@ -166,9 +170,9 @@ def register():
         bpy.utils.register_class(cls)
 
     # PROPERTY
-    bpy.types.Scene.keymesh = bpy.props.PointerProperty(type = SCENE_PG_keymesh, name="Keymesh")
-    bpy.types.Object.keymesh = bpy.props.PointerProperty(type = OBJECT_PG_keymesh, name="Keymesh")
-    bpy.types.ID.keymesh = bpy.props.PointerProperty(type = DATA_PG_keymesh, name="Keymesh")
+    bpy.types.Scene.keymesh = bpy.props.PointerProperty(type=SCENE_PG_keymesh, name="Keymesh")
+    bpy.types.Object.keymesh = bpy.props.PointerProperty(type=OBJECT_PG_keymesh, name="Keymesh", override={"LIBRARY_OVERRIDABLE"})
+    bpy.types.ID.keymesh = bpy.props.PointerProperty(type=DATA_PG_keymesh, name="Keymesh")
 
 
 def unregister():
