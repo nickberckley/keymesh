@@ -1,6 +1,6 @@
 import bpy
 from .. import __package__ as base_package
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block
 from ..functions.timeline import insert_keyframe
 from ..functions.poll import is_candidate_object, is_linked, edit_modes
 from ..functions.handler import update_keymesh
@@ -27,7 +27,6 @@ def insert_keymesh_keyframe(context, obj):
 
         # Assign Keymesh ID
         assign_keymesh_id(obj)
-        obj_keymesh_id = obj.keymesh["ID"]
 
         # get_block_index
         block_index = get_next_keymesh_index(obj)
@@ -44,16 +43,10 @@ def insert_keymesh_keyframe(context, obj):
                 new_block = bpy.data.meshes.new_from_object(obj)
         else:
             new_block = obj.data.copy()
-
         new_block.name = block_name
-        new_block.keymesh["ID"] = obj_keymesh_id
-        new_block.keymesh["Data"] = block_index
-        new_block.use_fake_user = True
 
-        # Assign New Block to Object
-        block_registry = obj.keymesh.blocks.add()
-        block_registry.block = new_block
-        block_registry.name = new_block.name
+        # assign_new_block_to_object
+        insert_block(obj, new_block, block_index)
 
         # Insert Keyframe
         obj.data = new_block

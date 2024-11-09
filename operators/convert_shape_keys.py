@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, create_back_up
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, create_back_up, insert_block
 from ..functions.poll import is_linked, obj_data_type
 from ..functions.timeline import insert_keyframe
 from ..functions.handler import update_keymesh
@@ -91,24 +91,18 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
         # Assign Keymesh ID
         assign_keymesh_id(obj)
-        obj_keymesh_id = obj.keymesh["ID"]
 
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
             name = ''.join([self.naming_convention(key) for key in shape_keys.key_blocks if key.name != "Basis"])
 
             # Create new Block
-            block_index = get_next_keymesh_index(obj)
             new_block = original_data.copy()
             new_block.name = obj.name + "_frame_" + str(frame)
-            new_block.keymesh["ID"] = obj_keymesh_id
-            new_block.keymesh["Data"] = block_index
-            new_block.use_fake_user = True
 
-            # Assign New Block to Object
-            block_registry = obj.keymesh.blocks.add()
-            block_registry.block = new_block
-            block_registry.name = new_block.name
+            # assign_new_block_to_object
+            block_index = get_next_keymesh_index(obj)
+            insert_block(obj, new_block, block_index)
 
             # Apply Shape Keys
             obj.data = new_block

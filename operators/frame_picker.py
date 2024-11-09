@@ -34,24 +34,34 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         obj = context.active_object
         data_type = obj_data_type(obj)
 
-        # assign_keymesh_block_to_object
+        # Assign Keymesh Block to Object
         obj.data = data_type[self.keymesh_index]
-        keymesh_block = context.active_object.data.keymesh.get("Data")
-
         active_block_index = get_active_block_index(obj)
         obj.keymesh.blocks_active_index = int(active_block_index)
+
+        # account_for_non_animated_Keymesh_objects (properly assign block by changing object_keymesh_data as well)
+        block_keymesh_data = context.active_object.data.keymesh.get("Data")
+        if scene.keymesh.insert_on_selection == False and not obj.animation_data:
+            obj.keymesh["Keymesh Data"] = int(block_keymesh_data)
+
 
         # Keyframe Block
         if obj in context.editable_objects:
             if scene.keymesh.insert_on_selection:
+                # create_action_if_object_isn't_animated
+                if not obj.animation_data:
+                    new_action = bpy.data.actions.new(obj.name + "Action")
+                    obj.animation_data_create()
+                    obj.animation_data.action = new_action
+
                 action = obj.animation_data.action
                 if action:
                     if action.library is None:
-                        insert_keyframe(obj, scene.frame_current, keymesh_block)
+                        insert_keyframe(obj, scene.frame_current, block_keymesh_data)
                     else:
                         self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
                 else:
-                    insert_keyframe(obj, scene.frame_current, keymesh_block)
+                    insert_keyframe(obj, scene.frame_current, block_keymesh_data)
 
         return {'FINISHED'}
 
