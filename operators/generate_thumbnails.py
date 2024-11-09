@@ -189,7 +189,10 @@ class OBJECT_OT_keymesh_offer_render(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self, width=350, title="Missing Thumbnails", confirm_text="Yes")
 
     def execute(self, context):
-        bpy.ops.object.keymesh_thumbnails_generate('INVOKE_DEFAULT')
+        if bpy.data.is_saved:
+            bpy.ops.object.keymesh_thumbnails_generate('INVOKE_DEFAULT')
+        else:
+            self.report({'ERROR'}, ".blend file isn't saved")
         return {'FINISHED'}
 
 
@@ -197,7 +200,7 @@ class OBJECT_OT_keymesh_thumbnails_refresh(bpy.types.Operator):
     bl_idname = 'object.keymesh_thumbnails_refresh'
     bl_label = 'Refresh Keymesh Thumbnails'
     bl_description = ("Refresh thumbnails for Keymesh blocks to reflect updated images in UI.\n"
-                      "Shift-Click to regenerate thumbnails (render new images)")
+                      "Shift-Click to regenerate thumbnails (render new images) for non-linked objects")
     bl_options = {'INTERNAL'}
 
     regenerate: bpy.props.BoolProperty(
@@ -216,7 +219,14 @@ class OBJECT_OT_keymesh_thumbnails_refresh(bpy.types.Operator):
 
     def execute(self, context):
         if self.regenerate:
-            bpy.ops.object.keymesh_thumbnails_generate('INVOKE_DEFAULT')
+            if bpy.data.is_saved:
+                if context.active_object.is_editable:
+                    bpy.ops.object.keymesh_thumbnails_generate('INVOKE_DEFAULT')
+                else:
+                    previews_unregister()
+                    previews_register()
+            else:
+                self.report({'ERROR'}, ".blend file isn't saved")
         else:
             previews_unregister()
             previews_register()

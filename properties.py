@@ -32,11 +32,12 @@ def thumbnails_render_offer(self, context):
     '''Detects when there are Keymesh blocks with no/missing thumbnails and calls for pop-up that offers to render it'''
 
     obj = self.id_data
-    if not obj.keymesh.ignore_missing_thumbnails:
-        if self.grid_view:
-            missing_thumbnails = get_missing_thumbnails(obj)
-            if len(missing_thumbnails) != 0:
-                bpy.ops.object.keymesh_offer_render('INVOKE_DEFAULT')
+    if obj.is_editable:
+        if not obj.keymesh.ignore_missing_thumbnails:
+            if self.grid_view:
+                missing_thumbnails = get_missing_thumbnails(obj)
+                if len(missing_thumbnails) != 0:
+                    bpy.ops.object.keymesh_offer_render('INVOKE_DEFAULT')
 
     return
 
@@ -106,6 +107,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
         name = "Ignore Missing Thumbnails",
         description = "Don't show pop-up when switching to grid view if block thumbnails are missing",
         options = set(),
+        override = {"LIBRARY_OVERRIDABLE"},
         default = False,
     )
 
