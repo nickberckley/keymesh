@@ -1,4 +1,5 @@
 import bpy, os, mathutils
+from ..functions.poll import is_keymesh_object
 from ..functions.thumbnail import get_missing_thumbnails, previews_register, previews_unregister
 
 
@@ -35,7 +36,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and context.active_object.keymesh.animated
+        return context.active_object and is_keymesh_object(context.active_object)
 
     def calibrate_viewport(self, area):
         '''Tries to better center objects in the frame so that they're not too tiny in the image'''
@@ -167,6 +168,10 @@ class OBJECT_OT_keymesh_offer_render(bpy.types.Operator):
     bl_label = 'Generate Thumbnails'
     bl_options = {'INTERNAL'}
 
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and is_keymesh_object(context.active_object)
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_decorate = False
@@ -200,6 +205,10 @@ class OBJECT_OT_keymesh_thumbnails_refresh(bpy.types.Operator):
         description = "Start operator for generating thumbnils to render new images",
         default = False,
     )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and is_keymesh_object(context.active_object)
 
     def invoke(self, context, event):
         self.regenerate = event.shift

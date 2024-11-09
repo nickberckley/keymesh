@@ -54,10 +54,11 @@ def update_keymesh(scene):
             active_block_index = get_active_block_index(obj)
 
             if (active_index != active_block_index) and (active_block_index >= 0):
-                if bpy.context.active_object.keymesh.grid_view:
-                    obj.keymesh.blocks_grid = str(active_block_index)
-                else:
-                    obj.keymesh.blocks_active_index = int(active_block_index)
+                if bpy.context.active_object:
+                    if bpy.context.active_object.keymesh.grid_view:
+                        obj.keymesh.blocks_grid = str(active_block_index)
+                    else:
+                        obj.keymesh.blocks_active_index = int(active_block_index)
 
 
 

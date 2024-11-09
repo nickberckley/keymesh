@@ -1,4 +1,5 @@
 import bpy
+from ..functions.poll import is_keymesh_object
 from ..functions.timeline import get_keymesh_keyframes, keymesh_block_usage_count
 
 
@@ -63,10 +64,17 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         default = 'X',
     )
 
+
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and context.active_object.keymesh.animated
-
+        if context.active_object:
+            if is_keymesh_object(context.active_object):
+                return True
+            else:
+                cls.poll_message_set("Active object doesn't have Keymesh animation")
+                return False
+        else:
+            return False
 
     def animate_visibility(self, obj, frame):
         obj.keyframe_insert(data_path="hide_viewport",

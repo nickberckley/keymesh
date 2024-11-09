@@ -1,5 +1,5 @@
 import bpy
-from .functions.poll import is_not_linked, prop_type, obj_data_type
+from .functions.poll import is_linked, prop_type, obj_data_type
 from .functions.timeline import get_keymesh_fcurve, keymesh_block_usage_count
 
 
@@ -26,14 +26,14 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         row.prop(scene, "frame_skip_count", text="Frame Step")
         row.separator()
         row.prop(scene, "keyframe_after_skip", text="")
-        if not is_not_linked(context, obj):
+        if is_linked(context, obj):
             row.enabled = False
 
         # Insert Keyframes
         column = layout.column()
         row = column.row(align=False)
         row.alignment = 'EXPAND'
-        if scene.keyframe_after_skip and is_not_linked(context, obj):
+        if scene.keyframe_after_skip and not is_linked(context, obj):
             row.operator("object.keyframe_object_data", text="Insert", icon_value=6).path='BACKWARD'
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME').path='STILL'
             row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path='FORWARD'

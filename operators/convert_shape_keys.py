@@ -1,6 +1,6 @@
 import bpy
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, create_back_up
-from ..functions.poll import is_not_linked, obj_data_type
+from ..functions.poll import is_linked, obj_data_type
 from ..functions.timeline import insert_keyframe
 from ..functions.handler import update_keymesh
 
@@ -42,8 +42,21 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object and context.active_object.type in ('MESH', 'CURVE', 'LATTICE')
-                and context.active_object.data.shape_keys is not None and is_not_linked(context))
+        if context.active_object:
+            if is_linked(context, context.active_object):
+                cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                return False
+            else:
+                if context.active_object.type not in ('MESH', 'CURVE', 'LATTICE'):
+                    cls.poll_message_set("Active object needs to support shape keys")
+                    return False
+                else:
+                    if context.active_object.data.shape_keys is None:
+                        cls.poll_message_set("Active object does not have shape keys")
+                        return False
+            return True
+        else:
+            return False
 
     # Naming Convention
     def naming_convention(self, key):

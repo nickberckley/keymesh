@@ -2,7 +2,7 @@ import bpy
 from .. import __package__ as base_package
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id
 from ..functions.timeline import insert_keyframe
-from ..functions.poll import is_candidate_object, is_not_linked
+from ..functions.poll import is_candidate_object, is_linked
 from ..functions.handler import update_keymesh
 
 
@@ -96,12 +96,23 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         prefs = bpy.context.preferences.addons[base_package].preferences
-        if prefs.enable_edit_mode:
-            return is_candidate_object(context)
+        if context.active_object:
+            if is_linked(context, context.active_object):
+                cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                return False
+            else:
+                if is_candidate_object(context.active_object):
+                    if not prefs.enable_edit_mode and context.mode in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
+                                                                       'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']:
+                        cls.poll_message_set("Keymesh can't create frames in edit modes (can be enabled from preferences)")
+                        return False
+                    else:
+                        return True
+                else:
+                    cls.poll_message_set("Active object type isn't supported by Keymesh")
+                    return False
         else:
-            return (is_candidate_object(context) and is_not_linked(context)
-                    and context.mode not in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
-                                                 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE'])
+            return False
 
     def execute(self, context):
         obj = context.active_object

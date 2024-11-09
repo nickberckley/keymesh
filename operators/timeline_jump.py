@@ -1,5 +1,5 @@
 import bpy
-from ..functions.poll import is_candidate_object
+from ..functions.poll import is_keymesh_object
 from ..functions.timeline import get_keymesh_keyframes
 
 
@@ -20,7 +20,7 @@ class TIMELINE_OT_keymesh_frame_jump(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return is_candidate_object(context) and context.active_object is not None
+        return context.active_object and is_keymesh_object(context.active_object)
 
     def execute(self, context):
         keyframes = get_keymesh_keyframes(context.active_object)

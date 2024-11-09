@@ -1,5 +1,5 @@
 import bpy
-from ..functions.poll import is_not_linked, obj_data_type
+from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
 from ..functions.timeline import insert_keyframe
 
 
@@ -9,9 +9,14 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
     bl_label = "Pick Keymesh Frame"
     bl_idname = "object.keymesh_pick_frame"
     bl_description = "Link the selected Keymesh block to the current object"
+    bl_options = {'UNDO'}
 
     keymesh_index: bpy.props.StringProperty(
     )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and is_keymesh_object(context.active_object)
 
     def execute(self, context):
         scene = context.scene
@@ -56,7 +61,17 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return is_not_linked(context)
+        if context.active_object:
+            if is_keymesh_object(context.active_object):
+                if is_linked(context, context.active_object):
+                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                    return False
+                else:
+                    return True
+            else:
+                return False
+        else:
+            return False
 
     def execute(self, context):
         obj = context.active_object
@@ -76,7 +91,7 @@ class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
     bl_idname = "object.keymesh_block_set_active"
     bl_label = "Change Active Keymesh Block"
     bl_description = "Change active keymesh block in grid view of frame picker"
-    bl_options = {'UNDO'}
+    bl_options = {'INTERNAL'}
 
     direction: bpy.props.EnumProperty(
         name = "Direction",
@@ -84,6 +99,10 @@ class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
                 ('PREVIOUS', "Previous", "Change to previous Keymesh block in the grid"),],
         default = 'NEXT'
     )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and is_keymesh_object(context.active_object)
 
     def execute(self, context):
         obj = context.active_object
