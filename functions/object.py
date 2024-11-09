@@ -84,3 +84,19 @@ def get_active_block_index(obj):
             active_block_index = i
     
     return active_block_index
+
+
+def insert_block(obj, block, index, name=None):
+    """Inserts given object data in Keymesh blocks list for given object"""
+
+    if name is None:
+        name = block.name
+
+    block.keymesh["ID"] = obj.keymesh["ID"]
+    block.keymesh["Data"] = index
+    block.use_fake_user = True
+
+    # Assign New Block to Object
+    block_registry = obj.keymesh.blocks.add()
+    block_registry.block = block
+    block_registry.name = name

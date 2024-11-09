@@ -24,6 +24,25 @@ def is_linked(context, obj):
                 return False
 
 
+def is_instanced(data):
+    """Checks whether or not given object data (i.e. mesh) is instanced (used by more than one object)"""
+
+    if data.users == 1:
+        return False
+    else:
+        object_users = []
+        for obj in bpy.data.objects:
+            if obj.data == data:
+                object_users.append(obj)
+                if len(object_users) >= 2:
+                    break
+
+        if len(object_users) > 1:
+            return True
+        else:
+            return False
+
+
 def is_keymesh_object(obj):
     """Checks whether or not given object has Keymesh animation or blocks"""
 
