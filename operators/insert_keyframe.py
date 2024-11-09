@@ -2,7 +2,7 @@ import bpy
 from .. import __package__ as base_package
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id
 from ..functions.timeline import insert_keyframe
-from ..functions.poll import is_candidate_object, is_linked
+from ..functions.poll import is_candidate_object, is_linked, edit_modes
 from ..functions.handler import update_keymesh
 
 
@@ -70,7 +70,7 @@ def insert_keymesh_keyframe(context, obj):
             obj.data.use_mirror_z = symmetry_z
 
         # restore_object_mode
-        if object_mode in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']:
+        if object_mode in edit_modes():
             object_mode = 'EDIT'
         bpy.ops.object.mode_set(mode=object_mode)
 
@@ -102,8 +102,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
                 return False
             else:
                 if is_candidate_object(context.active_object):
-                    if not prefs.enable_edit_mode and context.mode in ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT',
-                                                                       'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']:
+                    if not prefs.enable_edit_mode and context.mode in edit_modes():
                         cls.poll_message_set("Keymesh can't create frames in edit modes (can be enabled from preferences)")
                         return False
                     else:

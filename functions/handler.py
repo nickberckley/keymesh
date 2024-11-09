@@ -8,7 +8,7 @@ from .object import get_active_block_index
 @bpy.app.handlers.persistent
 def update_keymesh(scene):
     prefs = bpy.context.preferences.addons[base_package].preferences
-    for obj in bpy.data.objects:
+    for obj in bpy.context.scene.objects:
         # is_not_keymesh_object
         if obj.keymesh.get("Keymesh Data") is None:
             continue
@@ -50,15 +50,15 @@ def update_keymesh(scene):
         if scene.sync_with_timeline:
             active_index = obj.keymesh.blocks_active_index
 
-            # find_index_of_active_keymesh_block
-            active_block_index = get_active_block_index(obj)
-
-            if (active_index != active_block_index) and (active_block_index >= 0):
-                if bpy.context.active_object:
-                    if bpy.context.active_object.keymesh.grid_view:
-                        obj.keymesh.blocks_grid = str(active_block_index)
-                    else:
-                        obj.keymesh.blocks_active_index = int(active_block_index)
+            if active_index is not None:
+                # find_index_of_active_keymesh_block
+                active_block_index = get_active_block_index(obj)
+                if (active_index != active_block_index) and (active_block_index >= 0):
+                    if bpy.context.active_object:
+                        if bpy.context.active_object.keymesh.grid_view:
+                            obj.keymesh.blocks_grid = str(active_block_index)
+                        else:
+                            obj.keymesh.blocks_active_index = int(active_block_index)
 
 
 

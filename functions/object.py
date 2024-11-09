@@ -34,6 +34,10 @@ def get_next_keymesh_index(obj):
 
 
 def list_block_users(block):
+    """Returns list of objects that are using given Keymesh block"""
+    """NOTE: This look-up is not ideal, but it's needed for now because when Keymesh object is duplicated same block is used twice"""
+    """NOTE: When/if duplicate handlers are added in Blender and we can guarantee one owner per block this can be refactored."""
+
     users = []
     for obj in bpy.data.objects:
         if obj.keymesh.animated:
@@ -76,7 +80,7 @@ def get_active_block_index(obj):
 
     active_block_index = None
     for i, block in enumerate(obj.keymesh.blocks):
-        if block.name == obj.data.name:
+        if block.block == obj.data:
             active_block_index = i
     
     return active_block_index

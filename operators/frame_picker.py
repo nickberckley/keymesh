@@ -1,5 +1,6 @@
 import bpy
-from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
+from ..functions.object import get_active_block_index
+from ..functions.poll import is_linked, is_keymesh_object, obj_data_type, edit_modes
 from ..functions.timeline import insert_keyframe
 
 
@@ -16,20 +17,29 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object and is_keymesh_object(context.active_object)
+        if context.active_object:
+            if is_keymesh_object(context.active_object):
+                if context.mode in edit_modes():
+                    cls.poll_message_set("Can't insert Keymesh frames in edit modes")
+                    return False
+                else:
+                    return True
+            else:
+                return False
+        else:
+            return False
 
     def execute(self, context):
         scene = context.scene
         obj = context.active_object
         data_type = obj_data_type(obj)
 
-        current_mode = obj.mode
-        if current_mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
-
         # assign_keymesh_block_to_object
         obj.data = data_type[self.keymesh_index]
         keymesh_block = context.active_object.data.keymesh.get("Data")
+
+        active_block_index = get_active_block_index(obj)
+        obj.keymesh.blocks_active_index = int(active_block_index)
 
         # Keyframe Block
         if obj in context.editable_objects:
@@ -43,7 +53,6 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
                 else:
                     insert_keyframe(obj, scene.frame_current, keymesh_block)
 
-            bpy.ops.object.mode_set(mode=current_mode)
         return {'FINISHED'}
 
 

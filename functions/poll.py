@@ -5,8 +5,7 @@ import bpy
 
 def is_candidate_object(obj):
     if obj:
-        return obj.type in ['MESH', 'CURVE', 'SURFACE', 'FONT', 'CURVES', 'META', 'VOLUME',
-                            'LATTICE', 'LIGHT', 'LIGHT_PROBE', 'CAMERA', 'SPEAKER']
+        return obj.type in [obj_type for obj_type, _ in supported_types()]
 
 
 def is_linked(context, obj):
@@ -38,8 +37,8 @@ def is_keymesh_object(obj):
         return False
 
 
-def obj_data_type(obj):
-    supported_types = [
+def supported_types():
+    return [
         ('MESH', bpy.data.meshes),
         ('CURVE', bpy.data.curves),
         ('SURFACE', bpy.data.curves),
@@ -55,28 +54,12 @@ def obj_data_type(obj):
         ('SPEAKER', bpy.data.speakers),
     ]
 
-    for obj_type, data_type in supported_types:
+
+def obj_data_type(obj):
+    for obj_type, data_type in supported_types():
         if obj.type == obj_type:
             return data_type
 
 
-def prop_type(obj):
-    supported_types = [
-        ('MESH', "meshes"),
-        ('CURVE', "curves"),
-        ('SURFACE', "curves"),
-        ('FONT', "curves"),
-        ('CURVES', "hair_curves"),
-        ('META', "metaballs"),
-        ('VOLUME', "volumes"),
-
-        ('LATTICE', "lattices"),
-        ('LIGHT', "lights"),
-        ('LIGHT_PROBE', "lightprobes"),
-        ('CAMERA', "cameras"),
-        ('SPEAKER', "speakers"),
-    ]
-
-    for obj_type, prop_type in supported_types:
-        if obj.type == obj_type:
-            return prop_type
+def edit_modes():
+    return ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']

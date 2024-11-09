@@ -1,5 +1,5 @@
 import bpy
-from .functions.poll import is_linked, prop_type, obj_data_type
+from .functions.poll import is_linked
 from .functions.timeline import get_keymesh_fcurve, keymesh_block_usage_count
 
 
