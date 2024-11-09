@@ -11,7 +11,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
     bl_idname = "object.purge_keymesh_data"
     bl_label = "Purge Unused Keymesh Blocks"
     bl_description = ("Purges all Keymesh blocks from active object that are not used in the animation.\n"
-                    "Shift-click purges unused blocks for all objects in the .blend file")
+                      "Shift-click purges unused blocks for all objects in the .blend file")
     bl_options = {'REGISTER', 'UNDO'}
 
     all: bpy.props.BoolProperty(
@@ -128,10 +128,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         if len(delete_keymesh_blocks) == 0:
             self.report({'INFO'}, "No Keymesh blocks were removed")
         else:
-            if self.all:
-                specifier = " from the scene"
-            else:
-                specifier = " for " + context.active_object.name
+            specifier = " from the scene" if self.all else " for " + context.active_object.name
             self.report({'INFO'}, str(len(delete_keymesh_blocks)) + " Keymesh block(s) removed" + specifier)
 
         return {'FINISHED'}
@@ -176,11 +173,14 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
                 # Remove Keyframes
                 fcurve = get_keymesh_fcurve(obj)
-                for keyframe in reversed(fcurve.keyframe_points.values()):
-                    if keyframe.co_ui[1] == block.keymesh.get("Data"):
-                        fcurve.keyframe_points.remove(keyframe)
+                if fcurve:
+                    for keyframe in reversed(fcurve.keyframe_points.values()):
+                        if keyframe.co_ui[1] == block.keymesh.get("Data"):
+                            fcurve.keyframe_points.remove(keyframe)
 
                 # refresh_timeline
+                """NOTE: Scrubbing in timeline makes sure that correct object data is asigned based on previous found keyframe."""
+                """NOTE: Without this whole object is deleted because Blender thinks it doesn't have object data anymore."""
                 current_frame = context.scene.frame_current
                 context.scene.frame_set(current_frame + 1)
                 context.scene.frame_set(current_frame)

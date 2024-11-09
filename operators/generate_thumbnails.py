@@ -39,8 +39,8 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         return context.active_object and is_keymesh_object(context.active_object)
 
     def calibrate_viewport(self, area):
-        '''Tries to better center objects in the frame so that they're not too tiny in the image'''
-        '''It's needed because viewports that are in 'landscape' mode zoom out in gl_render to accomodate height pixels, and vice versa'''
+        """Tries to better center objects in the frame so that they're not too tiny in the image"""
+        """It's useful because viewports that are in 'landscape' mode zoom out in gl_render to accomodate height pixels, and vice versa"""
 
         region = next((region for region in area.regions if region.type == 'WINDOW'), None)
         if region:
@@ -92,8 +92,8 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
 
         # store_values
         mat, loc, rot = (viewport.region_3d.view_matrix.copy(),
-                        viewport.region_3d.view_location.copy(),
-                        viewport.region_3d.view_rotation.copy())
+                         viewport.region_3d.view_location.copy(),
+                         viewport.region_3d.view_rotation.copy())
         initial_shading = viewport.shading.type
         initial_overlays = viewport.overlay.show_overlays
         initial_transparency = context.scene.render.film_transparent
@@ -128,8 +128,8 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
             obj.data = block.block
             context.scene.render.filepath = directory + block.name
             bpy.ops.render.opengl(animation=False,
-                                write_still=True,
-                                view_context=True)
+                                  write_still=True,
+                                  view_context=True)
 
             # assign_thumbnail
             image_path = os.path.join(directory, block.name + ".jpg")

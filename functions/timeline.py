@@ -4,7 +4,7 @@ import bpy
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def get_keymesh_fcurve(obj):
-    """Returns the Keymesh f-curve for active object"""
+    """Returns the Keymesh f-curve for obj"""
 
     fcurve = None
     if obj.keymesh.animated:
@@ -16,18 +16,9 @@ def get_keymesh_fcurve(obj):
 
     return fcurve
 
-        # alternative_way
-        # for action in bpy.data.actions:
-        #     if obj.user_of_id(action.id_data):
-        #         fcurves = action.fcurves
-        #         if fcurves is not None:
-        #             for f in fcurves:
-        #                 if f.data_path == 'keymesh["Keymesh Data"]':
-        #                     fcurve = f
-
 
 def get_keymesh_keyframes(obj):
-    """Get all Keymesh keyframes associated with the active object"""
+    """Get all Keymesh keyframes associated with the obj"""
 
     keyframes = []
     fcurve = get_keymesh_fcurve(obj)
@@ -60,10 +51,9 @@ def insert_keyframe(obj, frame, block=None):
             kf.interpolation = 'CONSTANT'
 
 
-def keymesh_block_usage_count(self, context, block):
-    """Returns number of uses (keyframes) for each Keymesh block for object"""
+def keymesh_block_usage_count(obj, block):
+    """Returns number of uses (keyframes) for each Keymesh block of obj"""
 
-    obj = context.active_object
     fcurve = get_keymesh_fcurve(obj)
     value = block.keymesh["Data"]
 
@@ -110,17 +100,3 @@ def get_next_keymesh_block(context, obj, direction):
                     next_keymesh_block = mesh
 
     return next_keyframe, next_keymesh_block
-
-
-# def get_object_key_values(context, obj):
-#     values = []
-#     fcurve = get_keymesh_fcurve(obj)
-#     keyframe_points = fcurve.keyframe_points
-
-#     for item in keyframe_points:
-#         i = 1
-#         while i < len(item.co):
-#             values.append(int(item.co[i]))
-#             i += 2
-
-#     return values

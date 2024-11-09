@@ -87,7 +87,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
         # Create Back-up
         if self.back_up:
-            create_back_up(context, obj, original_data)
+            create_back_up(obj, original_data)
 
         # Assign Keymesh ID
         assign_keymesh_id(obj)

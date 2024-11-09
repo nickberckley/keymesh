@@ -29,7 +29,7 @@ def keymesh_blocks_coll_update(self, context):
 
 
 def thumbnails_render_offer(self, context):
-    '''Detects when there are Keymesh blocks with no/missing thumbnails and calls for pop-up that offers to render it'''
+    """Detects when there are Keymesh blocks with no/missing thumbnails and calls for pop-up that offers to render it"""
 
     obj = self.id_data
     if obj.is_editable:

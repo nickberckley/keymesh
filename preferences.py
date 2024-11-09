@@ -23,6 +23,7 @@ def update_sidebar_category(self, context):
 # Keymaps
 def get_hotkey_entry_item(km, kmi_name, kmi_prop=None, kmi_value=None):
     """Returns keymap with given operator name and `path` property value"""
+
     for i, km_item in enumerate(km.keymap_items):
         if km.keymap_items.keys()[i] == kmi_name:
             if kmi_prop:
@@ -72,8 +73,9 @@ def draw_kmi(kmi, layout):
         row.label()
 
     # NOTE: there is a bug that always shows next icon in list instead of defined,
-    # NOTE: so 'REMOVE' is used instead of 'PANEL_CLOSE'
-    row.prop(kmi, "active", text="", icon='REMOVE' if kmi.active else 'TRACKING_CLEAR_BACKWARDS', emboss=False)
+    # NOTE: so 'REMOVE' or 'OPTIONS' is used instead of 'PANEL_CLOSE'
+    fixed_icon = 'OPTIONS' if bpy.app.version >= (4, 3, 0) else 'REMOVE'
+    row.prop(kmi, "active", text="", icon=fixed_icon if kmi.active else 'TRACKING_CLEAR_BACKWARDS', emboss=False)
 
 
     # Body
@@ -117,7 +119,6 @@ def draw_kmi(kmi, layout):
 #### ------------------------------ PREFERENCES ------------------------------ ####
 
 class KeymeshAddonPreferences(bpy.types.AddonPreferences):
-
     bl_idname = __package__
 
     # ui

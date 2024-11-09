@@ -7,8 +7,8 @@ from ..functions.timeline import insert_keyframe
 #### ------------------------------ OPERATORS ------------------------------ ####
 
 class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
-    bl_label = "Pick Keymesh Frame"
     bl_idname = "object.keymesh_pick_frame"
+    bl_label = "Pick Keymesh Frame"
     bl_description = "Link the selected Keymesh block to the current object"
     bl_options = {'UNDO'}
 
@@ -39,7 +39,7 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         active_block_index = get_active_block_index(obj)
         obj.keymesh.blocks_active_index = int(active_block_index)
 
-        # account_for_non_animated_Keymesh_objects (properly assign block by changing object_keymesh_data as well)
+        # account_for_non_animated_Keymesh_objects (properly_assign_block_by_changing_object_keymesh_data_as_well)
         block_keymesh_data = context.active_object.data.keymesh.get("Data")
         if scene.keymesh.insert_on_selection == False and not obj.animation_data:
             obj.keymesh["Keymesh Data"] = int(block_keymesh_data)
@@ -75,7 +75,7 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
     direction: bpy.props.EnumProperty(
         name = "Direction",
         items = [('UP', "", ""),
-                ('DOWN', "", ""),],
+                 ('DOWN', "", ""),],
     )
 
     @classmethod
@@ -103,11 +103,12 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
         elif self.direction == 'DOWN' and (index + 1) < len(obj.keymesh.blocks):
             obj.keymesh.blocks.move(index, index + 1)
             obj.keymesh.blocks_active_index += 1
+
         return {'FINISHED'}
 
 
 class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
-    bl_idname = "object.keymesh_block_set_active"
+    bl_idname = "object.keymesh_block_active_set"
     bl_label = "Change Active Keymesh Block"
     bl_description = "Change active keymesh block in grid view of frame picker"
     bl_options = {'INTERNAL'}

@@ -36,12 +36,12 @@ def populate_keymesh_blocks(scene):
             # delete_old_properties
             if obj.get("km_id", None):
                 del obj["km_id"]
-            elif obj.get("Keymesh ID", None):
+            if obj.get("Keymesh ID", None):
                 del obj["Keymesh ID"]
 
             if obj.get("km_datablock", None):
                 del obj["km_datablock"]
-            elif obj.get("Keymesh Data", None):
+            if obj.get("Keymesh Data", None):
                 del obj["Keymesh Data"]
 
             if obj.get("Keymesh Name") is not None:
@@ -51,16 +51,19 @@ def populate_keymesh_blocks(scene):
             # list_objects_blocks
             unregistered_blocks = []
             for block in obj_data_type(obj):
-                if (not block.get("km_id")) and (not block.get("Keymesh ID")):
+                if not block.get("km_id", None) and not block.get("Keymesh ID", None):
                     continue
 
-                if (block.get("Keymesh ID") == obj_legacy_keymesh_id) or (block.get("km_id") == obj_legacy_keymesh_id):
+                if (block.get("Keymesh ID", None) == obj_legacy_keymesh_id) or (block.get("km_id", None) == obj_legacy_keymesh_id):
                     unregistered_blocks.append(block)
 
+                    print(block.name)
+
                     # Convert Data Properties
+                    block_legacy_keymesh_data = None
                     if block.get("km_datablock", None):
                         block_legacy_keymesh_data = block.get("km_datablock", None)
-                    elif block.get("Keymesh Data", None):
+                    if block.get("Keymesh Data", None):
                         block_legacy_keymesh_data = block.get("Keymesh Data", None)
 
                     block.keymesh["ID"] = new_id
@@ -69,12 +72,12 @@ def populate_keymesh_blocks(scene):
                     # delete_old_properties
                     if block.get("km_id", None):
                         del block["km_id"]
-                    elif block.get("Keymesh ID", None):
+                    if block.get("Keymesh ID", None):
                         del block["Keymesh ID"]
                     
                     if block.get("km_datablock", None):
                         del block["km_datablock"]
-                    elif block.get("Keymesh Data", None):
+                    if block.get("Keymesh Data", None):
                         del block["Keymesh Data"]
 
                     if block.get("Keymesh Name") is not None:

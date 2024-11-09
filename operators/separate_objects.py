@@ -16,8 +16,8 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         items = [('PRINT', "3D Printing", ("Each new object can be offsetted from previous objects position and they're not animated.\n"
                                             "Useful for preparing replacement parts that should be exported and 3D printed for stop-motion.")),
                 ('RENDER', "Rendering", ("Each new objects visibility will be animated so they only appear on frames on which they were on.\n"
-                                        "This allows to keep the final animation while using separate objects instead of Keymesh blocks.\n"
-                                        "Can be used when regular Keymesh animation is misbehaving in render, or is sent to render farm."))],
+                                         "This allows to keep the final animation while using separate objects instead of Keymesh blocks.\n"
+                                         "Can be used when regular Keymesh animation is misbehaving in render, or is sent to render farm."))],
         default = 'PRINT',
     )
 
@@ -30,9 +30,9 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         name = "Duplicate Handling Method",
         description = "How to handle Keymesh blocks that are used more than one time in animation",
         items = [('REUSE', "Reuse Single Object", ("Single object will be created for each block regardless of how many times it is used in animation.\n"
-                                                    "It's visibility will be animated so that it's visible on every frame that Keymesh block was visible on.")),
+                                                   "It's visibility will be animated so that it's visible on every frame that Keymesh block was visible on.")),
                 ('INSTANCE', "Instance Object-Data", ("Single object data (i.e. mesh, curve...) will be created for each Keymesh block,\n"
-                                                    "and instanced by new object on every frame it is keyframed on."))],
+                                                      "and instanced by new object on every frame it is keyframed on."))],
         default = 'REUSE',
     )
 
@@ -40,7 +40,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         name = "Naming Convention",
         description = "Choose how newly created objects are named",
         items = [('BLOCKS', "Keymesh Blocks", "Objects will be named after the Keymesh block they represent"),
-                ('FRAMES', "Frames", "Objects will be named after the frame on which they're created")],
+                 ('FRAMES', "Frames", "Objects will be named after the frame on which they're created")],
         default = 'BLOCKS',
     )
 
@@ -59,8 +59,8 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         name = "Move on Axis",
         description = "Axis to move the duplicated objects on",
         items = [('X', "X", "Move on X axis"),
-                ('Y', "Y", "Move on Y axis"),
-                ('Z', "Z", "Move on Z axis")],
+                 ('Y', "Y", "Move on Y axis"),
+                 ('Z', "Z", "Move on Z axis")],
         default = 'X',
     )
 
@@ -114,7 +114,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
         return output_frames
 
 
-    def create_object(self, context, obj, data, frame, collection, instance=False):
+    def create_object(self, obj, data, frame, collection, instance=False):
         dup_obj = obj.copy()
         if self.naming_convention == 'FRAMES':
             dup_obj.name = obj.name + "_frame_" + str(frame)
@@ -171,7 +171,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
             if not (self.handle_duplicates and current_value in uniques.values()):
                 # Create New Object
-                dup_obj = self.create_object(context, obj, obj.data.copy(), frame, duplicates_collection)
+                dup_obj = self.create_object(obj, obj.data.copy(), frame, duplicates_collection)
                 uniques[dup_obj] = current_value
             else:
                 if self.workflow == 'RENDER' and self.handle_duplicates:
@@ -183,7 +183,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
                     # Create Instance Object
                     if self.handling_method == 'INSTANCE':
-                        dup_obj = self.create_object(context, match, match.data, frame, duplicates_collection, instance=True)
+                        dup_obj = self.create_object(match, match.data, frame, duplicates_collection, instance=True)
                     # Reuse Same Object for Animation
                     if self.handling_method == 'REUSE':
                         dup_obj = match
@@ -242,7 +242,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
             self.report({'INFO'}, "Duplicates were detected. Read console for more information")
 
             for duplicate in duplicates:
-                usage, frames = keymesh_block_usage_count(self, context, duplicate)
+                usage, frames = keymesh_block_usage_count(obj, duplicate)
                 output_frames = self.count_duplicate_usage(obj, frames, holds)
 
                 if self.workflow == 'RENDER':

@@ -4,12 +4,14 @@ import bpy
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def is_candidate_object(obj):
+    """Checks if obj.type is supported by Keymesh"""
+
     if obj:
         return obj.type in [obj_type for obj_type, _ in supported_types()]
 
 
 def is_linked(context, obj):
-    """Checks whether or not object is linked from another file and/or library overriden"""
+    """Checks whether or not obj is linked from another file and/or library overriden"""
 
     if obj:
         if obj not in context.editable_objects:
@@ -44,7 +46,7 @@ def is_instanced(data):
 
 
 def is_keymesh_object(obj):
-    """Checks whether or not given object has Keymesh animation or blocks"""
+    """Checks whether or not obj has Keymesh animation or blocks"""
 
     if obj.keymesh.animated == True:
         if obj.keymesh.get("ID", None):

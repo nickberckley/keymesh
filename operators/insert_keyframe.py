@@ -12,19 +12,11 @@ def insert_keymesh_keyframe(context, obj):
     prefs = bpy.context.preferences.addons[base_package].preferences
 
     object_mode = context.mode
-    if context.active_object.mode != 'OBJECT':
-        bpy.ops.object.mode_set(mode='OBJECT')
+    if prefs.enable_edit_mode and context.mode in edit_modes():
+        if object_mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
 
     if obj:
-        # store_data_that_is_not_persistent
-        if obj.type == 'MESH':
-            remesh_voxel_size = obj.data.remesh_voxel_size
-            remesh_voxel_adaptivity = obj.data.remesh_voxel_adaptivity
-            symmetry_x = obj.data.use_mirror_x
-            symmetry_y = obj.data.use_mirror_y
-            symmetry_z = obj.data.use_mirror_z
-
-
         # Assign Keymesh ID
         assign_keymesh_id(obj)
 
@@ -53,16 +45,7 @@ def insert_keymesh_keyframe(context, obj):
         insert_keyframe(obj, context.scene.frame_current, block_index)
         update_keymesh(context.scene)
 
-
-        # restore_inpersistent_data
-        if obj.type == 'MESH':
-            obj.data.remesh_voxel_size = remesh_voxel_size
-            obj.data.remesh_voxel_adaptivity = remesh_voxel_adaptivity
-            obj.data.use_mirror_x = symmetry_x
-            obj.data.use_mirror_y = symmetry_y
-            obj.data.use_mirror_z = symmetry_z
-
-        # restore_object_mode
+    if prefs.enable_edit_mode:
         if object_mode in edit_modes():
             object_mode = 'EDIT'
         bpy.ops.object.mode_set(mode=object_mode)
@@ -75,14 +58,14 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
     bl_idname = "object.keyframe_object_data"
     bl_label = "Insert Keymesh Keyframe"
     bl_description = ("Adds a Keymesh keyframe on active object.\n"
-                    "Object data gets tied to the frame. You can edit it while previous one is kept on previous frame")
+                      "Object data gets tied to the frame. You can edit it while previous one is kept on previous frame")
     bl_options = {'UNDO'}
 
     path: bpy.props.EnumProperty(
         name = "Direction",
         items = (('STILL', "Still", "Insert keyframe on current frame"),
-                ('FORWARD', "Forward", "Insert keyframe forward by number of frames specified"),
-                ('BACKWARD', "Backward", "Insert keyframe backward by number of frames specified")),
+                 ('FORWARD', "Forward", "Insert keyframe forward by number of frames specified"),
+                 ('BACKWARD', "Backward", "Insert keyframe backward by number of frames specified")),
         default = 'STILL',
     )
 

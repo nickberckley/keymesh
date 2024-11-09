@@ -16,7 +16,7 @@ def new_object_id():
 
 
 def get_next_keymesh_index(obj):
-    """Get the appropriate index for the newly created Keymesh block"""
+    """Get the appropriate index for the newly created/added Keymesh block"""
 
     if obj.keymesh.get("Keymesh Data") is None:
         return 0
@@ -48,14 +48,15 @@ def list_block_users(block):
 
 
 def assign_keymesh_id(obj):
-    prefs = bpy.context.preferences.addons[base_package].preferences
+    """Assigns properties to obj required to make it Keymesh object"""
+
     if obj.keymesh.animated is False:
         obj.keymesh["ID"] = new_object_id()
         obj.keymesh.animated = True
 
 
-def create_back_up(context, obj, data):
-    """Creates hidden copy of object and appends to object collections"""
+def create_back_up(obj, data):
+    """Creates hidden copy of obj and appends to object collections"""
 
     backup = obj.copy()
     backup.data = data
@@ -76,7 +77,7 @@ def create_back_up(context, obj, data):
 
 def get_active_block_index(obj):
     """Returns index for active Keymesh block (current object data)"""
-    """NOTE: Necessary to get with iterations since no direct way to access index for CollectionProperty items"""
+    """NOTE: Necessary to get with iterations since there is no direct way to access index for CollectionProperty items"""
 
     active_block_index = None
     for i, block in enumerate(obj.keymesh.blocks):

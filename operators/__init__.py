@@ -6,11 +6,11 @@ from . import (
     generate_thumbnails,
     initialize_handler,
     insert_keyframe,
+    # interpolate,
     join_extract,
     purge_unused_data,
     separate_objects,
     timeline_jump,
-    # interpolate,
 )
 
 
@@ -22,11 +22,11 @@ modules = [
     generate_thumbnails,
     initialize_handler,
     insert_keyframe,
+    # interpolate,
     join_extract,
     purge_unused_data,
     separate_objects,
     timeline_jump,
-    # interpolate,
 ]
 
 def register():

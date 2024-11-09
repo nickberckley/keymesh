@@ -17,6 +17,7 @@ class SCENE_OT_initialize_keymesh_handler(bpy.types.Operator):
     def execute(self, context):
         bpy.app.handlers.frame_change_post.remove(update_keymesh)
         bpy.app.handlers.frame_change_post.append(update_keymesh)
+
         return {'FINISHED'}
 
 

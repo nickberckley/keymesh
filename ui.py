@@ -1,5 +1,5 @@
 import bpy
-from .functions.poll import is_linked
+from .functions.poll import is_linked, is_keymesh_object
 from .functions.timeline import get_keymesh_fcurve, keymesh_block_usage_count
 
 
@@ -34,9 +34,9 @@ class VIEW3D_PT_keymesh(bpy.types.Panel):
         row = column.row(align=False)
         row.alignment = 'EXPAND'
         if scene.keyframe_after_skip and not is_linked(context, obj):
-            row.operator("object.keyframe_object_data", text="Insert", icon_value=6).path='BACKWARD'
+            row.operator("object.keyframe_object_data", text="Insert", icon='TRIA_LEFT').path='BACKWARD'
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME').path='STILL'
-            row.operator("object.keyframe_object_data", text="Insert", icon_value=4).path='FORWARD'
+            row.operator("object.keyframe_object_data", text="Insert", icon='TRIA_RIGHT').path='FORWARD'
         else:
             row.operator("timeline.keymesh_frame_jump", text="Jump", icon='FRAME_PREV').path='BACKWARD'
             row.operator("object.keyframe_object_data", text="", icon='DECORATE_KEYFRAME').path='STILL'
@@ -53,8 +53,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object is not None and context.active_object.keymesh.animated
-                and len(context.active_object.keymesh.blocks) >= 1)
+        return context.active_object and is_keymesh_object(context.active_object)
 
     def draw_header_preset(self, context):
         layout = self.layout
@@ -70,13 +69,15 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
         if obj.keymesh.grid_view == False:
             row = layout.row()
             col = row.column()
-            col.template_list("VIEW3D_UL_keymesh_blocks",
+            col.template_list(
+                "VIEW3D_UL_keymesh_blocks",
                 list_id = "Keymesh Blocks",
                 dataptr = obj.keymesh,
                 propname = "blocks",
                 active_dataptr = obj.keymesh,
                 active_propname = "blocks_active_index",
-                rows = 8)
+                rows = 8
+            )
 
             # buttons
             col = row.column(align=True)
@@ -100,8 +101,14 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             active_block = obj.keymesh.blocks[active_index]
 
             col = layout.column(align=True)
-            col.template_icon_view(obj.keymesh, "blocks_grid", show_labels=True, scale=6)
+            col.template_icon_view(
+                obj.keymesh,
+                "blocks_grid",
+                show_labels=True,
+                scale=6
+            )
 
+            # properties
             row = col.row(align=True)
             row.prop(active_block, "thumbnail", text="")
             row.operator("object.keymesh_thumbnails_refresh", text="", icon='FILE_REFRESH')
@@ -123,24 +130,25 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
                         is_keyframed = True
                         if int(keyframe.co.y) == obj.keymesh.blocks[int(obj.keymesh.blocks_grid)].block.keymesh["Data"]:
                             is_active = True
-                        break
+                            break
 
-            if is_active:
-                icon = 'DECORATE_KEYFRAME'
-            else:
-                if is_keyframed:
-                    icon = 'ANIM'
-                else:
-                    icon = 'DECORATE_ANIMATE'
-            if not obj in context.editable_objects:
+            if obj not in context.editable_objects:
                 if obj.keymesh.blocks[active_index].block != obj.data:
                     icon = 'VIEWZOOM'
                 else:
                     icon = 'PINNED'
+            else:
+                if is_active:
+                    icon = 'DECORATE_KEYFRAME'
+                else:
+                    if is_keyframed:
+                        icon = 'DECORATE_OVERRIDE'
+                    else:
+                        icon = 'DECORATE_ANIMATE'
 
-            row.operator("object.keymesh_block_set_active", text="Previous", icon='BACK').direction='PREVIOUS'
+            row.operator("object.keymesh_block_active_set", text="Previous", icon='BACK').direction='PREVIOUS'
             row.operator("object.keymesh_pick_frame", text="", icon=icon).keymesh_index = active_block.name
-            row.operator("object.keymesh_block_set_active", text="Next", icon='FORWARD').direction='NEXT'
+            row.operator("object.keymesh_block_active_set", text="Next", icon='FORWARD').direction='NEXT'
 
             col = layout.column(align=True)
             col.prop(scene, "sync_with_timeline", text="Synchronize Active with Timeline")
@@ -194,13 +202,14 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
 
 class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     """List of Keymesh data-blocks for active object"""
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.active_object
         action = obj.animation_data.action if obj.animation_data else None
 
         obj_keymesh_data = obj.keymesh.get("Keymesh Data")
         block_keymesh_data = item.block.keymesh.get("Data")
-        usage_count, __ = keymesh_block_usage_count(self, context, item.block)
+        usage_count, __ = keymesh_block_usage_count(obj, item.block)
 
         col = layout.column(align=True)
         row = col.row(align=True)
