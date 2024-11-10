@@ -11,12 +11,12 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
     bl_idname = "object.purge_keymesh_data"
     bl_label = "Purge Unused Keymesh Blocks"
     bl_description = ("Purges all Keymesh blocks from active object that are not used in the animation.\n"
-                      "Shift-click purges unused blocks for all objects in the .blend file")
-    bl_options = {'REGISTER', 'UNDO'}
+                      "Shift-click purges unused blocks for all Keymesh objects in the .blend file (excluding static ones)")
+    bl_options = {'UNDO'}
 
     all: bpy.props.BoolProperty(
-        name="For All Objects",
-        default=False,
+        name = "For All Objects",
+        default = False,
     )
 
     @classmethod
@@ -32,110 +32,80 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                 return False
         else:
             return False
+        
+    def invoke(self, context, event):
+        self.all = event.shift
+
+        obj = context.active_object
+        if obj.keymesh.animated == False and self.all == False:
+            self.report({'INFO'}, "Can't remove unused blocks for static Keymesh objects")
+            return {'CANCELLED'}
+
+        return self.execute(context)
 
     def execute(self, context):
-        # List Used Keymesh Blocks
-        used_keymesh_blocks = {}
-        objects = bpy.data.objects if self.all else [context.active_object]
-        for obj in objects:
-            if obj.keymesh.animated is False:
-                continue
+        # filter_objects
+        filtered_objects = []
+        if self.all:
+            for obj in bpy.data.objects:
+                if obj.keymesh.animated is False:
+                    continue
+                if is_linked(context, obj):
+                    continue
+                filtered_objects.append(obj)
+        else:
+            filtered_objects = [context.active_object]
 
+
+        # list_used_keymesh_blocks
+        used_keymesh_blocks = {}
+        for obj in filtered_objects:
             obj_keymesh_id = obj.keymesh.get("ID")
             used_keymesh_blocks[obj_keymesh_id] = []
 
             fcurve = get_keymesh_fcurve(obj)
-            keyframe_points = fcurve.keyframe_points
-            for item in keyframe_points:
-                keyframe = item
-                used_keymesh_blocks[obj_keymesh_id].append(keyframe.co.y)
+            if fcurve:
+                keyframe_points = fcurve.keyframe_points
+                for keyframe in reversed(keyframe_points):
+                    if keyframe.co.y not in used_keymesh_blocks[obj_keymesh_id]:
+                        used_keymesh_blocks[obj_keymesh_id].append(keyframe.co.y)
 
 
-        # list_unused_keymesh_blocks (for_all_objects)
-        delete_keymesh_blocks = []
-        if self.all:
-            for data_collection in [bpy.data.meshes, bpy.data.curves, bpy.data.hair_curves, bpy.data.metaballs, bpy.data.volumes,
-                                    bpy.data.lattices, bpy.data.lights, bpy.data.lightprobes, bpy.data.cameras, bpy.data.speakers]:
-                for block in data_collection:
-                    if block.keymesh.get("ID") is None:
-                        continue
+        purged_keymesh_blocks = []
+        for obj in filtered_objects:
+            obj_keymesh_id = obj.keymesh.get("ID")
 
-                    block_keymesh_id = block.keymesh.get("ID")
-                    if block_keymesh_id not in used_keymesh_blocks:
-                        delete_keymesh_blocks.append(block)
-                        continue
-
-                    block_keymesh_data = block.keymesh.get("Data")
-                    if block_keymesh_data not in used_keymesh_blocks[block_keymesh_id]:
-                        delete_keymesh_blocks.append(block)
-                        continue
-
-        # list_unused_keymesh_blocks (for_active_object)
-        else:
-            obj = context.active_object
+            # List Unused Blocks
+            unused_blocks = []
             for block in obj.keymesh.blocks:
-                block_keymesh_id = block.block.keymesh.get("ID")
                 block_keymesh_data = block.block.keymesh.get("Data")
-
-                if block_keymesh_data not in used_keymesh_blocks[block_keymesh_id]:
-                    delete_keymesh_blocks.append(block.block)
+                if block_keymesh_data not in used_keymesh_blocks[obj_keymesh_id]:
+                    unused_blocks.append(block.block)
+                    purged_keymesh_blocks.append(block.block)
                     continue
 
+            # Purge Unused Blocks
+            for block in unused_blocks:
+                block.use_fake_user = False
 
-        # Purge Unused Blocks
-        for block in delete_keymesh_blocks:
-            block.use_fake_user = False
-
-            # remove_from_block_registry
-            users = list_block_users(block)
-            for user in users:
-                if user not in context.editable_objects:
-                    continue
-
-                for index, mesh_ref in enumerate(user.keymesh.blocks):
+                for index, mesh_ref in enumerate(obj.keymesh.blocks):
                     if mesh_ref.block == block:
-                        user.keymesh.blocks.remove(index)
+                        obj.keymesh.blocks.remove(index)
 
-            removed_blocks = []
-            if block.users == 0:
-                if isinstance(block, bpy.types.Mesh):
-                    bpy.data.meshes.remove(block)
-                elif isinstance(block, bpy.types.Curve):
-                    bpy.data.curves.remove(block)
-                elif isinstance(block, bpy.types.Curves):
-                    bpy.data.hair_curves.remove(block)
-                elif isinstance(block, bpy.types.MetaBall):
-                    bpy.data.metaballs.remove(block)
-                elif isinstance(block, bpy.types.Volume):
-                    bpy.data.volumes.remove(block)
-                elif isinstance(block, bpy.types.Lattice):
-                    bpy.data.lattices.remove(block)
-                elif isinstance(block, bpy.types.Light):
-                    bpy.data.lights.remove(block)
-                elif isinstance(block, bpy.types.LightProbe):
-                    bpy.data.lightprobes.remove(block)
-                elif isinstance(block, bpy.types.Camera):
-                    bpy.data.cameras.remove(block)
-                elif isinstance(block, bpy.types.Speaker):
-                    bpy.data.speakers.remove(block)
-                removed_blocks.append(block)
+                obj_type = obj_data_type(obj)
+                obj_type.remove(block)
 
         # update_frame_handler
         update_keymesh(context.scene)
 
-
         # Info
-        if len(delete_keymesh_blocks) == 0:
+        if len(purged_keymesh_blocks) == 0:
             self.report({'INFO'}, "No Keymesh blocks were removed")
         else:
             specifier = " from the scene" if self.all else " for " + context.active_object.name
-            self.report({'INFO'}, str(len(delete_keymesh_blocks)) + " Keymesh block(s) removed" + specifier)
+            self.report({'INFO'}, str(len(purged_keymesh_blocks)) + " Keymesh block(s) removed" + specifier)
 
         return {'FINISHED'}
-
-    def invoke(self, context, event):
-        self.all = event.shift
-        return self.execute(context)
 
 
 class OBJECT_OT_keymesh_remove(bpy.types.Operator):
