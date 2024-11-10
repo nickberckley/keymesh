@@ -254,7 +254,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
                 # Animate Visibility
                 if self.workflow == 'RENDER':
-                    if self.handling_method == 'REUSE' and current_value == previous_value:
+                    if (self.handle_duplicates and self.handling_method == 'REUSE') and current_value == previous_value:
                         continue
                     else:
                         self.animate_visibility(dup_obj, frame)
