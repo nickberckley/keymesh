@@ -2,18 +2,15 @@ import bpy
 from ..functions.object import (
     get_next_keymesh_index,
     assign_keymesh_id,
-    get_active_block_index,
     insert_block,
     remove_block,
     remove_keymesh_properties,
+    update_active_index,
 )
 from ..functions.poll import (
     is_linked,
     is_instanced,
     is_keymesh_object,
-)
-from ..functions.timeline import (
-    get_keymesh_fcurve,
 )
 
 
@@ -145,11 +142,10 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
         else:
             # set_new_active_block
             if block == initial_data:
-                fcurve = get_keymesh_fcurve(obj)
-                if not fcurve:
+                if not obj.keymesh.animated:
                     # make_previous_object_new_obj.data_for_static_keymesh_objects
                     previous_index = index - 1 if index - 1 > -1 else 0
-                    obj.keymesh.blocks_active_index = previous_index
+                    update_active_index(obj, index=previous_index)
 
                     previous_block = obj.keymesh.blocks[obj.keymesh.blocks_active_index].block
                     obj.data = previous_block
@@ -159,12 +155,9 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
                     current_frame = context.scene.frame_current
                     context.scene.frame_set(current_frame + 1)
                     context.scene.frame_set(current_frame)
-
-                    active_index = get_active_block_index(obj)
-                    obj.keymesh.blocks_active_index = active_index
+                    update_active_index(obj)
             else:
-                active_index = get_active_block_index(obj)
-                obj.keymesh.blocks_active_index = active_index
+                update_active_index(obj)
 
         # make_new_object_active
         for ob in context.view_layer.objects:

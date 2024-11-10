@@ -152,7 +152,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
                         icon = 'DECORATE_ANIMATE'
 
             row.operator("object.keymesh_block_active_set", text="Previous", icon='BACK').direction='PREVIOUS'
-            row.operator("object.keymesh_pick_frame", text="", icon=icon).keymesh_index = active_block.name
+            row.operator("object.keymesh_pick_frame", text="", icon=icon).block = active_block.name
             row.operator("object.keymesh_block_active_set", text="Next", icon='FORWARD').direction='NEXT'
 
             col = layout.column(align=True)
@@ -241,7 +241,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
                 select_icon = 'UNPINNED'
 
         # Name
-        row.operator("object.keymesh_pick_frame", text="", icon=select_icon).keymesh_index = item.name
+        row.operator("object.keymesh_pick_frame", text="", icon=select_icon).block = item.name
         row.prop(item, "name", text="", emboss=False,)
 
         # Usage Count

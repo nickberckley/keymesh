@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object import get_active_block_index
+from ..functions.object import update_active_index
 from ..functions.poll import is_linked, is_keymesh_object, obj_data_type, edit_modes
 from ..functions.timeline import insert_keyframe
 
@@ -12,7 +12,7 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
     bl_description = "Link the selected Keymesh block to the current object"
     bl_options = {'UNDO'}
 
-    keymesh_index: bpy.props.StringProperty(
+    block: bpy.props.StringProperty(
     )
 
     @classmethod
@@ -35,13 +35,12 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         data_type = obj_data_type(obj)
 
         # Assign Keymesh Block to Object
-        obj.data = data_type[self.keymesh_index]
-        active_block_index = get_active_block_index(obj)
-        obj.keymesh.blocks_active_index = int(active_block_index)
+        obj.data = data_type[self.block]
+        update_active_index(obj)
 
         # account_for_non_animated_Keymesh_objects (properly_assign_block_by_changing_object_keymesh_data_as_well)
-        block_keymesh_data = context.active_object.data.keymesh.get("Data")
-        if scene.keymesh.insert_on_selection == False and not obj.keymesh.animated:
+        block_keymesh_data = obj.data.keymesh.get("Data")
+        if scene.keymesh.insert_on_selection == False and obj.keymesh.animated == False:
             obj.keymesh["Keymesh Data"] = int(block_keymesh_data)
 
 
@@ -87,7 +86,10 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
                     cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                     return False
                 else:
-                    return True
+                    if context.active_object.keymesh.grid_view == False:
+                        return True
+                    else:
+                        return False
             else:
                 return False
         else:

@@ -1,6 +1,6 @@
 import bpy
 from .. import __package__ as base_package
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, get_active_block_index
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, update_active_index
 from ..functions.timeline import insert_keyframe
 from ..functions.poll import is_candidate_object, is_linked, edit_modes
 from ..functions.handler import update_keymesh
@@ -44,8 +44,7 @@ def insert_keymesh_keyframe(self, context, obj):
         if self.static:
             # account_for_static_Keymesh_objects_by_actually_changing_object_data
             obj.keymesh["Keymesh Data"] = block_index
-            active_block_index = get_active_block_index(obj)
-            obj.keymesh.blocks_active_index = int(active_block_index)
+            update_active_index(obj)
         else:
             # Insert Keyframe
             insert_keyframe(obj, context.scene.frame_current, block_index)

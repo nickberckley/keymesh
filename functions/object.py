@@ -82,7 +82,7 @@ def create_back_up(obj, data):
 
 
 def get_active_block_index(obj):
-    """Returns index for active Keymesh block (current object data)"""
+    """Returns index (integer) for active Keymesh block (current object data)"""
     """NOTE: Necessary to get with iterations since there is no direct way to access index for CollectionProperty items"""
 
     active_block_index = None
@@ -149,3 +149,13 @@ def remove_keymesh_properties(obj):
                 empty_action = obj.animation_data.action
                 obj.animation_data.action = None
                 bpy.data.actions.remove(empty_action)
+
+
+def update_active_index(obj, index=None):
+    """Updates active block in Frame Picker & grid view UI"""
+
+    if index == None:
+        index = get_active_block_index(obj)
+
+    obj.keymesh.blocks_active_index = int(index)
+    obj.keymesh.blocks_grid = str(index)

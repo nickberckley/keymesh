@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object import list_block_users, remove_block
+from ..functions.object import list_block_users, remove_block, update_active_index
 from ..functions.handler import update_keymesh
 from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
 from ..functions.timeline import get_keymesh_fcurve
@@ -184,9 +184,9 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
             # make_previous_block_active
             previous_block_index = initial_index - 1
             if previous_block_index > -1:
-                obj.keymesh.blocks_active_index = previous_block_index
+                update_active_index(obj, index=previous_block_index)
             else:
-                obj.keymesh.blocks_active_index = 0
+                update_active_index(obj, index=0)
 
             # Purge
             data_type = obj_data_type(obj)
