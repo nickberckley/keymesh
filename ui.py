@@ -81,10 +81,14 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
             # buttons
             col = row.column(align=True)
-            col.operator("object.keyframe_object_data", text="", icon='ADD').path='STILL'
+            add = col.operator("object.keyframe_object_data", text="", icon='ADD')
+            add.path='STILL'
+            add.static=True
             col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
+
             col.separator()
             col.menu("VIEW3D_MT_keymesh_special_menu", icon='DOWNARROW_HLT', text="")
+
             col.separator()
             col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').direction='UP'
             col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').direction='DOWN'
