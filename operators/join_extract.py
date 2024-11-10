@@ -6,6 +6,7 @@ from ..functions.object import (
     remove_block,
     remove_keymesh_properties,
     update_active_index,
+    duplicate_object,
 )
 from ..functions.poll import (
     is_linked,
@@ -122,17 +123,7 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
         initial_data = obj.data
 
         # Duplicate Object
-        dup_obj = obj.copy()
-        dup_obj.data = block
-        dup_obj.name = block.name
-        context.view_layer.active_layer_collection.collection.objects.link(dup_obj)
-
-        if obj.animation_data is not None:
-            if obj.animation_data.action is not None:
-                dup_action = obj.animation_data.action.copy()
-                dup_obj.animation_data.action = dup_action
-
-        # remove_Keymesh_properties_from_new_object
+        dup_obj = duplicate_object(context, obj, block, name=block.name)
         remove_keymesh_properties(dup_obj)
 
         # Remove Block from Registry

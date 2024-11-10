@@ -159,3 +159,22 @@ def update_active_index(obj, index=None):
 
     obj.keymesh.blocks_active_index = int(index)
     obj.keymesh.blocks_grid = str(index)
+
+
+def duplicate_object(context, obj, block, name=None):
+    """Creates duplicate of obj and assigns object data / block"""
+
+    if name == None:
+        name = obj.name
+
+    dup_obj = obj.copy()
+    dup_obj.data = block
+    dup_obj.name = name
+    context.view_layer.active_layer_collection.collection.objects.link(dup_obj)
+
+    if obj.animation_data is not None:
+        if obj.animation_data.action is not None:
+            dup_action = obj.animation_data.action.copy()
+            dup_obj.animation_data.action = dup_action
+
+    return dup_obj
