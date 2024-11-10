@@ -13,6 +13,8 @@ def update_keymesh(scene):
     for obj in bpy.context.scene.objects:
         if not is_keymesh_object(obj):
             continue
+        if not obj.keymesh.animated:
+            continue
 
         obj_keymesh_data = obj.keymesh["Keymesh Data"]
 

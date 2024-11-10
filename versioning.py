@@ -29,6 +29,7 @@ def populate_keymesh_blocks(scene):
                 obj_legacy_keymesh_data = obj.get("Keymesh Data", None)
 
             obj.keymesh["ID"] = new_id
+            obj.keymesh.active = True
             obj.keymesh.animated = True
             obj.keymesh["Keymesh Data"] = obj_legacy_keymesh_data
             obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
@@ -56,8 +57,6 @@ def populate_keymesh_blocks(scene):
 
                 if (block.get("Keymesh ID", None) == obj_legacy_keymesh_id) or (block.get("km_id", None) == obj_legacy_keymesh_id):
                     unregistered_blocks.append(block)
-
-                    print(block.name)
 
                     # Convert Data Properties
                     block_legacy_keymesh_data = None
@@ -121,6 +120,8 @@ def populate_keymesh_blocks(scene):
                 for fcurve in anim_data.action.fcurves:
                     if (fcurve.data_path == '["Keymesh Data"]') or (fcurve.data_path == '["km_datablock"]'):
                         obj.animation_data.action.fcurves.remove(fcurve)
+
+            print("Successfully versioned " + obj.name)
 
 
 

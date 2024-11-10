@@ -46,6 +46,9 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
 
     def execute(self, context):
         target = context.active_object
+        keymesh_object = False
+        if is_keymesh_object(target):
+            keymesh_object = True
 
         # filter_sources
         sources = []
@@ -66,10 +69,6 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
 
         if len(sources) > 0:
             # Prepare Target
-            keymesh_object = False
-            if is_keymesh_object(target):
-                keymesh_object = True
-
             assign_keymesh_id(target)
             if keymesh_object == False:
                 # turn_active_data_into_first_Keymesh_block

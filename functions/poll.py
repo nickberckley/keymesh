@@ -48,7 +48,7 @@ def is_instanced(data):
 def is_keymesh_object(obj):
     """Checks whether or not obj has Keymesh animation or blocks"""
 
-    if obj.keymesh.animated == True:
+    if obj.keymesh.active == True:
         if obj.keymesh.get("ID", None):
             if len(obj.keymesh.blocks) > 0:
                 return True

@@ -160,37 +160,37 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        if obj and obj.keymesh.animated:
-            if len(obj.keymesh.blocks) <= 1:
-                bpy.data.objects.remove(obj)
+
+        if len(obj.keymesh.blocks) <= 1:
+            bpy.data.objects.remove(obj)
+        else:
+            initial_index = obj.keymesh.blocks_active_index
+
+            # get_active_block
+            if (initial_index is None) or (initial_index > len(obj.keymesh.blocks) - 1):
+                return {'CANCELLED'}
+            block = obj.keymesh.blocks[initial_index].block
+
+            # remove_from_block_registry
+            remove_block(obj, block)
+
+            # refresh_timeline
+            """NOTE: Scrubbing in timeline makes sure that correct object data is asigned based on previous found keyframe."""
+            """NOTE: Without this whole object is deleted because Blender thinks it doesn't have object data anymore."""
+            current_frame = context.scene.frame_current
+            context.scene.frame_set(current_frame + 1)
+            context.scene.frame_set(current_frame)
+
+            # make_previous_block_active
+            previous_block_index = initial_index - 1
+            if previous_block_index > -1:
+                obj.keymesh.blocks_active_index = previous_block_index
             else:
-                initial_index = obj.keymesh.blocks_active_index
+                obj.keymesh.blocks_active_index = 0
 
-                # get_active_block
-                if (initial_index is None) or (initial_index > len(obj.keymesh.blocks) - 1):
-                    return {'CANCELLED'}
-                block = obj.keymesh.blocks[initial_index].block
-
-                # remove_from_block_registry
-                remove_block(obj, block)
-
-                # refresh_timeline
-                """NOTE: Scrubbing in timeline makes sure that correct object data is asigned based on previous found keyframe."""
-                """NOTE: Without this whole object is deleted because Blender thinks it doesn't have object data anymore."""
-                current_frame = context.scene.frame_current
-                context.scene.frame_set(current_frame + 1)
-                context.scene.frame_set(current_frame)
-
-                # make_previous_block_active
-                previous_block_index = initial_index - 1
-                if previous_block_index > -1:
-                    obj.keymesh.blocks_active_index = previous_block_index
-                else:
-                    obj.keymesh.blocks_active_index = 0
-
-                # Purge
-                data_type = obj_data_type(obj)
-                data_type.remove(block)
+            # Purge
+            data_type = obj_data_type(obj)
+            data_type.remove(block)
 
         return {'FINISHED'}
 

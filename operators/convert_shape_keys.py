@@ -90,7 +90,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             create_back_up(obj, original_data)
 
         # Assign Keymesh ID
-        assign_keymesh_id(obj)
+        assign_keymesh_id(obj, animate=True)
 
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)

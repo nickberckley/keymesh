@@ -18,7 +18,7 @@ def insert_keymesh_keyframe(context, obj):
 
     if obj:
         # Assign Keymesh ID
-        assign_keymesh_id(obj)
+        assign_keymesh_id(obj, animate=True)
 
         # get_block_index
         block_index = get_next_keymesh_index(obj)

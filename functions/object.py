@@ -42,19 +42,23 @@ def list_block_users(block):
 
     users = []
     for obj in bpy.data.objects:
-        if obj.keymesh.animated:
+        if is_keymesh_object(obj):
             if block.keymesh.get("ID") == obj.keymesh.get("ID"):
                 users.append(obj)
 
     return users
 
 
-def assign_keymesh_id(obj):
+def assign_keymesh_id(obj, animate=False):
     """Assigns properties to obj required to make it Keymesh object"""
 
-    if obj.keymesh.animated is False:
+    if obj.keymesh.active is False:
+        obj.keymesh.active = True
         obj.keymesh["ID"] = new_object_id()
-        obj.keymesh.animated = True
+
+    if animate:
+        if obj.keymesh.animated is False:
+            obj.keymesh.animated = True
 
 
 def create_back_up(obj, data):
@@ -124,6 +128,7 @@ def remove_keymesh_properties(obj):
     """Removes all Keymesh properties from obj, making it regular object"""
 
     if is_keymesh_object(obj):
+        obj.keymesh.active = False
         obj.keymesh.animated = False
         obj.keymesh.blocks.clear()
         if obj.keymesh.get("ID", None):

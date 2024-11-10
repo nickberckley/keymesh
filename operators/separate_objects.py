@@ -128,6 +128,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
         # remove_keymesh_data
         if instance == False:
+            dup_obj.keymesh.active = False
             dup_obj.keymesh.animated = False
             del dup_obj.keymesh["Keymesh Data"]
             del dup_obj.keymesh["ID"]
