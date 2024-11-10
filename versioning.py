@@ -13,6 +13,9 @@ def populate_keymesh_blocks(scene):
         for obj in bpy.data.objects:
             # is_not_legacy_keymesh_object
             if (not obj.get("km_id")) and (not obj.get("Keymesh ID")):
+                if obj.keymesh.animated:
+                    if not obj.keymesh.active:
+                        obj.keymesh.active = True
                 continue
 
             new_id = new_object_id()
