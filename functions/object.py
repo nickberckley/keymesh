@@ -1,4 +1,6 @@
 import bpy, random
+from .poll import is_keymesh_object
+from .timeline import get_keymesh_fcurve
 from .. import __package__ as base_package
 
 
@@ -101,3 +103,44 @@ def insert_block(obj, block, index, name=None):
     block_registry = obj.keymesh.blocks.add()
     block_registry.block = block
     block_registry.name = name
+
+
+def remove_block(obj, block):
+    """Removes given object data from objects Keymesh blocks registry"""
+
+    for index, mesh_ref in enumerate(obj.keymesh.blocks):
+        if mesh_ref.block == block:
+            obj.keymesh.blocks.remove(index)
+
+    # Remove Keyframes
+    fcurve = get_keymesh_fcurve(obj)
+    if fcurve:
+        for keyframe in reversed(fcurve.keyframe_points.values()):
+            if keyframe.co_ui[1] == block.keymesh.get("Data"):
+                fcurve.keyframe_points.remove(keyframe)
+
+
+def remove_keymesh_properties(obj):
+    """Removes all Keymesh properties from obj, making it regular object"""
+
+    if is_keymesh_object(obj):
+        obj.keymesh.animated = False
+        obj.keymesh.blocks.clear()
+        if obj.keymesh.get("ID", None):
+            del obj.keymesh["ID"]
+        if obj.keymesh.get("Keymesh Data", None):
+            del obj.keymesh["Keymesh Data"]
+
+        obj.keymesh.grid_view = False
+        obj.keymesh.ignore_missing_thumbnails = False
+        obj.keymesh.blocks_active_index = -1
+
+        # Remove Keymesh F-Curve
+        fcurve = get_keymesh_fcurve(obj)
+        if fcurve:
+            obj.animation_data.action.fcurves.remove(fcurve)
+            # remove_action_if_it_has_no_fcurves_remaining
+            if len(obj.animation_data.action.fcurves) == 0:
+                empty_action = obj.animation_data.action
+                obj.animation_data.action = None
+                bpy.data.actions.remove(empty_action)

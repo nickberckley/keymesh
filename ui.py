@@ -83,7 +83,8 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             col = row.column(align=True)
             col.operator("object.keyframe_object_data", text="", icon='ADD').path='STILL'
             col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
-            col.operator("object.purge_keymesh_data", text="", icon='TRASH')
+            col.separator()
+            col.menu("VIEW3D_MT_keymesh_special_menu", icon='DOWNARROW_HLT', text="")
             col.separator()
             col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').direction='UP'
             col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').direction='DOWN'
@@ -197,6 +198,16 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
                 # panel.operator("object.keymesh_interpolate", text="INTERPOLATE")
 
 
+class VIEW3D_MT_keymesh_special_menu(bpy.types.Menu):
+    bl_label = "Keymesh Specials"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("object.keymesh_extract", icon='FILE_PARENT')
+        layout.separator()
+        layout.operator("object.purge_keymesh_data", text="Purge Unused Blocks", icon='TRASH')
+
+
 
 #### ------------------------------ /ui_list/ ------------------------------ ####
 
@@ -262,6 +273,7 @@ classes = [
     VIEW3D_PT_keymesh,
     VIEW3D_PT_keymesh_frame_picker,
     VIEW3D_PT_keymesh_tools,
+    VIEW3D_MT_keymesh_special_menu,
     VIEW3D_UL_keymesh_blocks,
 ]
 

@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object import list_block_users
+from ..functions.object import list_block_users, remove_block
 from ..functions.handler import update_keymesh
 from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
 from ..functions.timeline import get_keymesh_fcurve
@@ -132,7 +132,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
             self.report({'INFO'}, str(len(delete_keymesh_blocks)) + " Keymesh block(s) removed" + specifier)
 
         return {'FINISHED'}
-    
+
     def invoke(self, context, event):
         self.all = event.shift
         return self.execute(context)
@@ -171,12 +171,8 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                     return {'CANCELLED'}
                 block = obj.keymesh.blocks[initial_index].block
 
-                # Remove Keyframes
-                fcurve = get_keymesh_fcurve(obj)
-                if fcurve:
-                    for keyframe in reversed(fcurve.keyframe_points.values()):
-                        if keyframe.co_ui[1] == block.keymesh.get("Data"):
-                            fcurve.keyframe_points.remove(keyframe)
+                # remove_from_block_registry
+                remove_block(obj, block)
 
                 # refresh_timeline
                 """NOTE: Scrubbing in timeline makes sure that correct object data is asigned based on previous found keyframe."""
@@ -184,11 +180,6 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                 current_frame = context.scene.frame_current
                 context.scene.frame_set(current_frame + 1)
                 context.scene.frame_set(current_frame)
-
-                # remove_from_block_registry
-                for index, mesh_ref in enumerate(obj.keymesh.blocks):
-                    if mesh_ref.block == block:
-                        obj.keymesh.blocks.remove(index)
 
                 # make_previous_block_active
                 previous_block_index = initial_index - 1
