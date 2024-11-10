@@ -11,6 +11,7 @@ from ..functions.poll import (
     is_linked,
     is_instanced,
     is_keymesh_object,
+    edit_modes,
 )
 
 
@@ -104,7 +105,11 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
                     cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                     return False
                 else:
-                    return True
+                    if context.mode in edit_modes():
+                        cls.poll_message_set("Can't remove Keymesh block in edit modes")
+                        return False
+                    else:
+                        return True
             else:
                 return False
         else:

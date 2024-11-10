@@ -10,7 +10,7 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
     bl_idname = "object.keymesh_pick_frame"
     bl_label = "Pick Keymesh Frame"
     bl_description = "Link the selected Keymesh block to the current object"
-    bl_options = {'UNDO'}
+    bl_options = {'UNDO', 'INTERNAL'}
 
     block: bpy.props.StringProperty(
     )

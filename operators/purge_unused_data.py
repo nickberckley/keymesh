@@ -1,7 +1,7 @@
 import bpy
 from ..functions.object import list_block_users, remove_block, update_active_index
 from ..functions.handler import update_keymesh
-from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
+from ..functions.poll import is_linked, is_keymesh_object, obj_data_type, edit_modes
 from ..functions.timeline import get_keymesh_fcurve
 
 
@@ -152,7 +152,11 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
                     cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                     return False
                 else:
-                    return True
+                    if context.mode in edit_modes():
+                        cls.poll_message_set("Can't remove Keymesh block in edit modes")
+                        return False
+                    else:
+                        return True
             else:
                 return False
         else:
