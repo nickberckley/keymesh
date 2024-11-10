@@ -42,7 +42,7 @@ def insert_keymesh_keyframe(self, context, obj):
         obj.data = new_block
 
         if self.static:
-            # account_for_static_Keymesh_objects_by_actually_changing_object_data
+            # account_for_static_keymesh_objects_by_actually_changing_object_data
             obj.keymesh["Keymesh Data"] = block_index
             update_active_index(obj)
         else:

@@ -169,6 +169,7 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
             bpy.data.objects.remove(obj)
         else:
             initial_index = obj.keymesh.blocks_active_index
+            initial_data = obj.data
 
             # get_active_block
             if (initial_index is None) or (initial_index > len(obj.keymesh.blocks) - 1):
@@ -178,19 +179,22 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
             # remove_from_block_registry
             remove_block(obj, block)
 
-            # refresh_timeline
-            """NOTE: Scrubbing in timeline makes sure that correct object data is asigned based on previous found keyframe."""
-            """NOTE: Without this whole object is deleted because Blender thinks it doesn't have object data anymore."""
-            current_frame = context.scene.frame_current
-            context.scene.frame_set(current_frame + 1)
-            context.scene.frame_set(current_frame)
-
             # make_previous_block_active
-            previous_block_index = initial_index - 1
-            if previous_block_index > -1:
-                update_active_index(obj, index=previous_block_index)
+            previous_block_index = initial_index - 1 if initial_index - 1 > -1 else 0
+            if obj.keymesh.animated:
+                """NOTE: Scrubbing timeline makes sure that correct object data is asigned based on previous found keyframe."""
+                """NOTE: Without this whole object is deleted because Blender thinks it doesn't have object data anymore."""
+                current_frame = context.scene.frame_current
+                context.scene.frame_set(current_frame + 1)
+                context.scene.frame_set(current_frame)
             else:
-                update_active_index(obj, index=0)
+                if block == initial_data:
+                    # make_previous_block_new_obj.data_for_static_keymesh_objects
+                    previous_block = obj.keymesh.blocks[previous_block_index].block
+                    obj.data = previous_block
+                    obj.keymesh["Keymesh Data"] = previous_block.keymesh["Data"]
+
+            update_active_index(obj, index=previous_block_index)
 
             # Purge
             data_type = obj_data_type(obj)

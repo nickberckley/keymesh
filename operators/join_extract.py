@@ -106,7 +106,7 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
                     return False
                 else:
                     if context.mode in edit_modes():
-                        cls.poll_message_set("Can't remove Keymesh block in edit modes")
+                        cls.poll_message_set("Can't extract Keymesh block in edit modes")
                         return False
                     else:
                         return True
@@ -147,20 +147,20 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
         else:
             # set_new_active_block
             if block == initial_data:
-                if not obj.keymesh.animated:
-                    # make_previous_object_new_obj.data_for_static_keymesh_objects
+                if obj.keymesh.animated:
+                    """NOTE: Refreshing timeline for same reason as in 'object.remove_keymesh_block' operator."""
+                    current_frame = context.scene.frame_current
+                    context.scene.frame_set(current_frame + 1)
+                    context.scene.frame_set(current_frame)
+                    update_active_index(obj)
+                else:
+                    # make_previous_block_new_obj.data_for_static_keymesh_objects
                     previous_index = index - 1 if index - 1 > -1 else 0
                     update_active_index(obj, index=previous_index)
 
                     previous_block = obj.keymesh.blocks[obj.keymesh.blocks_active_index].block
                     obj.data = previous_block
                     obj.keymesh["Keymesh Data"] = previous_block.keymesh["Data"]
-                else:
-                    """NOTE: Refreshing timeline for same reason as in 'object.remove_keymesh_block' operator."""
-                    current_frame = context.scene.frame_current
-                    context.scene.frame_set(current_frame + 1)
-                    context.scene.frame_set(current_frame)
-                    update_active_index(obj)
             else:
                 update_active_index(obj)
 
