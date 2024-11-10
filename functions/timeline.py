@@ -4,15 +4,15 @@ import bpy
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def get_keymesh_fcurve(obj):
-    """Returns the Keymesh f-curve for obj"""
+    """Returns f-curve for Keymesh data property of obj"""
 
     fcurve = None
-    if obj.keymesh.animated:
-        if obj.animation_data is not None:
-            if obj.animation_data.action is not None:
-                for f in obj.animation_data.action.fcurves:
-                    if f.data_path == 'keymesh["Keymesh Data"]':
-                        fcurve = f
+    if obj.animation_data is not None:
+        if obj.animation_data.action is not None:
+            for f in obj.animation_data.action.fcurves:
+                if f.data_path == 'keymesh["Keymesh Data"]':
+                    fcurve = f
+                    break
 
     return fcurve
 

@@ -83,6 +83,8 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             col = row.column(align=True)
             col.operator("object.keyframe_object_data", text="", icon='ADD').path='STILL'
             col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
+            col.separator()
+            col.operator("object.keymesh_extract", text="", icon='FILE_PARENT')
             col.operator("object.purge_keymesh_data", text="", icon='TRASH')
             col.separator()
             col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').direction='UP'

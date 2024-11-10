@@ -1,6 +1,20 @@
 import bpy
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block
-from ..functions.poll import is_linked, is_instanced, is_keymesh_object
+from ..functions.object import (
+    get_next_keymesh_index,
+    assign_keymesh_id,
+    get_active_block_index,
+    insert_block,
+    remove_block,
+    remove_keymesh_properties,
+)
+from ..functions.poll import (
+    is_linked,
+    is_instanced,
+    is_keymesh_object,
+)
+from ..functions.timeline import (
+    get_keymesh_fcurve,
+)
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -16,11 +30,12 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.active_object and len(context.selected_objects) > 1:
-            if is_linked(context, context.active_object):
-                cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                return False
-            else:
-                return True
+            if context.object.mode == 'OBJECT':
+                if is_linked(context, context.active_object):
+                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                    return False
+                else:
+                    return True
         else:
             return False
 
@@ -75,13 +90,98 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
                 bpy.data.objects.remove(source)
 
         return {'FINISHED'}
-    
+
+
+class OBJECT_OT_keymesh_extract(bpy.types.Operator):
+    bl_idname = "object.keymesh_extract"
+    bl_label = "Extract Keymesh Block"
+    bl_description = ("Pop (extract) active Keymesh block and make it separate object.\n"
+                      "New object will retain modifiers, constraints, animation, and etc. but Keymesh properties will be removed.\n"
+                      "Keyframes for extracted block (if there are any) will be deleted from objects active action")
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if context.active_object:
+            if is_keymesh_object(context.active_object):
+                if is_linked(context, context.active_object):
+                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                    return False
+                else:
+                    return True
+            else:
+                return False
+        else:
+            return False
+
+    def execute(self, context):
+        obj = context.active_object
+        index = int(obj.keymesh.blocks_active_index)
+        block = obj.keymesh.blocks[index].block
+        initial_data = obj.data
+
+        # Duplicate Object
+        dup_obj = obj.copy()
+        dup_obj.data = block
+        dup_obj.name = block.name
+        context.view_layer.active_layer_collection.collection.objects.link(dup_obj)
+
+        if obj.animation_data is not None:
+            if obj.animation_data.action is not None:
+                dup_action = obj.animation_data.action.copy()
+                dup_obj.animation_data.action = dup_action
+
+        # remove_Keymesh_properties_from_new_object
+        remove_keymesh_properties(dup_obj)
+
+        # Remove Block from Registry
+        remove_block(obj, block)
+        del block.keymesh["ID"]
+        del block.keymesh["Data"]
+
+
+        # remove_original_object_if_last_block_was_extracted
+        if len(obj.keymesh.blocks) == 0:
+            context.view_layer.active_layer_collection.collection.objects.unlink(obj)
+        else:
+            # set_new_active_block
+            if block == initial_data:
+                fcurve = get_keymesh_fcurve(obj)
+                if not fcurve:
+                    # make_previous_object_new_obj.data_for_static_keymesh_objects
+                    previous_index = index - 1 if index - 1 > -1 else 0
+                    obj.keymesh.blocks_active_index = previous_index
+
+                    previous_block = obj.keymesh.blocks[obj.keymesh.blocks_active_index].block
+                    obj.data = previous_block
+                    obj.keymesh["Keymesh Data"] = previous_block.keymesh["Data"]
+                else:
+                    """NOTE: Refreshing timeline for same reason as in 'object.remove_keymesh_block' operator."""
+                    current_frame = context.scene.frame_current
+                    context.scene.frame_set(current_frame + 1)
+                    context.scene.frame_set(current_frame)
+
+                    active_index = get_active_block_index(obj)
+                    obj.keymesh.blocks_active_index = active_index
+            else:
+                active_index = get_active_block_index(obj)
+                obj.keymesh.blocks_active_index = active_index
+
+        # make_new_object_active
+        for ob in context.view_layer.objects:
+            ob.select_set(False)
+        dup_obj.select_set(True)
+        context.view_layer.objects.active = dup_obj
+
+        return {'FINISHED'}
+
 
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
     OBJECT_OT_keymesh_join,
+    OBJECT_OT_keymesh_extract,
 ]
 
 def register():
