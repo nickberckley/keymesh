@@ -2,6 +2,7 @@ import bpy
 from .. import __package__ as base_package
 from .object import get_active_block_index
 from .poll import is_keymesh_object
+from .timeline import get_keymesh_fcurve
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -14,6 +15,11 @@ def update_keymesh(scene):
         if not is_keymesh_object(obj):
             continue
         if not obj.keymesh.animated:
+            continue
+
+        fcurve = get_keymesh_fcurve(obj)
+        if not fcurve:
+            obj.keymesh.animated = False
             continue
 
         obj_keymesh_data = obj.keymesh["Keymesh Data"]
