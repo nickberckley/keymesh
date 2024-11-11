@@ -1,6 +1,6 @@
 import bpy
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object
-from ..functions.poll import is_linked, obj_data_type
+from ..functions.poll import is_candidate_object, is_linked, obj_data_type
 from ..functions.timeline import insert_keyframe
 from ..functions.handler import update_keymesh
 
@@ -14,6 +14,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                       "Keymesh block will be created for each frame of the given range with animation applied")
     bl_options = {'REGISTER', 'UNDO'}
 
+    # General
     follow_scene_range: bpy.props.BoolProperty(
         name = "Scene Frame Range",
         description = "Use scene frame range start and end",
@@ -28,6 +29,13 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         default = 250, min = 1,
     )
 
+    instance_duplicates: bpy.props.BoolProperty(
+        name = "Instance Duplicates",
+        description = ("Operator will detect if some blocks are exactly the same (same shape key values, same keyframes, etc).\n"
+                       "If they are, it will reuse same Keymesh block on those frames, instead of creating new, duplicate one for each"),
+        default = False,
+    )
+
     # Shape Keys
     shape_keys: bpy.props.BoolProperty(
         name = "Bake Shape Keys",
@@ -35,42 +43,28 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                        "Animated shape keys will be applied on Keymesh blocks on the frame they're created"),
         default = True,
     )
-    delete_duplicates: bpy.props.BoolProperty(
-        name = "Delete Duplicates",
-        description = "Operator will detect if object has same exact shape on two or more frames.\n"
-                    "Duplicates will be deleted and instead it will instance one block on every frame that was the same.",
-        default = False,
-    )
+
+    has_shape_keys = False
 
     @classmethod
     def poll(cls, context):
         if context.active_object:
-            if is_linked(context, context.active_object):
-                cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                return False
-            else:
-                if context.active_object.type not in ('MESH', 'CURVE', 'LATTICE'):
-                    cls.poll_message_set("Active object needs to support shape keys")
+            obj = context.active_object
+            if context.object.mode == 'OBJECT':
+                if not is_candidate_object(context.active_object):
+                    cls.poll_message_set("Active object type isn't supported by Keymesh")
                     return False
                 else:
-                    if context.active_object.data.shape_keys is None:
-                        cls.poll_message_set("Active object does not have shape keys")
+                    if is_linked(context, obj):
+                        cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                         return False
-            return True
+                    else:
+                        return True
+            else:
+                return False
         else:
             return False
 
-    # Naming Convention
-    def naming_convention(self, key):
-        value = key.value
-        if value.is_integer():
-            return chr(int(value) + 65)
-        elif value < 1:
-            return str(int(value * 100))
-        else:
-            integer_part = chr(int(value) + 64)
-            decimal_part = str(int((value % 1) * 100))
-            return f"{integer_part}{decimal_part}"
 
     def execute(self, context):
         # hide_original_object
@@ -80,16 +74,12 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         # Create New Object
         obj = duplicate_object(context, original_obj, original_obj.data.copy(), name=original_obj.name + "_keymesh", collection=True)
+        initial_data = obj.data
         obj.select_set(True)
         context.view_layer.objects.active = obj
 
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=True)
-
-        # define_variables
-        initial_data = obj.data
-        shape_keys = initial_data.shape_keys
-        obj_type = obj_data_type(context.active_object)
 
 
         # define_frame_range
@@ -102,56 +92,44 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             frame_end = self.frame_end
 
 
+        unique_shape_key_values = {}
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
-            name = ''.join([self.naming_convention(key) for key in shape_keys.key_blocks if key.name != "Basis"])
 
-            # Create New Block
-            new_block = initial_data.copy()
-            new_block.name = obj.name + "_frame_" + str(frame)
+            # Detect Duplicate
+            match = None
+            if self.instance_duplicates:
+                if self.shape_keys:
+                    shape_key_values = tuple(key.value for key in original_obj.data.shape_keys.key_blocks)
+                    if shape_key_values in unique_shape_key_values:
+                        match = unique_shape_key_values[shape_key_values]
 
-            # assign_new_block_to_object
-            block_index = get_next_keymesh_index(obj)
-            insert_block(obj, new_block, block_index)
 
-            # Apply Shape Keys
-            obj.data = new_block
-            bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-            obj.data = initial_data
-
-            # Delete Duplicates
-            if self.delete_duplicates:
-                match = None
-                index = None
-                for i, block in enumerate(obj.keymesh.blocks):
-                    # find_match
-                    if block.block.get("shape_key_value") == name:
-                        match = block.block.keymesh.get("Data")
-                    # get_duplicates_index
-                    if block.name == new_block.name:
-                        index = i
-                    if all(v is not None for v in (match, index)):
-                        break
-
-                # remove_duplicate_block
-                if match is not None:
-                    obj.keymesh.blocks.remove(index)
-                    obj_type.remove(new_block)
-                    obj.keymesh["Keymesh Data"] = match
-                else:
-                    new_block["shape_key_value"] = name
-                    obj.keymesh["Keymesh Data"] = block_index
+            if match:
+                block_index = match.keymesh.get("Data", None)
             else:
-                obj.keymesh["Keymesh Data"] = block_index
+                # Create New Block
+                new_block = initial_data.copy()
+                new_block.name = obj.name + "_frame_" + str(frame)
+
+                # assign_new_block_to_object
+                block_index = get_next_keymesh_index(obj)
+                insert_block(obj, new_block, block_index)
+
+                if self.shape_keys:
+                    # Apply Shape Keys
+                    obj.data = new_block
+                    bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+                    obj.data = initial_data
+
+                    if self.instance_duplicates:
+                        unique_shape_key_values[shape_key_values] = new_block
+
 
             # Insert Keyframe
+            obj.keymesh["Keymesh Data"] = block_index
             obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
             insert_keyframe(obj, context.scene.frame_current)
-
-        # delete_temporary_property
-        for block in obj.keymesh.blocks:
-            if block.block.get("shape_key_value"):
-                del block.block["shape_key_value"]
 
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
@@ -159,19 +137,13 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
     def invoke(self, context, event):
         obj = context.active_object
-        shape_keys = obj.data.shape_keys
 
-        if obj.type not in ('MESH', 'CURVE', 'LATTICE'):
-            self.report({'ERROR'}, "Active object type can't have shape keys. Only Mesh, Curve, and Lattice objects are supported")
-            return {'CANCELLED'}
-
-        if not shape_keys:
-            self.report({'ERROR'}, "Active object does not have shape keys")
-            return {'CANCELLED'}
-
-        if not shape_keys.animation_data:
-            self.report({'ERROR'}, "Shape keys on active object are not animated")
-            return {'CANCELLED'}
+        self.shape_keys = False
+        if obj.type in ('MESH', 'CURVE', 'LATTICE'):
+            if obj.data.shape_keys:
+                if obj.data.shape_keys.animation_data:
+                    self.has_shape_keys = True
+                    self.shape_keys = True
 
         return context.window_manager.invoke_props_dialog(self)
 
@@ -190,7 +162,17 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             col.enabled = False
 
         layout.separator()
-        layout.prop(self, "delete_duplicates")
+        layout.prop(self, "instance_duplicates")
+
+        header, panel = layout.panel("BAKE_OT_shape_keys", default_closed=False)
+        header.label(text="Shape Keys")
+        if panel:
+            if self.has_shape_keys:
+                panel.prop(self, "shape_keys")
+            else:
+                row = panel.row()
+                row.alignment = 'RIGHT'
+                row.label(text="Active object doesn't have shape key animation", icon='INFO')
 
 
 
