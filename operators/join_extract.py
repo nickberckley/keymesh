@@ -2,18 +2,17 @@ import bpy
 from ..functions.object import (
     get_next_keymesh_index,
     assign_keymesh_id,
-    get_active_block_index,
     insert_block,
     remove_block,
     remove_keymesh_properties,
+    update_active_index,
+    duplicate_object,
 )
 from ..functions.poll import (
     is_linked,
     is_instanced,
     is_keymesh_object,
-)
-from ..functions.timeline import (
-    get_keymesh_fcurve,
+    edit_modes,
 )
 
 
@@ -46,6 +45,9 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
 
     def execute(self, context):
         target = context.active_object
+        keymesh_object = False
+        if is_keymesh_object(target):
+            keymesh_object = True
 
         # filter_sources
         sources = []
@@ -66,10 +68,6 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
 
         if len(sources) > 0:
             # Prepare Target
-            keymesh_object = False
-            if is_keymesh_object(target):
-                keymesh_object = True
-
             assign_keymesh_id(target)
             if keymesh_object == False:
                 # turn_active_data_into_first_Keymesh_block
@@ -108,7 +106,11 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
                     cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                     return False
                 else:
-                    return True
+                    if context.mode in edit_modes():
+                        cls.poll_message_set("Can't extract Keymesh block in edit modes")
+                        return False
+                    else:
+                        return True
             else:
                 return False
         else:
@@ -121,20 +123,10 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
         initial_data = obj.data
 
         # Duplicate Object
-        dup_obj = obj.copy()
-        dup_obj.data = block
-        dup_obj.name = block.name
-        context.view_layer.active_layer_collection.collection.objects.link(dup_obj)
-
-        if obj.animation_data is not None:
-            if obj.animation_data.action is not None:
-                dup_action = obj.animation_data.action.copy()
-                dup_obj.animation_data.action = dup_action
-
-        # remove_Keymesh_properties_from_new_object
+        dup_obj = duplicate_object(context, obj, block, name=block.name)
         remove_keymesh_properties(dup_obj)
 
-        # Remove Block from Registry
+        # remove_block_from_registry
         remove_block(obj, block)
         del block.keymesh["ID"]
         del block.keymesh["Data"]
@@ -146,26 +138,22 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
         else:
             # set_new_active_block
             if block == initial_data:
-                fcurve = get_keymesh_fcurve(obj)
-                if not fcurve:
-                    # make_previous_object_new_obj.data_for_static_keymesh_objects
-                    previous_index = index - 1 if index - 1 > -1 else 0
-                    obj.keymesh.blocks_active_index = previous_index
-
-                    previous_block = obj.keymesh.blocks[obj.keymesh.blocks_active_index].block
-                    obj.data = previous_block
-                    obj.keymesh["Keymesh Data"] = previous_block.keymesh["Data"]
-                else:
+                if obj.keymesh.animated:
                     """NOTE: Refreshing timeline for same reason as in 'object.remove_keymesh_block' operator."""
                     current_frame = context.scene.frame_current
                     context.scene.frame_set(current_frame + 1)
                     context.scene.frame_set(current_frame)
+                    update_active_index(obj)
+                else:
+                    # make_previous_block_new_obj.data_for_static_keymesh_objects
+                    previous_index = index - 1 if index - 1 > -1 else 0
+                    update_active_index(obj, index=previous_index)
 
-                    active_index = get_active_block_index(obj)
-                    obj.keymesh.blocks_active_index = active_index
+                    previous_block = obj.keymesh.blocks[obj.keymesh.blocks_active_index].block
+                    obj.data = previous_block
+                    obj.keymesh["Keymesh Data"] = previous_block.keymesh["Data"]
             else:
-                active_index = get_active_block_index(obj)
-                obj.keymesh.blocks_active_index = active_index
+                update_active_index(obj)
 
         # make_new_object_active
         for ob in context.view_layer.objects:

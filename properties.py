@@ -67,6 +67,11 @@ class KeymeshBlocks(bpy.types.PropertyGroup):
 class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     # OBJECT-level PROPERTIES
 
+    active: bpy.props.BoolProperty(
+        name = "Keymesh Object",
+        options = set(),
+        default = False,
+    )
     animated: bpy.props.BoolProperty(
         name = "Has Keymesh Animation",
         options = set(),

@@ -12,7 +12,7 @@ class ANIM_OT_keymesh_interpolate(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object and is_keymesh_object(context.active_object)
+        return context.active_object and is_keymesh_object(context.active_object) and context.active_object.keymesh.animated
 
     def execute(self, context):
         obj = context.active_object

@@ -1,6 +1,6 @@
 import bpy, random
 from .poll import is_keymesh_object
-from .timeline import get_keymesh_fcurve
+from .timeline import get_keymesh_fcurve, delete_empty_action
 from .. import __package__ as base_package
 
 
@@ -42,19 +42,23 @@ def list_block_users(block):
 
     users = []
     for obj in bpy.data.objects:
-        if obj.keymesh.animated:
+        if is_keymesh_object(obj):
             if block.keymesh.get("ID") == obj.keymesh.get("ID"):
                 users.append(obj)
 
     return users
 
 
-def assign_keymesh_id(obj):
+def assign_keymesh_id(obj, animate=False):
     """Assigns properties to obj required to make it Keymesh object"""
 
-    if obj.keymesh.animated is False:
+    if obj.keymesh.active is False:
+        obj.keymesh.active = True
         obj.keymesh["ID"] = new_object_id()
-        obj.keymesh.animated = True
+
+    if animate:
+        if obj.keymesh.animated is False:
+            obj.keymesh.animated = True
 
 
 def create_back_up(obj, data):
@@ -78,7 +82,7 @@ def create_back_up(obj, data):
 
 
 def get_active_block_index(obj):
-    """Returns index for active Keymesh block (current object data)"""
+    """Returns index (integer) for active Keymesh block (current object data)"""
     """NOTE: Necessary to get with iterations since there is no direct way to access index for CollectionProperty items"""
 
     active_block_index = None
@@ -119,11 +123,19 @@ def remove_block(obj, block):
             if keyframe.co_ui[1] == block.keymesh.get("Data"):
                 fcurve.keyframe_points.remove(keyframe)
 
+        # remove_animated_properties_if_last_keyframe_was_removed
+        has_other_keys = bool(fcurve.keyframe_points)
+        if not has_other_keys:
+            obj.animation_data.action.fcurves.remove(fcurve)
+            obj.keymesh.animated = False
+            delete_empty_action(obj)
+
 
 def remove_keymesh_properties(obj):
     """Removes all Keymesh properties from obj, making it regular object"""
 
     if is_keymesh_object(obj):
+        obj.keymesh.active = False
         obj.keymesh.animated = False
         obj.keymesh.blocks.clear()
         if obj.keymesh.get("ID", None):
@@ -139,8 +151,32 @@ def remove_keymesh_properties(obj):
         fcurve = get_keymesh_fcurve(obj)
         if fcurve:
             obj.animation_data.action.fcurves.remove(fcurve)
-            # remove_action_if_it_has_no_fcurves_remaining
-            if len(obj.animation_data.action.fcurves) == 0:
-                empty_action = obj.animation_data.action
-                obj.animation_data.action = None
-                bpy.data.actions.remove(empty_action)
+            delete_empty_action(obj)
+
+
+def update_active_index(obj, index=None):
+    """Updates active block in Frame Picker & grid view UI"""
+
+    if index == None:
+        index = get_active_block_index(obj)
+    obj.keymesh.blocks_active_index = int(index)
+    obj.keymesh.blocks_grid = str(index)
+
+
+def duplicate_object(context, obj, block, name=None):
+    """Creates duplicate of obj and assigns object data / block"""
+
+    if name == None:
+        name = obj.name
+
+    dup_obj = obj.copy()
+    dup_obj.data = block
+    dup_obj.name = name
+    context.view_layer.active_layer_collection.collection.objects.link(dup_obj)
+
+    if obj.animation_data is not None:
+        if obj.animation_data.action is not None:
+            dup_action = obj.animation_data.action.copy()
+            dup_obj.animation_data.action = dup_action
+
+    return dup_obj

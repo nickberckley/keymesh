@@ -100,3 +100,16 @@ def get_next_keymesh_block(context, obj, direction):
                     next_keymesh_block = mesh
 
     return next_keyframe, next_keymesh_block
+
+
+def delete_empty_action(obj):
+    """Removes action from object and purges it if it has no f-curves remaining"""
+
+    if obj.animation_data:
+        if obj.animation_data.action:
+            if len(obj.animation_data.action.fcurves) == 0:
+                empty_action = obj.animation_data.action
+                obj.animation_data.action = None
+                bpy.data.actions.remove(empty_action)
+
+    obj.keymesh.animated = False

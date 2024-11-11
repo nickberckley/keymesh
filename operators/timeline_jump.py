@@ -20,7 +20,17 @@ class TIMELINE_OT_keymesh_frame_jump(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object and is_keymesh_object(context.active_object)
+        if context.active_object:
+            if is_keymesh_object(context.active_object):
+                if context.active_object.keymesh.animated:
+                    return True
+                else:
+                    cls.poll_message_set("Active object doesn't have Keymesh animation")
+                    return False
+            else:
+                return False
+        else:
+            return False
 
     def execute(self, context):
         keyframes = get_keymesh_keyframes(context.active_object)
