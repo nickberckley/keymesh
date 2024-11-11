@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, create_back_up, insert_block
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object
 from ..functions.poll import is_linked, obj_data_type
 from ..functions.timeline import insert_keyframe
 from ..functions.handler import update_keymesh
@@ -7,18 +7,12 @@ from ..functions.handler import update_keymesh
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
-class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
-    bl_idname = "object.shape_keys_to_keymesh"
-    bl_label = "Shape Keys to Keymesh"
-    bl_description = "Converts shape key animation into Keymesh blocks (removes shape keys)"
+class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
+    bl_idname = "anim.bake_to_keymesh"
+    bl_label = "Bake to Keymesh"
+    bl_description = ("Bakes down objects animation (action, armature, shape key) into Keymesh blocks.\n"
+                      "Keymesh block will be created for each frame of the given range with animation applied")
     bl_options = {'REGISTER', 'UNDO'}
-
-    delete_duplicates: bpy.props.BoolProperty(
-        name = "Delete Duplicates",
-        description = "Operator will detect if object has same exact shape on two or more frames.\n"
-                    "Duplicates will be deleted and instead it will instance one block on every frame that was the same.",
-        default = False,
-    )
 
     follow_scene_range: bpy.props.BoolProperty(
         name = "Scene Frame Range",
@@ -34,10 +28,18 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
         default = 250, min = 1,
     )
 
-    back_up: bpy.props.BoolProperty(
-        name = "Backup Active Object",
-        description = "Active object will be duplicated and hidden from viewport and render with shape keys still on it",
+    # Shape Keys
+    shape_keys: bpy.props.BoolProperty(
+        name = "Bake Shape Keys",
+        description = ("Bake shape key animation to Keymesh blocks.\n"
+                       "Animated shape keys will be applied on Keymesh blocks on the frame they're created"),
         default = True,
+    )
+    delete_duplicates: bpy.props.BoolProperty(
+        name = "Delete Duplicates",
+        description = "Operator will detect if object has same exact shape on two or more frames.\n"
+                    "Duplicates will be deleted and instead it will instance one block on every frame that was the same.",
+        default = False,
     )
 
     @classmethod
@@ -71,10 +73,24 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             return f"{integer_part}{decimal_part}"
 
     def execute(self, context):
-        obj = context.active_object
-        original_data = obj.data
-        shape_keys = original_data.shape_keys
-        obj_type = obj_data_type(obj)
+        # hide_original_object
+        original_obj = context.active_object
+        original_obj.hide_set(True)
+        original_obj.select_set(True)
+
+        # Create New Object
+        obj = duplicate_object(context, original_obj, original_obj.data.copy(), name=original_obj.name + "_keymesh", collection=True)
+        obj.select_set(True)
+        context.view_layer.objects.active = obj
+
+        # Assign Keymesh ID
+        assign_keymesh_id(obj, animate=True)
+
+        # define_variables
+        initial_data = obj.data
+        shape_keys = initial_data.shape_keys
+        obj_type = obj_data_type(context.active_object)
+
 
         # define_frame_range
         initial_frame = context.scene.frame_current
@@ -85,19 +101,13 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             frame_start = self.frame_start
             frame_end = self.frame_end
 
-        # Create Back-up
-        if self.back_up:
-            create_back_up(obj, original_data)
-
-        # Assign Keymesh ID
-        assign_keymesh_id(obj, animate=True)
 
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
             name = ''.join([self.naming_convention(key) for key in shape_keys.key_blocks if key.name != "Basis"])
 
-            # Create new Block
-            new_block = original_data.copy()
+            # Create New Block
+            new_block = initial_data.copy()
             new_block.name = obj.name + "_frame_" + str(frame)
 
             # assign_new_block_to_object
@@ -107,7 +117,7 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
             # Apply Shape Keys
             obj.data = new_block
             bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-            obj.data = original_data
+            obj.data = initial_data
 
             # Delete Duplicates
             if self.delete_duplicates:
@@ -181,14 +191,13 @@ class OBJECT_OT_shape_keys_to_keymesh(bpy.types.Operator):
 
         layout.separator()
         layout.prop(self, "delete_duplicates")
-        layout.prop(self, 'back_up')
 
 
 
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
-    OBJECT_OT_shape_keys_to_keymesh,
+    ANIM_OT_bake_to_keymesh,
 ]
 
 def register():

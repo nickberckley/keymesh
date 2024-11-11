@@ -1,7 +1,7 @@
 import bpy
 
 from . import (
-    convert_shape_keys,
+    bake,
     frame_picker,
     generate_thumbnails,
     initialize_handler,
@@ -17,7 +17,7 @@ from . import (
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 modules = [
-    convert_shape_keys,
+    bake,
     frame_picker,
     generate_thumbnails,
     initialize_handler,

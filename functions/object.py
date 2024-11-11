@@ -61,26 +61,6 @@ def assign_keymesh_id(obj, animate=False):
             obj.keymesh.animated = True
 
 
-def create_back_up(obj, data):
-    """Creates hidden copy of obj and appends to object collections"""
-
-    backup = obj.copy()
-    backup.data = data
-    backup.name = obj.name + "_backup"
-    backup.hide_render = True
-    backup.hide_viewport = True
-
-    # add_backup_to_obj_collections
-    target_colls = obj.users_collection
-    for collection in target_colls:
-        collection.objects.link(backup)
-
-    # remove_backup_from_other_collections
-    for coll in backup.users_collection:
-        if coll not in target_colls:
-            coll.objects.unlink(backup)
-
-
 def get_active_block_index(obj):
     """Returns index (integer) for active Keymesh block (current object data)"""
     """NOTE: Necessary to get with iterations since there is no direct way to access index for CollectionProperty items"""
@@ -163,7 +143,7 @@ def update_active_index(obj, index=None):
     obj.keymesh.blocks_grid = str(index)
 
 
-def duplicate_object(context, obj, block, name=None):
+def duplicate_object(context, obj, block, name=None, hide=False, collection=False):
     """Creates duplicate of obj and assigns object data / block"""
 
     if name == None:
@@ -178,5 +158,21 @@ def duplicate_object(context, obj, block, name=None):
         if obj.animation_data.action is not None:
             dup_action = obj.animation_data.action.copy()
             dup_obj.animation_data.action = dup_action
+
+    if hide:
+        dup_obj.hide_render = True
+        dup_obj.hide_viewport = True
+
+    if collection:
+        # add_duplicate_to_originals_collections
+        target_colls = obj.users_collection
+        for collection in target_colls:
+            if dup_obj.name not in collection.objects:
+                collection.objects.link(dup_obj)
+
+        # remove_duplicate_from_other_collections
+        for coll in dup_obj.users_collection:
+            if coll not in target_colls:
+                coll.objects.unlink(dup_obj)
 
     return dup_obj
