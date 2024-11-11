@@ -126,7 +126,7 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
         dup_obj = duplicate_object(context, obj, block, name=block.name)
         remove_keymesh_properties(dup_obj)
 
-        # Remove Block from Registry
+        # remove_block_from_registry
         remove_block(obj, block)
         del block.keymesh["ID"]
         del block.keymesh["Data"]

@@ -1,6 +1,6 @@
 import bpy, random
 from .poll import is_keymesh_object
-from .timeline import get_keymesh_fcurve
+from .timeline import get_keymesh_fcurve, delete_empty_action
 from .. import __package__ as base_package
 
 
@@ -123,6 +123,13 @@ def remove_block(obj, block):
             if keyframe.co_ui[1] == block.keymesh.get("Data"):
                 fcurve.keyframe_points.remove(keyframe)
 
+        # remove_animated_properties_if_last_keyframe_was_removed
+        has_other_keys = bool(fcurve.keyframe_points)
+        if not has_other_keys:
+            obj.animation_data.action.fcurves.remove(fcurve)
+            obj.keymesh.animated = False
+            delete_empty_action(obj)
+
 
 def remove_keymesh_properties(obj):
     """Removes all Keymesh properties from obj, making it regular object"""
@@ -144,11 +151,7 @@ def remove_keymesh_properties(obj):
         fcurve = get_keymesh_fcurve(obj)
         if fcurve:
             obj.animation_data.action.fcurves.remove(fcurve)
-            # remove_action_if_it_has_no_fcurves_remaining
-            if len(obj.animation_data.action.fcurves) == 0:
-                empty_action = obj.animation_data.action
-                obj.animation_data.action = None
-                bpy.data.actions.remove(empty_action)
+            delete_empty_action(obj)
 
 
 def update_active_index(obj, index=None):
@@ -156,7 +159,6 @@ def update_active_index(obj, index=None):
 
     if index == None:
         index = get_active_block_index(obj)
-
     obj.keymesh.blocks_active_index = int(index)
     obj.keymesh.blocks_grid = str(index)
 
