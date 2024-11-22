@@ -120,6 +120,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
     def invoke(self, context, event):
         obj = context.active_object
 
+        self.frame_start = context.scene.frame_start
+        self.frame_end = context.scene.frame_end
+
         # armature_poll
         self.armature = False
         for mod in obj.modifiers:
