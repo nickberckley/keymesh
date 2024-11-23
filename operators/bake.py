@@ -6,8 +6,9 @@ from ..functions.handler import update_keymesh
 
 
 class ArmatureModifierData:
-    def __init__(self, mod):
-        # general_odifier_properties
+    def __init__(self, mod, i):
+        # general_modifier_properties
+        self.index = i
         self.name = mod.name
         self.show_in_editmode = mod.show_in_editmode
         self.show_on_cage = mod.show_on_cage
@@ -125,10 +126,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         # armature_poll
         self.armature = False
-        for mod in obj.modifiers:
+        for i, mod in enumerate(obj.modifiers):
             if mod.type == 'ARMATURE':
                 if mod.object:
-                    self.armature_modifiers[mod.name] = ArmatureModifierData(mod)
+                    self.armature_modifiers[mod.name] = ArmatureModifierData(mod, i)
                     self.has_armature = True
                     self.armature = True
 
@@ -280,6 +281,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Finish
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
+        if any(value.index != 0 for value in self.armature_modifiers.values()):
+            self.report({'WARNING'}, "Armature modifier was not first, result may not be as expected")
+
         return {'FINISHED'}
 
 
