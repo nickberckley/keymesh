@@ -51,6 +51,11 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
     )
 
     # General
+    back_up: bpy.props.BoolProperty(
+        name = "Create Back-up",
+        description = "Operator will duplicate the active object and bake animation into it, keeping current object safe",
+        default = True,
+    )
     keep_original: bpy.props.BoolProperty(
         name = "Keep Original Object Data",
         description = ("Keep current object data as Keymesh block without baking animation into it.\n"
@@ -168,16 +173,19 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
     def execute(self, context):
-        # hide_original_object
+        # back_up_original_object
         original_obj = context.active_object
+        original_data = original_obj.data
+        original_name = original_obj.name
+        original_obj.name = original_name + "_backup"
         original_obj.hide_set(True)
-        original_obj.select_set(True)
 
-        # Create New Object
-        obj = duplicate_object(context, original_obj, original_obj.data.copy(), name=original_obj.name + "_keymesh", collection=True)
+        # Create Key Object
+        obj = duplicate_object(context, original_obj, original_data, name=original_name, collection=True)
         initial_data = obj.data
         obj.select_set(True)
         context.view_layer.objects.active = obj
+
 
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=True)
@@ -201,7 +209,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             match = None
             if self.instance_duplicates:
                 if self.shape_keys:
-                    shape_key_values = tuple(key.value for key in original_obj.data.shape_keys.key_blocks)
+                    shape_key_values = tuple(key.value for key in original_data.shape_keys.key_blocks)
                     if shape_key_values in unique_shape_key_values:
                         match = unique_shape_key_values[shape_key_values]
 
@@ -239,9 +247,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
             # Insert Keyframe
-            obj.keymesh["Keymesh Data"] = block_index
-            obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
-            insert_keyframe(obj, context.scene.frame_current)
+            insert_keyframe(obj, context.scene.frame_current, block_index)
 
 
         # Handle Armatures
@@ -278,6 +284,15 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             insert_keyframe(obj, frame_end + 1, block_index)
 
 
+        # Remove Back-up Object
+        if self.back_up == False:
+            bpy.data.objects.remove(original_obj)
+            if self.keep_original == False:
+                update_keymesh(context.scene)
+                obj_type = obj_data_type(obj)
+                obj_type.remove(original_data)
+
+
         # Finish
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
@@ -302,6 +317,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             col.enabled = False
 
         layout.separator()
+        layout.prop(self, "back_up")
         layout.prop(self, "keep_original")
         layout.prop(self, "instance_duplicates")
 
