@@ -173,6 +173,20 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
     def execute(self, context):
+        # define_frame_range
+        initial_frame = context.scene.frame_current
+        if self.follow_scene_range == True:
+            frame_start = context.scene.frame_start
+            frame_end = context.scene.frame_end
+        else:
+            frame_start = self.frame_start
+            frame_end = self.frame_end
+        
+        if frame_start > frame_end:
+            self.report({'ERROR'}, "Operation cancelled. Start frame can't be higher than end frame")
+            return {'CANCELLED'}
+
+
         # back_up_original_object
         original_obj = context.active_object
         original_data = original_obj.data
@@ -189,16 +203,6 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=True)
-
-
-        # define_frame_range
-        initial_frame = context.scene.frame_current
-        if self.follow_scene_range == True:
-            frame_start = context.scene.frame_start
-            frame_end = context.scene.frame_end
-        else:
-            frame_start = self.frame_start
-            frame_end = self.frame_end
 
 
         unique_shape_key_values = {}
