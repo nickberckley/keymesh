@@ -177,7 +177,7 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
         layout.use_property_decorate = False
 
         layout.operator("object.keymesh_join")
-        layout.operator("object.shape_keys_to_keymesh")
+        layout.operator("anim.bake_to_keymesh")
         layout.operator("object.keymesh_to_objects", text="Convert to Separate Objects")
         layout.operator("scene.initialize_keymesh_handler", text="Initialize Frame Handler")
 
