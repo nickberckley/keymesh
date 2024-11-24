@@ -137,7 +137,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # shape_key_poll
         if obj.type in ('MESH', 'CURVE', 'LATTICE'):
             if obj.data.shape_keys:
-                if obj.data.shape_keys.animation_data:
+                # if obj.data.shape_keys.animation_data:
+                if len(obj.data.shape_keys.key_blocks) > 1:
                     self.has_shape_keys = True
 
         return context.window_manager.invoke_props_dialog(self)
@@ -162,7 +163,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 match = unique_shape_keys_dict[sk_values]
 
         # compare_vertex_positions
-        elif self.bake_type == 'ARMATURE' and self.has_armature:
+        elif self.bake_type == 'ARMATURE':
             depsgraph = context.evaluated_depsgraph_get()
             eval_obj = obj.evaluated_get(depsgraph)
 
@@ -378,7 +379,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 if self.has_shape_keys == False:
                     row = panel.row()
                     row.alignment = 'RIGHT'
-                    row.label(text="Active object doesn't have shape key animation", icon='INFO')
+                    row.label(text="Active object doesn't have shape keys", icon='INFO')
 
             if obj.type == 'MESH' and self.bake_type != 'NOTHING':
                 panel.prop(self, "instance_duplicates")
