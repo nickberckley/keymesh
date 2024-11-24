@@ -1,4 +1,4 @@
-import bpy
+import bpy, numpy
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object
 from ..functions.poll import is_candidate_object, is_linked, obj_data_type
 from ..functions.timeline import insert_keyframe
@@ -65,7 +65,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
     instance_duplicates: bpy.props.BoolProperty(
         name = "Instance Duplicates",
         description = ("Operator will detect if some blocks are exactly the same (same shape key values, same keyframes, etc).\n"
-                       "If they are, it will reuse same Keymesh block on those frames, instead of creating new, duplicate one for each"),
+                       "If they are, it will reuse same Keymesh block on those frames, instead of creating new one for each.\n"
+                       "WARNING: For complex objects this is expensive calculation and will make operator much slower"),
         default = False,
     )
 
@@ -149,6 +150,41 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
 
+    def detect_duplicate(self, context, obj, unique_verts_dict, unique_shape_keys_dict, original_data):
+        """Checks if exact match of the evaluated mesh (on the current frame) has already been created in loop"""
+        """Compares array of evaluated meshes vertex positions to other arrays `in unique_verts_dict` and returns key(Keymesh block) if matches"""
+        """If match is not found array is added to the dict as unique"""
+
+        match = None
+        sk_values = None
+        verts_co = None
+
+        # compare_shape_key_values
+        if self.shape_keys and not self.armature:
+            """NOTE: Separate detection method is kept for when only baking shape key values, because its faster and more optimized"""
+            """NOTE: original_data is necessary because `obj.data` is changing on every frame and is not dependable"""
+
+            sk_values = tuple(key.value for key in original_data.shape_keys.key_blocks)
+            if sk_values in unique_shape_keys_dict:
+                match = unique_shape_keys_dict[sk_values]
+
+        # compare_vertex_positions
+        elif self.armature:
+            depsgraph = context.evaluated_depsgraph_get()
+            eval_obj = obj.evaluated_get(depsgraph)
+
+            verts_co = numpy.empty((len(eval_obj.data.vertices) * 3), dtype=numpy.float64)
+            eval_obj.data.vertices.foreach_get("co", verts_co)
+            verts_co.shape = (len(eval_obj.data.vertices), 3)
+
+            for key, values in unique_verts_dict.items():
+                if numpy.array_equal(verts_co, values):
+                    match = key
+                    break
+
+        return verts_co, sk_values, match
+
+
     def restore_armature_modifier(self, obj, stored_mod):
         """Adds new armature modifier on object and assigns it value from stored (applied) one"""
 
@@ -194,29 +230,26 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         original_obj.name = original_name + "_backup"
         original_obj.hide_set(True)
 
-        # Create Key Object
+        # Create Keymesh Object
         obj = duplicate_object(context, original_obj, original_data, name=original_name, collection=True)
         initial_data = obj.data
         obj.select_set(True)
         context.view_layer.objects.active = obj
 
-
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=True)
 
 
-        unique_shape_key_values = {}
+        unique_shape_keys_dict = {}
+        unique_verts_dict = {}
+
         for frame in range(frame_start, frame_end + 1):
             context.scene.frame_set(frame)
 
             # Detect Duplicate
             match = None
-            if self.instance_duplicates:
-                if self.shape_keys:
-                    shape_key_values = tuple(key.value for key in original_data.shape_keys.key_blocks)
-                    if shape_key_values in unique_shape_key_values:
-                        match = unique_shape_key_values[shape_key_values]
-
+            if self.instance_duplicates and obj.type == 'MESH':
+                verts_co, sk_values, match = self.detect_duplicate(context, obj, unique_verts_dict, unique_shape_keys_dict, original_data)
 
             if match:
                 block_index = match.keymesh.get("Data", None)
@@ -225,16 +258,19 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 new_block = initial_data.copy()
                 new_block.name = obj.name + "_frame_" + str(frame)
 
-                if self.armature or self.shape_keys:
+                if self.shape_keys or self.armature:
                     # Apply Shape Keys
                     obj.data = new_block
                     bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
                     obj.data = initial_data
 
-                    if self.instance_duplicates:
-                        unique_shape_key_values[shape_key_values] = new_block
+                    if self.instance_duplicates and not self.armature:
+                        unique_shape_keys_dict[sk_values] = new_block
 
                 if self.armature:
+                    if self.instance_duplicates:
+                        unique_verts_dict[new_block] = verts_co
+
                     # Apply Armature Modifier
                     obj.data = new_block
                     for mod_name, mod_data in self.armature_modifiers.items():
@@ -307,6 +343,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
     def draw(self, context):
+        obj = context.active_object
+
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
@@ -323,7 +361,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         layout.separator()
         layout.prop(self, "back_up")
         layout.prop(self, "keep_original")
-        layout.prop(self, "instance_duplicates")
+        if obj.type == 'MESH':
+            layout.prop(self, "instance_duplicates")
 
         # Armature
         header, panel = layout.panel("ANIM_OT_bake_to_keymesh_armature", default_closed=False)
