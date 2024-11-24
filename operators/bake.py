@@ -51,6 +51,18 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
     )
 
     # General
+    bake_type: bpy.props.EnumProperty(
+        name = "Data to Bake",
+        description = "What animation & deformation data to bake down to Keymesh block",
+        items = (('ARMATURE', "Armature & Shape Keys", ("Bake armature and shape key animations to Keymesh blocks.\n"
+                                                        "Armature modifier and shape keys will be applied to every Keymesh block on the frame it's created.\n"
+                                                        "(i.e. armature and shape key deformations will be baked in for each block)")),
+                 ('SHAPE_KEYS', "Shape Keys", ("Bake shape key animation to Keymesh blocks.\n"
+                                               "Shape keys will be applied to every Keymesh block on the frame it's created")),
+                 ('NOTHING', "Nothing", "No data will be baked. Operator will create 'empty' Keymesh blocks"),),
+        default = 'ARMATURE',
+    )
+
     back_up: bpy.props.BoolProperty(
         name = "Create Back-up",
         description = "Operator will duplicate the active object and bake animation into it, keeping current object safe",
@@ -71,13 +83,6 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
     )
 
     # Armature
-    armature: bpy.props.BoolProperty(
-        name = "Bake Armature Animation",
-        description = ("Bake armature (rig) animation to Keymesh blocks.\n"
-                       "Armature modifier will be applied to every Keymesh block on the frame it's created.\n"
-                       "Meaning that armature deformations will be baked in for each block"),
-        default = True,
-    )
     handle_armatures: bpy.props.EnumProperty(
         name = "Handle Modifiers",
         description = "What to do with armature modifiers after they're baked into Keymesh blocks",
@@ -86,14 +91,6 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                                                     "Modifiers will be disabled when first Keymesh object becomes active, and re-enabled after last one.\n"
                                                     "This way object can retain existing regular animation before and after Keymesh animation"))),
         default = 'DELETE',
-    )
-
-    # Shape Keys
-    shape_keys: bpy.props.BoolProperty(
-        name = "Bake Shape Keys",
-        description = ("Bake shape key animation to Keymesh blocks.\n"
-                       "Animated shape keys will be applied on every Keymesh block on the frame it's created"),
-        default = True,
     )
 
 
@@ -131,21 +128,17 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         self.frame_end = context.scene.frame_end
 
         # armature_poll
-        self.armature = False
         for i, mod in enumerate(obj.modifiers):
             if mod.type == 'ARMATURE':
                 if mod.object:
                     self.armature_modifiers[mod.name] = ArmatureModifierData(mod, i)
                     self.has_armature = True
-                    self.armature = True
 
         # shape_key_poll
-        self.shape_keys = False
         if obj.type in ('MESH', 'CURVE', 'LATTICE'):
             if obj.data.shape_keys:
                 if obj.data.shape_keys.animation_data:
                     self.has_shape_keys = True
-                    self.shape_keys = True
 
         return context.window_manager.invoke_props_dialog(self)
 
@@ -159,8 +152,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         sk_values = None
         verts_co = None
 
-        # compare_shape_key_values
-        if self.shape_keys and not self.armature:
+        # compare_(only)_shape_key_values
+        if self.bake_type == 'SHAPE_KEYS' and self.has_shape_keys:
             """NOTE: Separate detection method is kept for when only baking shape key values, because its faster and more optimized"""
             """NOTE: original_data is necessary because `obj.data` is changing on every frame and is not dependable"""
 
@@ -169,7 +162,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 match = unique_shape_keys_dict[sk_values]
 
         # compare_vertex_positions
-        elif self.armature:
+        elif self.bake_type == 'ARMATURE' and self.has_armature:
             depsgraph = context.evaluated_depsgraph_get()
             eval_obj = obj.evaluated_get(depsgraph)
 
@@ -258,20 +251,21 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 new_block = initial_data.copy()
                 new_block.name = obj.name + "_frame_" + str(frame)
 
-                if self.shape_keys or self.armature:
-                    # Apply Shape Keys
+
+                # Apply Shape Keys
+                if self.bake_type != 'NOTHING' and self.has_shape_keys:
                     obj.data = new_block
                     bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
                     obj.data = initial_data
 
-                    if self.instance_duplicates and not self.armature:
+                    if self.instance_duplicates and self.bake_type == 'SHAPE_KEYS':
                         unique_shape_keys_dict[sk_values] = new_block
 
-                if self.armature:
+                # Apply Armature Modifier
+                if self.bake_type == 'ARMATURE' and self.has_armature:
                     if self.instance_duplicates:
                         unique_verts_dict[new_block] = verts_co
 
-                    # Apply Armature Modifier
                     obj.data = new_block
                     for mod_name, mod_data in self.armature_modifiers.items():
                         bpy.ops.object.modifier_apply(modifier=mod_name, report=False)
@@ -291,7 +285,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
         # Handle Armatures
-        if self.armature:
+        if self.bake_type == 'ARMATURE':
             for mod in obj.modifiers:
                 if mod.type == 'ARMATURE':
                     # remove_armature_modifiers
@@ -358,34 +352,36 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         if self.follow_scene_range:
             col.enabled = False
 
+        # general
         layout.separator()
         layout.prop(self, "back_up")
         layout.prop(self, "keep_original")
-        if obj.type == 'MESH':
-            layout.prop(self, "instance_duplicates")
 
-        # Armature
-        header, panel = layout.panel("ANIM_OT_bake_to_keymesh_armature", default_closed=False)
-        header.label(text="Armature")
-        if panel:
-            if self.has_armature:
-                panel.prop(self, "armature")
-                panel.prop(self, "handle_armatures")
-            else:
-                row = panel.row()
-                row.alignment = 'RIGHT'
-                row.label(text="Active object doesn't use armature modifier", icon='INFO')
+        # Bake Type
+        header, panel = layout.panel("ANIM_OT_bake_to_keymesh_data", default_closed=False)
+        header.label(text="Bake Type")
 
-        # Shape Keys
-        header, panel = layout.panel("ANIM_OT_bake_to_keymesh_shape_keys", default_closed=False)
-        header.label(text="Shape Keys")
         if panel:
-            if self.has_shape_keys:
-                panel.prop(self, "shape_keys")
-            else:
-                row = panel.row()
-                row.alignment = 'RIGHT'
-                row.label(text="Active object doesn't have shape key animation", icon='INFO')
+            panel.prop(self, "bake_type")
+
+            # armature
+            if self.bake_type == 'ARMATURE':
+                if self.has_armature:
+                    panel.prop(self, "handle_armatures")
+                else:
+                    row = panel.row()
+                    row.alignment = 'RIGHT'
+                    row.label(text="Active object doesn't use armature modifier", icon='INFO')
+
+            # shape_keys
+            if self.bake_type == 'SHAPE_KEYS':
+                if self.has_shape_keys == False:
+                    row = panel.row()
+                    row.alignment = 'RIGHT'
+                    row.label(text="Active object doesn't have shape key animation", icon='INFO')
+
+            if obj.type == 'MESH' and self.bake_type != 'NOTHING':
+                panel.prop(self, "instance_duplicates")
 
 
 
