@@ -152,7 +152,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
 
-    def detect_duplicate(self, context, obj, original_data, unique_verts_dict, unique_shape_keys_dict):
+    def detect_duplicate(self, context, obj, data, unique_verts_dict, unique_shape_keys_dict):
         """Checks if exact match of the evaluated mesh (on the current frame) has already been created in loop"""
         """Compares array of evaluated meshes vertex positions to other arrays `in unique_verts_dict` and returns key(Keymesh block) if matches"""
         """If match is not found array is added to the dict as unique"""
@@ -164,9 +164,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # compare_(only)_shape_key_values
         if self.bake_type == 'SHAPE_KEYS' and self.has_shape_keys:
             """NOTE: Separate detection method is kept for when only baking shape key values, because its faster and more optimized"""
-            """NOTE: original_data is necessary because `obj.data` is changing on every frame and is not dependable"""
+            """NOTE: original data arg is necessary because `obj.data` is changing on every frame and is not dependable"""
 
-            sk_values = tuple(key.value for key in original_data.shape_keys.key_blocks)
+            sk_values = tuple(key.value for key in data.shape_keys.key_blocks)
             if sk_values in unique_shape_keys_dict:
                 match = unique_shape_keys_dict[sk_values]
 
@@ -187,13 +187,13 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         return verts_co, sk_values, match
 
 
-    def store_modifiers(self, obj, selected_modifiers):
+    def store_modifiers(self, modifiers, selected_modifiers):
         """Stores modifiers in dict with all its properties and custom keys"""
         """Additionally, temporarily disables visibility of non-selected modifiers to make operator faster"""
         """Returns: stored_modifiers (dict) & obstructing_mods (list, for restoring visibility at the end)"""
 
         obstructing_mods = []
-        for mod in obj.modifiers:
+        for mod in modifiers:
             if mod.name.upper() not in selected_modifiers:
                 if mod.show_viewport:
                     obstructing_mods.append(mod.name)
@@ -201,7 +201,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         stored_modifiers = {}
         if self.has_modifiers:
-            for mod in obj.modifiers:
+            for mod in modifiers:
                 properties = {prop.identifier: getattr(mod, prop.identifier) for prop in mod.bl_rna.properties if not prop.is_readonly}
                 stored_modifiers[mod.name] = {"type": mod.type, "properties": properties}
                 if mod.type == 'NODES':
@@ -239,7 +239,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 # animate_modifier_visibility
                 elif self.modifier_handling == 'ANIMATE':
                     if mod.show_viewport:
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=context.scene.frame_start)
+                        if self.frame_start != context.scene.frame_start:
+                            mod.show_viewport = True
+                            obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=context.scene.frame_start)
 
                         mod.show_viewport = False
                         obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_start)
@@ -247,7 +249,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                         obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_end + 1)
 
                     if mod.show_render:
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=context.scene.frame_start)
+                        if self.frame_start != context.scene.frame_start:
+                            mod.show_render = True
+                            obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=context.scene.frame_start)
 
                         mod.show_render = False
                         obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_start)
@@ -279,29 +283,28 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-        # Back-up Original Object
-        original_obj = context.active_object
-        original_data = original_obj.data
-        original_name = original_obj.name
-        original_obj.name = original_name + "_backup"
-        original_obj.hide_set(True)
+        obj = context.active_object
+        original_data = obj.data
 
-        # Create Keymesh Object
-        obj = duplicate_object(context, original_obj, original_data, name=original_name, collection=True)
-        initial_data = obj.data
-        obj.select_set(True)
-        context.view_layer.objects.active = obj
+        # Back-up Original Object
+        if self.back_up or self.bake_type == 'ALL':
+            """NOTE: Duplicate has to be created when baking modifiers, because storing obj modifier values is bugged"""
+            backup_obj = duplicate_object(context, obj, original_data, name=obj.name + "_backup", collection=True)
+            backup_obj.hide_set(True)
+            backup_data = backup_obj.data
+
 
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=True)
 
 
         # store_modifiers
-        selected_modifiers = ",".join(self.modifiers)
-        stored_modifiers, obstructing_mods = self.store_modifiers(original_obj, selected_modifiers)
-        for mod in obj.modifiers:
-            if mod.name.upper() not in selected_modifiers and mod.show_viewport:
-                mod.show_viewport = False
+        if self.bake_type == 'ALL':
+            selected_modifiers = ",".join(self.modifiers)
+            stored_modifiers, obstructing_mods = self.store_modifiers(backup_obj.modifiers, selected_modifiers)
+            for mod in obj.modifiers:
+                if mod.name.upper() not in selected_modifiers and mod.show_viewport:
+                    mod.show_viewport = False
 
 
         unique_shape_keys_dict = {}
@@ -322,7 +325,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 block_index = match.keymesh.get("Data", None)
             else:
                 # Create New Block
-                new_block = initial_data.copy()
+                new_block = original_data.copy()
                 new_block.name = obj.name + "_frame_" + str(frame)
                 if self.has_shape_keys:
                     garbage_shape_keys.append(new_block.shape_keys.name)
@@ -346,7 +349,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                             else:
                                 obj.modifiers.remove(mod)
 
-                    obj.data = initial_data
+                    obj.data = original_data
 
                     # restore_modifiers
                     for mod_name, mod_data in stored_modifiers.items():
@@ -357,9 +360,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 elif self.bake_type == 'SHAPE_KEYS' and self.has_shape_keys:
                     obj.data = new_block
                     bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-                    obj.data = initial_data
+                    obj.data = original_data
 
-                    if self.instance_duplicates and self.bake_type == 'SHAPE_KEYS':
+                    if self.instance_duplicates:
                         unique_shape_keys_dict[sk_values] = new_block
 
 
@@ -375,16 +378,16 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Handle Modifiers
         if self.bake_type == 'ALL':
             self.handle_modifiers(context, obj, selected_modifiers)
-            for mod in itertools.chain(obj.modifiers, original_obj.modifiers):
+            for mod in itertools.chain(obj.modifiers, backup_obj.modifiers):
                 if mod.name in obstructing_mods:
                     mod.show_viewport = True
 
 
         # Append Original Mesh in Blocks
-        """NOTE: This has to be done at the end because being in `keymesh.blocks` makes mesh users 2 and modifiers don't apply"""
+        """NOTE: This has to be done at the end because being in `keymesh.blocks` makes mesh users 2 and modifiers can't apply"""
         if self.keep_original:
             block_index = get_next_keymesh_index(obj)
-            insert_block(obj, initial_data, block_index)
+            insert_block(obj, original_data, block_index)
             obj.keymesh.blocks.move(block_index, 0)
 
             insert_keyframe(obj, self.frame_start - 1, block_index)
@@ -392,12 +395,16 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
         # Remove Back-up Object
-        if self.back_up == False:
-            bpy.data.objects.remove(original_obj)
-            if self.keep_original == False:
-                update_keymesh(context.scene)
-                obj_type = obj_data_type(obj)
-                obj_type.remove(original_data)
+        if self.bake_type == 'ALL':
+            if self.has_modifiers and (backup_obj.modifiers[0].name.upper() not in selected_modifiers):
+                self.report({'WARNING'}, "Baked modifier was not first, result may not be as expected")
+
+            if self.back_up == False:
+                bpy.data.objects.remove(backup_obj)
+                if self.keep_original == False:
+                    update_keymesh(context.scene)
+                    obj_type = obj_data_type(obj)
+                    obj_type.remove(backup_data)
         
         # clean_up_shape_keys
         self.clean_up_shape_keys(garbage_shape_keys)
@@ -406,8 +413,6 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Finish
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
-        if self.has_modifiers and (original_obj.modifiers[0].name.upper() not in selected_modifiers):
-            self.report({'WARNING'}, "Applied modifier was not first, result may not be as expected")
 
         end_time = time.time()
         execution_time = end_time - start_time
