@@ -223,13 +223,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # define_frame_range
         initial_frame = context.scene.frame_current
         if self.follow_scene_range == True:
-            frame_start = context.scene.frame_start
-            frame_end = context.scene.frame_end
-        else:
-            frame_start = self.frame_start
-            frame_end = self.frame_end
-        
-        if frame_start > frame_end:
+            self.frame_start = context.scene.frame_start
+            self.frame_end = context.scene.frame_end
+
+        if self.frame_start > self.frame_end:
             self.report({'ERROR'}, "Operation cancelled. Start frame can't be higher than end frame")
             return {'CANCELLED'}
 
@@ -258,7 +255,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         unique_shape_keys_dict = {}
         unique_verts_dict = {}
 
-        for frame in range(frame_start, frame_end + 1):
+        for frame in range(self.frame_start, self.frame_end + 1):
             context.scene.frame_set(frame)
 
             # Detect Duplicate
@@ -333,13 +330,13 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
                         mod.show_viewport = False
                         mod.show_render = False
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=frame_start)
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=frame_start)
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_start)
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_start)
 
                         mod.show_viewport = True
                         mod.show_render = True
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=frame_end + 1)
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=frame_end + 1)
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_end + 1)
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_end + 1)
 
 
         # Append Original Mesh in Blocks
@@ -349,8 +346,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             insert_block(obj, initial_data, block_index)
             obj.keymesh.blocks.move(block_index, 0)
 
-            insert_keyframe(obj, frame_start - 1, block_index)
-            insert_keyframe(obj, frame_end + 1, block_index)
+            insert_keyframe(obj, self.frame_start - 1, block_index)
+            insert_keyframe(obj, self.frame_end + 1, block_index)
 
 
         # Remove Back-up Object
