@@ -1,29 +1,28 @@
 import bpy, numpy, time
+from ..functions.handler import update_keymesh
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object
 from ..functions.poll import is_candidate_object, is_linked, obj_data_type
+from ..functions.thumbnail import _make_enum_item
 from ..functions.timeline import insert_keyframe
-from ..functions.handler import update_keymesh
 
 
-class ArmatureModifierData:
-    def __init__(self, mod, i):
-        # general_modifier_properties
-        self.index = i
-        self.name = mod.name
-        self.show_in_editmode = mod.show_in_editmode
-        self.show_on_cage = mod.show_on_cage
-        self.show_viewport = mod.show_viewport
-        self.show_render = mod.show_render
-        self.use_pin_to_last = mod.use_pin_to_last
+#### ------------------------------ FUNCTIONS ------------------------------ ####
 
-        # armature_modifier_props
-        self.object = mod.object
-        self.vertex_group = mod.vertex_group
-        self.invert_vertex_group = mod.invert_vertex_group
-        self.use_deform_preserve_volume = mod.use_deform_preserve_volume
-        self.use_multi_modifier = mod.use_multi_modifier
-        self.use_vertex_groups = mod.use_vertex_groups
-        self.use_bone_envelopes = mod.use_bone_envelopes
+def get_modifier_enum_items(self, context):
+        """Dynamically generate items for the EnumProperty."""
+
+        enum_items = []
+        if context.active_object:
+            obj = context.active_object
+            if obj.type == 'MESH':
+                for i, mod in enumerate(obj.modifiers):
+                    enum_items.append(_make_enum_item(mod.name.upper(), mod.name, "", '', 1 << i))
+
+                # sort_by_index
+                enum_items.sort(key=lambda item: item[4])
+
+        return enum_items
+
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -50,22 +49,35 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         default = 250, min = 1,
     )
 
-    # General
+    # Bake Data
     bake_type: bpy.props.EnumProperty(
         name = "Data to Bake",
         description = "What animation & deformation data to bake down to Keymesh block",
-        items = (('ALL', "All Modifiers & Shape Keys", ("Bake all modifiers and shape key animations to Keymesh blocks.\n"
-                                                        "Modifiers and shape keys will be applied to every Keymesh block on the frame it's created.\n"
-                                                        "(i.e. modifiers and shape key deformations will be baked down to each block)")),
-                 ('ARMATURE', "Armature & Shape Keys", ("Bake armature and shape key animations to Keymesh blocks.\n"
-                                                        "Armature modifier and shape keys will be applied to every Keymesh block on the frame it's created.\n"
-                                                        "(i.e. armature and shape key deformations will be baked down to each block)")),
+        items = (('ALL', "Modifiers & Shape Keys", ("Bake modifiers and shape key animations to Keymesh blocks.\n"
+                                                    "Selected modifiers and shape keys will be applied to every Keymesh block on the frame they're created.\n"
+                                                    "(i.e. modifiers and shape key deformations will be baked down to each block)")),
                  ('SHAPE_KEYS', "Shape Keys", ("Bake shape key animation to Keymesh blocks.\n"
                                                "Shape keys will be applied to every Keymesh block on the frame it's created")),
                  ('NOTHING', "Nothing", "No data will be baked. Operator will create 'empty' Keymesh blocks"),),
-        default = 'ARMATURE',
+        default = 'ALL',
+    )
+    modifiers: bpy.props.EnumProperty(
+        name = "Modifiers",
+        description = "Choose modifiers that are going to be baked",
+        items = get_modifier_enum_items,
+        options = {"ENUM_FLAG"}
+    )
+    handle_modifiers: bpy.props.EnumProperty(
+        name = "Handle Modifiers",
+        description = "What to do with modifiers after they're baked into Keymesh blocks",
+        items = (('DELETE', "Delete", ("Modifiers will be completely removed from the object.\n")),
+                 ('ANIMATE', "Animate Visibility", ("Viewport and render visibility of modifiers will be animated.\n"
+                                                    "Modifiers will be disabled on given frame start, and re-enabled after frame end.\n"
+                                                    "This way object can retain existing animation before and after baked Keymesh blocks"))),
+        default = 'DELETE',
     )
 
+    # Utilities
     back_up: bpy.props.BoolProperty(
         name = "Create Back-up",
         description = "Operator will duplicate the active object and bake animation into it, keeping current object safe",
@@ -83,16 +95,6 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                        "If they are, it will reuse same Keymesh block on those frames, instead of creating new one for each.\n"
                        "WARNING: For complex objects this is expensive calculation and might make operator slower"),
         default = False,
-    )
-
-    handle_modifiers: bpy.props.EnumProperty(
-        name = "Handle Modifiers",
-        description = "What to do with modifiers after they're baked into Keymesh blocks",
-        items = (('DELETE', "Delete", ("Modifiers will be completely removed from the object.\n")),
-                 ('ANIMATE', "Animate Visibility", ("Viewport and render visibility of modifiers will be animated.\n"
-                                                    "Modifiers will be disabled on given frame start, and re-enabled after frame end.\n"
-                                                    "This way object can retain existing animation before and after baked Keymesh blocks"))),
-        default = 'DELETE',
     )
 
 
@@ -118,10 +120,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
     def __init__(self):
         self.has_shape_keys = False
-        self.has_armature = False
         self.has_modifiers = False
-        self.armature_modifiers = {}
-
 
     def invoke(self, context, event):
         obj = context.active_object
@@ -129,14 +128,20 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         self.frame_start = context.scene.frame_start
         self.frame_end = context.scene.frame_end
 
-        # armature_&_modifiers_poll
-        for i, mod in enumerate(obj.modifiers):
+        # modifiers_poll
+        if len(obj.modifiers) > 0:
             self.has_modifiers = True
 
-            if mod.type == 'ARMATURE':
-                if mod.object:
-                    self.armature_modifiers[mod.name] = ArmatureModifierData(mod, i)
-                    self.has_armature = True
+        # select_default_modifiers
+        enum_items = get_modifier_enum_items(self, context)
+        if enum_items:
+            default_mods = {enum_items[0][0]}
+            for mod in obj.modifiers:
+                if mod.type == 'ARMATURE':
+                    default_mods.add(mod.name.upper())
+
+            if default_mods not in self.modifiers:
+                self.modifiers = default_mods
 
         # shape_key_poll
         if obj.type in ('MESH', 'CURVE', 'LATTICE'):
@@ -166,7 +171,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 match = unique_shape_keys_dict[sk_values]
 
         # compare_vertex_positions
-        elif self.bake_type in ('ARMATURE', 'ALL'):
+        elif self.bake_type == 'ALL':
             depsgraph = context.evaluated_depsgraph_get()
             eval_obj = obj.evaluated_get(depsgraph)
 
@@ -180,6 +185,21 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                     break
 
         return verts_co, sk_values, match
+
+
+    def store_modifiers(self, obj):
+        """Stores modifiers in dict with all its properties and custom keys"""
+
+        stored_modifiers = {}
+        if self.has_modifiers:
+            for mod in obj.modifiers:
+                properties = {prop.identifier: getattr(mod, prop.identifier) for prop in mod.bl_rna.properties if not prop.is_readonly}
+                stored_modifiers[mod.name] = {"type": mod.type, "properties": properties}
+                if mod.type == 'NODES':
+                    keys = {key: mod[key] for key in mod.keys()}
+                    stored_modifiers[mod.name]["keys"] = keys
+        
+        return stored_modifiers
 
 
     def restore_modifier(self, obj, name, stored):
@@ -232,15 +252,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
         # store_modifiers
-        stored_modifiers = {}
-        if self.has_modifiers:
-            for mod in original_obj.modifiers:
-                properties = {prop.identifier: getattr(mod, prop.identifier) for prop in mod.bl_rna.properties if not prop.is_readonly}
-                stored_modifiers[mod.name] = {"type": mod.type, "properties": properties}
-                if mod.type == 'NODES':
-                    keys = {key: mod[key] for key in mod.keys()}
-                    stored_modifiers[mod.name]["keys"] = keys
-
+        stored_modifiers = self.store_modifiers(original_obj)
+        selected_modifiers = ",".join(self.modifiers)
 
         unique_shape_keys_dict = {}
         unique_verts_dict = {}
@@ -262,45 +275,39 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 new_block = initial_data.copy()
                 new_block.name = obj.name + "_frame_" + str(frame)
 
-
-                # Apply Everything (all_modifiers_and_shape_keys)
                 if self.bake_type == 'ALL':
                     if self.instance_duplicates:
                         unique_verts_dict[new_block] = verts_co
 
                     obj.data = new_block
-                    bpy.ops.object.convert(target='MESH')
+
+                    # Apply Everything (convert_to_mesh)
+                    if all(mod.name.upper() in selected_modifiers for mod in obj.modifiers):
+                        bpy.ops.object.convert(target='MESH')
+                    # Apply Selected Modifiers (& Shape Keys)
+                    else:
+                        bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+                        for mod in obj.modifiers:
+                            if mod.name.upper() in selected_modifiers:
+                                bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
+                            else:
+                                obj.modifiers.remove(mod)
+
                     obj.data = initial_data
 
                     # restore_modifiers
                     for mod_name, mod_data in stored_modifiers.items():
                         self.restore_modifier(obj, mod_name, mod_data)
 
-                else:
-                    # Apply Shape Keys
-                    if self.bake_type in ('SHAPE_KEYS', 'ARMATURE') and self.has_shape_keys:
-                        obj.data = new_block
-                        bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-                        obj.data = initial_data
 
-                        if self.instance_duplicates and self.bake_type == 'SHAPE_KEYS':
-                            unique_shape_keys_dict[sk_values] = new_block
+                # Apply Shape Keys
+                elif self.bake_type == 'SHAPE_KEYS' and self.has_shape_keys:
+                    obj.data = new_block
+                    bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+                    obj.data = initial_data
 
-                    # Apply Armature Modifier
-                    if self.bake_type == 'ARMATURE' and self.has_armature:
-                        if self.instance_duplicates:
-                            unique_verts_dict[new_block] = verts_co
-
-                        obj.data = new_block
-                        for mod in obj.modifiers:
-                            if mod.type == 'ARMATURE':
-                                bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
-                            else:
-                                obj.modifiers.remove(mod)
-                        obj.data = initial_data
-
-                        for mod_name, mod_data in stored_modifiers.items():
-                            self.restore_modifier(obj, mod_name, mod_data)
+                    if self.instance_duplicates and self.bake_type == 'SHAPE_KEYS':
+                        unique_shape_keys_dict[sk_values] = new_block
 
 
                 # assign_new_block_to_object
@@ -313,9 +320,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
         # Handle Modifiers
-        if self.bake_type in ('ALL', 'ARMATURE'):
+        if self.bake_type == 'ALL':
             for mod in obj.modifiers:
-                if (self.bake_type == 'ALL') or (self.bake_type == 'ARMATURE' and mod.type == 'ARMATURE'):
+                if mod.name.upper() in selected_modifiers:
                     # remove_modifiers
                     if self.handle_modifiers == 'DELETE':
                         obj.modifiers.remove(mod)
@@ -358,9 +365,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Finish
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
-        if (self.bake_type == 'ARMATURE') and (any(value.index != 0 for value in self.armature_modifiers.values())):
-            self.report({'WARNING'}, "Armature modifier was not first, result may not be as expected")
-
+        if original_obj.modifiers[0].name.upper() not in selected_modifiers:
+            self.report({'WARNING'}, "Applied modifier was not first, result may not be as expected")
 
         end_time = time.time()
         execution_time = end_time - start_time
@@ -376,7 +382,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        # frame_range
+        # Frame Range
         layout.prop(self, "follow_scene_range")
         col = layout.column(align=True)
         row = col.row()
@@ -385,14 +391,14 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         if self.follow_scene_range:
             col.enabled = False
 
-        # general
+        # General
         layout.separator()
         layout.prop(self, "back_up")
         layout.prop(self, "keep_original")
 
         # Bake Type
         header, panel = layout.panel("ANIM_OT_bake_to_keymesh_data", default_closed=False)
-        header.label(text="Bake Type")
+        header.label(text="Bake Data")
 
         if panel:
             panel.prop(self, "bake_type")
@@ -401,19 +407,11 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             if self.bake_type == 'ALL':
                 if self.has_modifiers:
                     panel.prop(self, "handle_modifiers")
+                    panel.prop(self, "modifiers", expand=True)
                 else:
                     row = panel.row()
                     row.alignment = 'RIGHT'
-                    row.label(text="Active object doesn't have modifier", icon='INFO')
-
-            # armature
-            if self.bake_type == 'ARMATURE':
-                if self.has_armature:
-                    panel.prop(self, "handle_modifiers")
-                else:
-                    row = panel.row()
-                    row.alignment = 'RIGHT'
-                    row.label(text="Active object doesn't use armature modifier", icon='INFO')
+                    row.label(text="Active object doesn't have modifiers", icon='INFO')
 
             # shape_keys
             if self.bake_type == 'SHAPE_KEYS':
