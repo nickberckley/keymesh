@@ -1,4 +1,4 @@
-import bpy, numpy, time
+import bpy, numpy, time, itertools
 from ..functions.handler import update_keymesh
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object
 from ..functions.poll import is_candidate_object, is_linked, obj_data_type
@@ -67,7 +67,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         items = get_modifier_enum_items,
         options = {"ENUM_FLAG"}
     )
-    handle_modifiers: bpy.props.EnumProperty(
+    modifier_handling: bpy.props.EnumProperty(
         name = "Handle Modifiers",
         description = "What to do with modifiers after they're baked into Keymesh blocks",
         items = (('DELETE', "Delete", ("Modifiers will be completely removed from the object.\n")),
@@ -187,8 +187,17 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         return verts_co, sk_values, match
 
 
-    def store_modifiers(self, obj):
+    def store_modifiers(self, obj, selected_modifiers):
         """Stores modifiers in dict with all its properties and custom keys"""
+        """Additionally, temporarily disables visibility of non-selected modifiers to make operator faster"""
+        """Returns: stored_modifiers (dict) & obstructing_mods (list, for restoring visibility at the end)"""
+
+        obstructing_mods = []
+        for mod in obj.modifiers:
+            if mod.name.upper() not in selected_modifiers:
+                if mod.show_viewport:
+                    obstructing_mods.append(mod.name)
+                    mod.show_viewport = False
 
         stored_modifiers = {}
         if self.has_modifiers:
@@ -198,8 +207,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 if mod.type == 'NODES':
                     keys = {key: mod[key] for key in mod.keys()}
                     stored_modifiers[mod.name]["keys"] = keys
-        
-        return stored_modifiers
+
+        return stored_modifiers, obstructing_mods
 
 
     def restore_modifier(self, obj, name, stored):
@@ -215,6 +224,35 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             if stored["type"] == 'NODES':
                 for key, value in stored["keys"].items():
                     mod[key] = value
+
+
+    def handle_modifiers(self, context, obj, selected_modifiers):
+        """Either removes modifiers, or animates their visibility before and after frame range"""
+        """Based on `self.modifier_handling` property. Used to keep regular animation around Keymesh animation"""
+
+        for mod in obj.modifiers:
+            if (mod.name.upper() in selected_modifiers):
+                # remove_modifiers
+                if self.modifier_handling == 'DELETE':
+                    obj.modifiers.remove(mod)
+
+                # animate_modifier_visibility
+                elif self.modifier_handling == 'ANIMATE':
+                    if mod.show_viewport:
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=context.scene.frame_start)
+
+                        mod.show_viewport = False
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_start)
+                        mod.show_viewport = True
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_end + 1)
+
+                    if mod.show_render:
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=context.scene.frame_start)
+
+                        mod.show_render = False
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_start)
+                        mod.show_render = True
+                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_end + 1)
 
 
     def execute(self, context):
@@ -249,8 +287,12 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
         # store_modifiers
-        stored_modifiers = self.store_modifiers(original_obj)
         selected_modifiers = ",".join(self.modifiers)
+        stored_modifiers, obstructing_mods = self.store_modifiers(original_obj, selected_modifiers)
+        for mod in obj.modifiers:
+            if mod.name.upper() not in selected_modifiers and mod.show_viewport:
+                mod.show_viewport = False
+
 
         unique_shape_keys_dict = {}
         unique_verts_dict = {}
@@ -285,7 +327,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                     else:
                         bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
                         for mod in obj.modifiers:
-                            if mod.name.upper() in selected_modifiers:
+                            if (mod.name.upper() in selected_modifiers) and mod.show_viewport:
                                 bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
                             else:
                                 obj.modifiers.remove(mod)
@@ -318,25 +360,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         # Handle Modifiers
         if self.bake_type == 'ALL':
-            for mod in obj.modifiers:
-                if mod.name.upper() in selected_modifiers:
-                    # remove_modifiers
-                    if self.handle_modifiers == 'DELETE':
-                        obj.modifiers.remove(mod)
-                    # animate_modifier_visibility
-                    elif self.handle_modifiers == 'ANIMATE':
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=context.scene.frame_start)
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=context.scene.frame_start)
-
-                        mod.show_viewport = False
-                        mod.show_render = False
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_start)
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_start)
-
-                        mod.show_viewport = True
-                        mod.show_render = True
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_end + 1)
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_end + 1)
+            self.handle_modifiers(context, obj, selected_modifiers)
+            for mod in itertools.chain(obj.modifiers, original_obj.modifiers):
+                if mod.name in obstructing_mods:
+                    mod.show_viewport = True
 
 
         # Append Original Mesh in Blocks
@@ -367,7 +394,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         end_time = time.time()
         execution_time = end_time - start_time
-        self.report({'INFO'}, f"Operator executed in {execution_time:.4f} seconds.")
+        print("Keymesh bake operator executed in " + str(round(execution_time, 4)) + " seconds.")
 
         return {'FINISHED'}
 
@@ -403,7 +430,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             # all
             if self.bake_type == 'ALL':
                 if self.has_modifiers:
-                    panel.prop(self, "handle_modifiers")
+                    panel.prop(self, "modifier_handling")
                     panel.prop(self, "modifiers", expand=True)
                 else:
                     row = panel.row()
