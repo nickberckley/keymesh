@@ -153,7 +153,6 @@ def duplicate_object(context, obj, block, name=None, hide=False, collection=Fals
     dup_obj.data = block
     dup_obj.name = name
     context.collection.objects.link(dup_obj)
-    # context.view_layer.active_layer_collection.collection.objects.link(dup_obj)
 
     if obj.animation_data is not None:
         if obj.animation_data.action is not None:

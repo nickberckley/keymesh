@@ -255,6 +255,16 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                         obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_end + 1)
 
 
+    def clean_up_shape_keys(self, garbage_shape_keys):
+        """NOTE: This is needed because applying/removing shape keys immediately after copying object doesn't remove keys"""
+        """This is a bug in Blender. Also, since there is no `BlendDataShapeKeys` collection can't directly remove keys"""
+        """Instead they're left orphaned, so that refreshing Blender or purge operator will remove them. Otherwise they stay in .blend file forever"""
+
+        for key in bpy.data.shape_keys:
+            if key.name in garbage_shape_keys:
+                key.user_clear()
+
+
     def execute(self, context):
         start_time = time.time()
 
@@ -296,6 +306,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         unique_shape_keys_dict = {}
         unique_verts_dict = {}
+        garbage_shape_keys = []
 
         for frame in range(self.frame_start, self.frame_end + 1):
             context.scene.frame_set(frame)
@@ -313,6 +324,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 # Create New Block
                 new_block = initial_data.copy()
                 new_block.name = obj.name + "_frame_" + str(frame)
+                if self.has_shape_keys:
+                    garbage_shape_keys.append(new_block.shape_keys.name)
 
                 if self.bake_type == 'ALL':
                     if self.instance_duplicates:
@@ -325,7 +338,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                         bpy.ops.object.convert(target='MESH')
                     # Apply Selected Modifiers (& Shape Keys)
                     else:
-                        bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+                        if self.has_shape_keys:
+                            bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
                         for mod in obj.modifiers:
                             if (mod.name.upper() in selected_modifiers) and mod.show_viewport:
                                 bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
@@ -384,12 +398,15 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 update_keymesh(context.scene)
                 obj_type = obj_data_type(obj)
                 obj_type.remove(original_data)
+        
+        # clean_up_shape_keys
+        self.clean_up_shape_keys(garbage_shape_keys)
 
 
         # Finish
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
-        if original_obj.modifiers[0].name.upper() not in selected_modifiers:
+        if self.has_modifiers and (original_obj.modifiers[0].name.upper() not in selected_modifiers):
             self.report({'WARNING'}, "Applied modifier was not first, result may not be as expected")
 
         end_time = time.time()
