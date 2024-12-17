@@ -1,6 +1,6 @@
 import bpy, numpy, time, itertools
 from ..functions.handler import update_keymesh
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object, get_active_block_index
 from ..functions.poll import is_candidate_object, is_linked, obj_data_type
 from ..functions.thumbnail import _make_enum_item
 from ..functions.timeline import insert_keyframe
@@ -386,9 +386,12 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Append Original Mesh in Blocks
         """NOTE: This has to be done at the end because being in `keymesh.blocks` makes mesh users 2 and modifiers can't apply"""
         if self.keep_original:
-            block_index = get_next_keymesh_index(obj)
-            insert_block(obj, original_data, block_index)
-            obj.keymesh.blocks.move(block_index, 0)
+            if original_data.name in obj.keymesh.blocks:
+                block_index = original_data.keymesh.get("Data", None)
+            else:
+                block_index = get_next_keymesh_index(obj)
+                insert_block(obj, original_data, block_index)
+                obj.keymesh.blocks.move(block_index, 0)
 
             insert_keyframe(obj, self.frame_start - 1, block_index)
             insert_keyframe(obj, self.frame_end + 1, block_index)
@@ -402,15 +405,17 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             if self.back_up == False:
                 bpy.data.objects.remove(backup_obj)
                 if self.keep_original == False:
-                    update_keymesh(context.scene)
-                    obj_type = obj_data_type(obj)
-                    obj_type.remove(backup_data)
+                    if original_data.name not in obj.keymesh.blocks:
+                        update_keymesh(context.scene)
+                        obj_type = obj_data_type(obj)
+                        obj_type.remove(backup_data)
         
         # clean_up_shape_keys
         self.clean_up_shape_keys(garbage_shape_keys)
 
 
         # Finish
+        obj.keymesh.animated = True
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
 

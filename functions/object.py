@@ -50,7 +50,8 @@ def list_block_users(block):
 
 
 def assign_keymesh_id(obj, animate=False):
-    """Assigns properties to obj required to make it Keymesh object"""
+    """Assigns properties to obj that are required to make it Keymesh object"""
+    """If obj is already Keymesh object nothing happens"""
 
     if obj.keymesh.active is False:
         obj.keymesh.active = True
