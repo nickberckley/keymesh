@@ -35,7 +35,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
     bl_label = "Bake to Keymesh"
     bl_description = ("Bakes down objects animation (action, armature, shape key) into Keymesh blocks.\n"
                       "Keymesh block will be created for each frame of the given range with animation applied")
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO'}
 
     # Frame Range
     follow_scene_range: bpy.props.BoolProperty(
