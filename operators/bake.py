@@ -14,12 +14,11 @@ def get_modifier_enum_items(self, context):
         enum_items = []
         if context.active_object:
             obj = context.active_object
-            if obj.type == 'MESH':
-                for i, mod in enumerate(obj.modifiers):
-                    enum_items.append(_make_enum_item(mod.name.upper(), mod.name, "", '', 1 << i))
+            for i, mod in enumerate(obj.modifiers):
+                enum_items.append(_make_enum_item(mod.name.upper(), mod.name, "", '', 1 << i))
 
-                # sort_by_index
-                enum_items.sort(key=lambda item: item[4])
+            # sort_by_index
+            enum_items.sort(key=lambda item: item[4])
 
         return enum_items
 
@@ -103,7 +102,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         if context.active_object:
             obj = context.active_object
             if context.object.mode == 'OBJECT':
-                if not is_candidate_object(context.active_object):
+                if not is_candidate_object(obj):
                     cls.poll_message_set("Active object type isn't supported by Keymesh")
                     return False
                 else:
@@ -133,15 +132,16 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             self.has_modifiers = True
 
         # select_default_modifiers
-        enum_items = get_modifier_enum_items(self, context)
-        if enum_items:
-            default_mods = {enum_items[0][0]}
-            for mod in obj.modifiers:
-                if mod.type == 'ARMATURE':
-                    default_mods.add(mod.name.upper())
+        if obj.type == 'MESH':
+            enum_items = get_modifier_enum_items(self, context)
+            if enum_items:
+                default_mods = {enum_items[0][0]}
+                for mod in obj.modifiers:
+                    if mod.type == 'ARMATURE':
+                        default_mods.add(mod.name.upper())
 
-            if default_mods not in self.modifiers:
-                self.modifiers = default_mods
+                if default_mods not in self.modifiers:
+                    self.modifiers = default_mods
 
         # shape_key_poll
         if obj.type in ('MESH', 'CURVE', 'LATTICE'):
@@ -187,17 +187,18 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         return verts_co, sk_values, match
 
 
-    def store_modifiers(self, modifiers, selected_modifiers):
+    def store_modifiers(self, type, selected_modifiers, modifiers, temp_mods):
         """Stores modifiers in dict with all its properties and custom keys"""
         """Additionally, temporarily disables visibility of non-selected modifiers to make operator faster"""
         """Returns: stored_modifiers (dict) & obstructing_mods (list, for restoring visibility at the end)"""
 
         obstructing_mods = []
-        for mod in modifiers:
-            if mod.name.upper() not in selected_modifiers:
-                if mod.show_viewport:
-                    obstructing_mods.append(mod.name)
-                    mod.show_viewport = False
+        if type == 'MESH':
+            for mod in itertools.chain(modifiers, temp_mods):
+                if mod.name.upper() not in selected_modifiers:
+                    if mod.show_viewport:
+                        obstructing_mods.append(mod.name)
+                        mod.show_viewport = False
 
         stored_modifiers = {}
         if self.has_modifiers:
@@ -271,6 +272,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
     def execute(self, context):
         start_time = time.time()
+        bpy.app.handlers.frame_change_post.remove(update_keymesh)
 
         # define_frame_range
         initial_frame = context.scene.frame_current
@@ -284,6 +286,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
         obj = context.active_object
+        original_type = obj.type
         original_data = obj.data
 
         # Back-up Original Object
@@ -291,20 +294,17 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             """NOTE: Duplicate has to be created when baking modifiers, because storing obj modifier values is bugged"""
             backup_obj = duplicate_object(context, obj, original_data, name=obj.name + "_backup", collection=True)
             backup_obj.hide_set(True)
-            backup_data = backup_obj.data
 
 
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=True)
 
 
-        # store_modifiers
-        if self.bake_type == 'ALL':
+        # Store Modifiers
+        if self.bake_type == 'ALL' and self.has_modifiers and original_type == 'MESH':
             selected_modifiers = ",".join(self.modifiers)
-            stored_modifiers, obstructing_mods = self.store_modifiers(backup_obj.modifiers, selected_modifiers)
-            for mod in obj.modifiers:
-                if mod.name.upper() not in selected_modifiers and mod.show_viewport:
-                    mod.show_viewport = False
+            stored_modifiers, obstructing_mods = self.store_modifiers(original_type, selected_modifiers,
+                                                                      backup_obj.modifiers, obj.modifiers)
 
 
         unique_shape_keys_dict = {}
@@ -316,54 +316,82 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
             # Detect Duplicate
             match = None
-            if self.instance_duplicates and obj.type == 'MESH':
+            if self.instance_duplicates and original_type == 'MESH':
                 verts_co, sk_values, match = self.detect_duplicate(context, obj, original_data,
                                                                    unique_verts_dict, unique_shape_keys_dict)
-
 
             if match:
                 block_index = match.keymesh.get("Data", None)
             else:
                 # Create New Block
-                new_block = original_data.copy()
-                new_block.name = obj.name + "_frame_" + str(frame)
-                if self.has_shape_keys:
-                    garbage_shape_keys.append(new_block.shape_keys.name)
+                if (original_type == 'MESH') or (original_type != 'MESH' and self.bake_type != 'ALL'):
+                    new_block = original_data.copy()
+                    new_block.name = obj.name + "_frame_" + str(frame)
+                    if self.has_shape_keys:
+                        garbage_shape_keys.append(new_block.shape_keys.name)
 
-                if self.bake_type == 'ALL':
-                    if self.instance_duplicates:
-                        unique_verts_dict[new_block] = verts_co
 
-                    obj.data = new_block
+                # Apply Modifiers
+                if self.bake_type == 'ALL' and self.has_modifiers:
+                    if original_type == 'MESH':
+                        if self.instance_duplicates:
+                            unique_verts_dict[new_block] = verts_co
 
-                    # Apply Everything (convert_to_mesh)
-                    if all(mod.name.upper() in selected_modifiers for mod in obj.modifiers):
-                        bpy.ops.object.convert(target='MESH')
-                    # Apply Selected Modifiers (& Shape Keys)
-                    else:
+                        obj.data = new_block
+
+                        # a. apply_everything
+                        if all(mod.name.upper() in selected_modifiers for mod in obj.modifiers):
+                            bpy.ops.object.convert(target='MESH')
+                        # b. apply_selected_modifiers
+                        else:
+                            if self.has_shape_keys:
+                                bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+                            for mod in obj.modifiers:
+                                if (mod.name.upper() in selected_modifiers) and mod.show_viewport:
+                                    bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
+                                else:
+                                    obj.modifiers.remove(mod)
+
+                        obj.data = original_data
+
+                        # restore_modifiers
+                        for mod_name, mod_data in stored_modifiers.items():
+                            self.restore_modifier(obj, mod_name, mod_data)
+
+
+                    # Convert to Mesh
+                    elif original_type == 'CURVE':
+                        # 1. create_temporary_object
+                        obj.select_set(False)
+                        temp_obj = obj.copy()
+                        temp_obj.data = obj.data.copy()
+                        context.collection.objects.link(temp_obj)
+                        context.view_layer.objects.active = temp_obj
+                        temp_obj.select_set(True)
                         if self.has_shape_keys:
-                            bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-                        for mod in obj.modifiers:
-                            if (mod.name.upper() in selected_modifiers) and mod.show_viewport:
-                                bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
-                            else:
-                                obj.modifiers.remove(mod)
+                            garbage_shape_keys.append(temp_obj.data.shape_keys.name)
 
-                    obj.data = original_data
+                        # 2. convert_to_mesh
+                        bpy.ops.object.convert(target='MESH', keep_original=False)
 
-                    # restore_modifiers
-                    for mod_name, mod_data in stored_modifiers.items():
-                        self.restore_modifier(obj, mod_name, mod_data)
+                        # 3. remove_temporary_data
+                        new_block = temp_obj.data
+                        new_block.name = obj.name + "_frame_" + str(frame)
+
+                        bpy.data.objects.remove(temp_obj)
+                        context.view_layer.objects.active = obj
+                        obj.select_set(True)
 
 
                 # Apply Shape Keys
-                elif self.bake_type == 'SHAPE_KEYS' and self.has_shape_keys:
-                    obj.data = new_block
-                    bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-                    obj.data = original_data
+                elif (self.bake_type == 'SHAPE_KEYS') or (self.bake_type == 'ALL' and self.has_modifiers == False):
+                    if self.has_shape_keys:
+                        obj.data = new_block
+                        bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+                        obj.data = original_data
 
-                    if self.instance_duplicates:
-                        unique_shape_keys_dict[sk_values] = new_block
+                        if self.instance_duplicates:
+                            unique_shape_keys_dict[sk_values] = new_block
 
 
                 # assign_new_block_to_object
@@ -375,47 +403,59 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             insert_keyframe(obj, context.scene.frame_current, block_index)
 
 
-        # Handle Modifiers
         if self.bake_type == 'ALL':
-            self.handle_modifiers(context, obj, selected_modifiers)
-            for mod in itertools.chain(obj.modifiers, backup_obj.modifiers):
-                if mod.name in obstructing_mods:
-                    mod.show_viewport = True
+            if self.has_modifiers:
+                # a. Handle Modifiers
+                if original_type == 'MESH':
+                    self.handle_modifiers(context, obj, selected_modifiers)
+                    for mod in itertools.chain(obj.modifiers, backup_obj.modifiers):
+                        if mod.name in obstructing_mods:
+                            mod.show_viewport = True
+
+                    if backup_obj.modifiers[0].name.upper() not in selected_modifiers:
+                        self.report({'WARNING'}, "Baked modifier was not first, result may not be as expected")
+
+                # b. Convert Non-Mesh Types to Mesh
+                else:
+                    backup_obj.data = original_data.copy()
+                    bpy.ops.object.convert(target='MESH', keep_original=False)
+                    original_data = obj.data
 
 
         # Append Original Mesh in Blocks
         """NOTE: This has to be done at the end because being in `keymesh.blocks` makes mesh users 2 and modifiers can't apply"""
         if self.keep_original:
-            if original_data.name in obj.keymesh.blocks:
-                block_index = original_data.keymesh.get("Data", None)
-            else:
-                block_index = get_next_keymesh_index(obj)
-                insert_block(obj, original_data, block_index)
-                obj.keymesh.blocks.move(block_index, 0)
+            if ((original_type == 'MESH') or
+                (original_type != 'MESH' and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
+                                              self.bake_type == 'ALL' and self.has_modifiers == False))):
+                if original_data.name in obj.keymesh.blocks:
+                    block_index = original_data.keymesh.get("Data", None)
+                else:
+                    block_index = get_next_keymesh_index(obj)
+                    insert_block(obj, original_data, block_index)
+                    obj.keymesh.blocks.move(block_index, 0)
 
-            insert_keyframe(obj, self.frame_start - 1, block_index)
-            insert_keyframe(obj, self.frame_end + 1, block_index)
+                insert_keyframe(obj, self.frame_start - 1, block_index)
+                insert_keyframe(obj, self.frame_end + 1, block_index)
 
 
         # Remove Back-up Object
-        if self.bake_type == 'ALL':
-            if self.has_modifiers and (backup_obj.modifiers[0].name.upper() not in selected_modifiers):
-                self.report({'WARNING'}, "Baked modifier was not first, result may not be as expected")
+        if self.bake_type == 'ALL' and self.back_up == False:
+            obj_type = obj_data_type(backup_obj)
+            bpy.data.objects.remove(backup_obj)
+            if self.keep_original == False:
+                if original_data.name not in obj.keymesh.blocks:
+                    update_keymesh(context.scene)
+                    obj_type.remove(original_data)
 
-            if self.back_up == False:
-                bpy.data.objects.remove(backup_obj)
-                if self.keep_original == False:
-                    if original_data.name not in obj.keymesh.blocks:
-                        update_keymesh(context.scene)
-                        obj_type = obj_data_type(obj)
-                        obj_type.remove(backup_data)
-        
+
         # clean_up_shape_keys
         self.clean_up_shape_keys(garbage_shape_keys)
 
 
         # Finish
         obj.keymesh.animated = True
+        bpy.app.handlers.frame_change_post.append(update_keymesh)
         update_keymesh(context.scene)
         context.scene.frame_set(initial_frame)
 
@@ -445,7 +485,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # General
         layout.separator()
         layout.prop(self, "back_up")
-        layout.prop(self, "keep_original")
+        if ((obj.type == 'MESH') or
+            (obj.type != 'MESH' and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
+                                     self.bake_type == 'ALL' and self.has_modifiers == False))):
+            layout.prop(self, "keep_original")
 
         # Bake Type
         header, panel = layout.panel("ANIM_OT_bake_to_keymesh_data", default_closed=False)
@@ -457,8 +500,14 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             # all
             if self.bake_type == 'ALL':
                 if self.has_modifiers:
-                    panel.prop(self, "modifier_handling")
-                    panel.prop(self, "modifiers", expand=True)
+                    if obj.type == 'MESH':
+                        panel.prop(self, "modifier_handling")
+                        panel.prop(self, "modifiers", expand=True)
+
+                    elif obj.type == 'CURVE':
+                        row = panel.row()
+                        row.alignment = 'RIGHT'
+                        row.label(text="Curve object will be converted to mesh", icon='INFO')
                 else:
                     row = panel.row()
                     row.alignment = 'RIGHT'
