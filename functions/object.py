@@ -144,6 +144,16 @@ def update_active_index(obj, index=None):
     obj.keymesh.blocks_grid = str(index)
 
 
+def convert_to_mesh(context, obj):
+    """Low-level alternative to `bpy.ops.object.convert` for converting to meshes"""
+
+    depsgraph = context.evaluated_depsgraph_get()
+    eval_obj = obj.evaluated_get(depsgraph)
+    mesh = bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers=True, depsgraph=depsgraph)
+
+    return mesh
+
+
 def duplicate_object(context, obj, block, name=None, hide=False, collection=False):
     """Creates duplicate of obj and assigns object data / block"""
 

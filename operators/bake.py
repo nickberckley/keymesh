@@ -1,13 +1,13 @@
 import bpy, numpy, time, itertools
 from ..functions.handler import update_keymesh
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object, get_active_block_index
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object, convert_to_mesh
 from ..functions.poll import is_candidate_object, is_linked, obj_data_type
 from ..functions.thumbnail import _make_enum_item
 from ..functions.timeline import insert_keyframe
 
 
 main_types = ['MESH', 'LATTICE']
-convert_types = ['CURVE', 'SURFACE', 'FONT', 'CURVES']
+convert_types = ['CURVE', 'SURFACE', 'FONT']
 shape_key_types = ['MESH', 'CURVE', 'SURFACE', 'LATTICE']
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -328,28 +328,29 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             if match:
                 block_index = match.keymesh.get("Data", None)
             else:
-                # Create New Block
-                if (original_type in main_types) or (original_type not in main_types and (self.bake_type != 'ALL' or
-                                                                                      self.bake_type == 'ALL' and self.has_modifiers == False)):
-                    new_block = original_data.copy()
-                    new_block.name = obj.name + "_frame_" + str(frame)
-                    if self.has_shape_keys:
-                        garbage_shape_keys.append(new_block.shape_keys.name)
-
+                new_block = None
 
                 # Apply Modifiers
                 if self.bake_type == 'ALL' and self.has_modifiers:
-                    if original_type in main_types:
-                        if self.instance_duplicates:
-                            unique_verts_dict[new_block] = verts_co
-
-                        obj.data = new_block
+                    if original_type in main_types + convert_types:
 
                         # a. apply_everything
-                        if obj.type == 'MESH' and all(mod.name.upper() in selected_modifiers for mod in obj.modifiers):
-                            """NOTE: obj.type is specified because Lattice, which is in main_types can't be converted"""
-                            bpy.ops.object.convert(target='MESH')
+                        all_selected = (obj.type == 'MESH') and (all(mod.name.upper() in selected_modifiers for mod in obj.modifiers))
+                        """NOTE: obj.type is specified because Lattice, which is in main_types, can't be converted to Mesh"""
+
+                        if all_selected or original_type in convert_types:
+                            new_block = convert_to_mesh(context, obj)
+
+                        # b. apply_selected_modifiers
                         else:
+                            # 1. create_new_block
+                            new_block = original_data.copy()
+                            if self.has_shape_keys:
+                                garbage_shape_keys.append(new_block.shape_keys.name)
+
+                            # 2. apply_modifiers_and_shape_keys
+                            obj.data = new_block
+
                             if self.has_shape_keys:
                                 bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
                             for mod in obj.modifiers:
@@ -358,15 +359,20 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                                 else:
                                     obj.modifiers.remove(mod)
 
-                        obj.data = original_data
+                            obj.data = original_data
 
-                        # restore_modifiers
-                        for mod_name, mod_data in stored_modifiers.items():
-                            self.restore_modifier(obj, mod_name, mod_data)
+                            # 3. restore_modifiers
+                            for mod_name, mod_data in stored_modifiers.items():
+                                self.restore_modifier(obj, mod_name, mod_data)
+
+                        if self.instance_duplicates:
+                            unique_verts_dict[new_block] = verts_co
 
 
                     # Convert to Mesh
-                    elif original_type in convert_types:
+                    elif original_type == 'CURVES':
+                        """Legacy code is kept because hair curves don't support `bpy.data.meshes.new_from_object`"""
+
                         # 1. create_temporary_object
                         obj.select_set(False)
                         temp_obj = obj.copy()
@@ -382,7 +388,6 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
                         # 3. remove_temporary_data
                         new_block = temp_obj.data
-                        new_block.name = obj.name + "_frame_" + str(frame)
 
                         bpy.data.objects.remove(temp_obj)
                         context.view_layer.objects.active = obj
@@ -392,6 +397,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 # Apply Shape Keys
                 elif (self.bake_type == 'SHAPE_KEYS') or (self.bake_type == 'ALL' and self.has_modifiers == False):
                     if self.has_shape_keys:
+                        new_block = original_data.copy()
+                        if self.has_shape_keys:
+                            garbage_shape_keys.append(new_block.shape_keys.name)
+
                         obj.data = new_block
                         bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
                         obj.data = original_data
@@ -401,6 +410,11 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
                 # assign_new_block_to_object
+                if not new_block:
+                    """NOTE: Safeguard for when nothing is being baked"""
+                    new_block = original_data.copy()
+
+                new_block.name = obj.name + "_frame_" + str(frame)
                 block_index = get_next_keymesh_index(obj)
                 insert_block(obj, new_block, block_index)
 
