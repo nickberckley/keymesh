@@ -6,6 +6,10 @@ from ..functions.thumbnail import _make_enum_item
 from ..functions.timeline import insert_keyframe
 
 
+main_types = ['MESH', 'LATTICE']
+convert_types = ['CURVE', 'SURFACE', 'FONT', 'CURVES']
+shape_key_types = ['MESH', 'CURVE', 'SURFACE', 'LATTICE']
+
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def get_modifier_enum_items(self, context):
@@ -106,11 +110,15 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                     cls.poll_message_set("Active object type isn't supported by Keymesh")
                     return False
                 else:
-                    if is_linked(context, obj):
-                        cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                    if obj.type == 'VOLUME':
+                        cls.poll_message_set("Volume type objects can't have animation baked")
                         return False
                     else:
-                        return True
+                        if is_linked(context, obj):
+                            cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                            return False
+                        else:
+                            return True
             else:
                 return False
         else:
@@ -132,7 +140,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             self.has_modifiers = True
 
         # select_default_modifiers
-        if obj.type == 'MESH':
+        if obj.type in main_types:
             enum_items = get_modifier_enum_items(self, context)
             if enum_items:
                 default_mods = {enum_items[0][0]}
@@ -144,10 +152,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                     self.modifiers = default_mods
 
         # shape_key_poll
-        if obj.type in ('MESH', 'CURVE', 'LATTICE'):
+        if obj.type in shape_key_types:
             if obj.data.shape_keys:
-                if len(obj.data.shape_keys.key_blocks) > 1:
-                    self.has_shape_keys = True
+                self.has_shape_keys = True
 
         return context.window_manager.invoke_props_dialog(self)
 
@@ -187,18 +194,17 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         return verts_co, sk_values, match
 
 
-    def store_modifiers(self, type, selected_modifiers, modifiers, temp_mods):
+    def store_modifiers(self, selected_modifiers, modifiers, temp_mods):
         """Stores modifiers in dict with all its properties and custom keys"""
         """Additionally, temporarily disables visibility of non-selected modifiers to make operator faster"""
         """Returns: stored_modifiers (dict) & obstructing_mods (list, for restoring visibility at the end)"""
 
         obstructing_mods = []
-        if type == 'MESH':
-            for mod in itertools.chain(modifiers, temp_mods):
-                if mod.name.upper() not in selected_modifiers:
-                    if mod.show_viewport:
-                        obstructing_mods.append(mod.name)
-                        mod.show_viewport = False
+        for mod in itertools.chain(modifiers, temp_mods):
+            if mod.name.upper() not in selected_modifiers:
+                if mod.show_viewport:
+                    obstructing_mods.append(mod.name)
+                    mod.show_viewport = False
 
         stored_modifiers = {}
         if self.has_modifiers:
@@ -301,10 +307,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
         # Store Modifiers
-        if self.bake_type == 'ALL' and self.has_modifiers and original_type == 'MESH':
+        if self.bake_type == 'ALL' and self.has_modifiers and original_type in main_types:
             selected_modifiers = ",".join(self.modifiers)
-            stored_modifiers, obstructing_mods = self.store_modifiers(original_type, selected_modifiers,
-                                                                      backup_obj.modifiers, obj.modifiers)
+            stored_modifiers, obstructing_mods = self.store_modifiers(selected_modifiers, backup_obj.modifiers, obj.modifiers)
 
 
         unique_shape_keys_dict = {}
@@ -316,7 +321,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
             # Detect Duplicate
             match = None
-            if self.instance_duplicates and original_type == 'MESH':
+            if self.instance_duplicates and original_type in main_types:
                 verts_co, sk_values, match = self.detect_duplicate(context, obj, original_data,
                                                                    unique_verts_dict, unique_shape_keys_dict)
 
@@ -324,7 +329,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 block_index = match.keymesh.get("Data", None)
             else:
                 # Create New Block
-                if (original_type == 'MESH') or (original_type != 'MESH' and self.bake_type != 'ALL'):
+                if (original_type in main_types) or (original_type not in main_types and (self.bake_type != 'ALL' or
+                                                                                      self.bake_type == 'ALL' and self.has_modifiers == False)):
                     new_block = original_data.copy()
                     new_block.name = obj.name + "_frame_" + str(frame)
                     if self.has_shape_keys:
@@ -333,16 +339,16 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
                 # Apply Modifiers
                 if self.bake_type == 'ALL' and self.has_modifiers:
-                    if original_type == 'MESH':
+                    if original_type in main_types:
                         if self.instance_duplicates:
                             unique_verts_dict[new_block] = verts_co
 
                         obj.data = new_block
 
                         # a. apply_everything
-                        if all(mod.name.upper() in selected_modifiers for mod in obj.modifiers):
+                        if obj.type == 'MESH' and all(mod.name.upper() in selected_modifiers for mod in obj.modifiers):
+                            """NOTE: obj.type is specified because Lattice, which is in main_types can't be converted"""
                             bpy.ops.object.convert(target='MESH')
-                        # b. apply_selected_modifiers
                         else:
                             if self.has_shape_keys:
                                 bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
@@ -360,7 +366,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
                     # Convert to Mesh
-                    elif original_type == 'CURVE':
+                    elif original_type in convert_types:
                         # 1. create_temporary_object
                         obj.select_set(False)
                         temp_obj = obj.copy()
@@ -406,7 +412,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         if self.bake_type == 'ALL':
             if self.has_modifiers:
                 # a. Handle Modifiers
-                if original_type == 'MESH':
+                if original_type in main_types:
                     self.handle_modifiers(context, obj, selected_modifiers)
                     for mod in itertools.chain(obj.modifiers, backup_obj.modifiers):
                         if mod.name in obstructing_mods:
@@ -425,9 +431,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Append Original Mesh in Blocks
         """NOTE: This has to be done at the end because being in `keymesh.blocks` makes mesh users 2 and modifiers can't apply"""
         if self.keep_original:
-            if ((original_type == 'MESH') or
-                (original_type != 'MESH' and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
-                                              self.bake_type == 'ALL' and self.has_modifiers == False))):
+            if ((original_type in main_types) or
+                (original_type not in main_types and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
+                                                      self.bake_type == 'ALL' and self.has_modifiers == False))):
                 if original_data.name in obj.keymesh.blocks:
                     block_index = original_data.keymesh.get("Data", None)
                 else:
@@ -485,9 +491,9 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # General
         layout.separator()
         layout.prop(self, "back_up")
-        if ((obj.type == 'MESH') or
-            (obj.type != 'MESH' and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
-                                     self.bake_type == 'ALL' and self.has_modifiers == False))):
+        if ((obj.type in main_types) or
+            (obj.type not in main_types and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
+                                             self.bake_type == 'ALL' and self.has_modifiers == False))):
             layout.prop(self, "keep_original")
 
         # Bake Type
@@ -500,14 +506,14 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             # all
             if self.bake_type == 'ALL':
                 if self.has_modifiers:
-                    if obj.type == 'MESH':
+                    if obj.type in main_types:
                         panel.prop(self, "modifier_handling")
                         panel.prop(self, "modifiers", expand=True)
 
-                    elif obj.type == 'CURVE':
+                    else:
                         row = panel.row()
                         row.alignment = 'RIGHT'
-                        row.label(text="Curve object will be converted to mesh", icon='INFO')
+                        row.label(text=f"{obj.type} object will be converted to mesh", icon='INFO')
                 else:
                     row = panel.row()
                     row.alignment = 'RIGHT'
@@ -518,7 +524,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                 if self.has_shape_keys == False:
                     row = panel.row()
                     row.alignment = 'RIGHT'
-                    row.label(text="Active object doesn't have shape keys", icon='INFO')
+                    if obj.type in shape_key_types:
+                        row.label(text="Active object doesn't have shape keys", icon='INFO')
+                    else:
+                        row.label(text=f"{obj.type} doesn't support shape keys", icon='INFO')
 
             if obj.type == 'MESH' and self.bake_type != 'NOTHING':
                 panel.prop(self, "instance_duplicates")
