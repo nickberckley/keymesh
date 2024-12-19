@@ -20,6 +20,8 @@ def update_keymesh(scene):
         if not fcurve:
             obj.keymesh.animated = False
             continue
+        if fcurve.mute:
+            continue
 
         obj_keymesh_data = obj.keymesh["Keymesh Data"]
 
@@ -34,6 +36,7 @@ def update_keymesh(scene):
         # Find Correct Keymesh Block for Object (with Same Data)
         correct_block = None
         for block in obj.keymesh.blocks:
+            print("STILL CHECKING")
             block_keymesh_data = block.block.keymesh["Data"]
             if block_keymesh_data != obj_keymesh_data:
                 continue
