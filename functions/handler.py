@@ -100,5 +100,8 @@ def append_keymesh(lapp_context):
                     obj.keymesh["ID"] = new_id
 
                 for block in obj.keymesh.blocks:
+                    data = block.block
+
+                    data.use_fake_user = True
                     if new_id != None:
-                        block.block.keymesh["ID"] = new_id
+                        data.keymesh["ID"] = new_id
