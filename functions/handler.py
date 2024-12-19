@@ -37,7 +37,6 @@ def update_keymesh(scene):
         # Find Correct Keymesh Block for Object (with Same Data)
         correct_block = None
         for block in obj.keymesh.blocks:
-            # print("STILL CHECKING")
             block_keymesh_data = block.block.keymesh["Data"]
             if block_keymesh_data != obj_keymesh_data:
                 continue
@@ -95,11 +94,10 @@ def append_keymesh(lapp_context):
                 km_id = obj.keymesh.get("ID", None)
                 new_id = None
 
-                # make_sure_id_is_unique
-                if not is_unique_id(obj, km_id):
+                # ensure_unique_id
+                if is_unique_id(obj, km_id) == False:
                     new_id = new_object_id()
                     obj.keymesh["ID"] = new_id
-                    print("ID CHANGED to: ", str(new_id))
 
                 for block in obj.keymesh.blocks:
                     if new_id != None:
