@@ -17,6 +17,21 @@ def new_object_id():
     return id
 
 
+def is_unique_id(obj, id):
+    """Checks if any of the objects in the .blend file have same Keymesh ID as obj"""
+    """Used in link/append handlers to make sure objects don't have same ID"""
+
+    for ob in bpy.data.objects:
+        if ob == obj:
+            continue
+        if not ob.keymesh.active:
+            continue
+        if ob.keymesh.get("ID", None) == id:
+            return False
+
+    return True
+
+
 def get_next_keymesh_index(obj):
     """Get the appropriate index for the newly created/added Keymesh block"""
 
