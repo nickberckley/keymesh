@@ -54,7 +54,6 @@ def update_keymesh(scene):
             obj.data.use_mirror_y = symmetry_y
             obj.data.use_mirror_z = symmetry_z
 
-
         # Update Active Index
         if bpy.context.active_object:
             scene = bpy.context.scene.keymesh
@@ -81,16 +80,18 @@ def append_keymesh(lapp_context):
     stage = lapp_context.process_stage # return: 'INIT' (for pre) and 'DONE' (for post)
 
     is_linking = True if 'LINK' in options else False
+    has_keymesh = False
 
     for item in items:
         type = item.id_type
         direct = False if 'INDIRECT_USAGE' not in item.import_info else True
         library = item.source_library
 
-        # Keymesh Object
+        # Detect Keymesh Object
         if type == 'OBJECT':
             obj = item.id
             if obj.keymesh.active:
+                has_keymesh = True
                 km_id = obj.keymesh.get("ID", None)
                 new_id = None
 
@@ -99,9 +100,18 @@ def append_keymesh(lapp_context):
                     new_id = new_object_id()
                     obj.keymesh["ID"] = new_id
 
+                # detect_keymesh_blocks
                 for block in obj.keymesh.blocks:
                     data = block.block
 
                     data.use_fake_user = True
                     if new_id != None:
                         data.keymesh["ID"] = new_id
+
+
+    # update_frame_handler
+    if has_keymesh:
+        """NOTE: `update_keymesh()` is not working because `obj.keymesh.get("ID")` is set to frame of original file"""
+        current_frame = bpy.context.scene.frame_current
+        bpy.context.scene.frame_set(current_frame + 1)
+        bpy.context.scene.frame_set(current_frame)
