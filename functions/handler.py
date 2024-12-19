@@ -1,6 +1,5 @@
 import bpy
 from .. import __package__ as base_package
-from .object import get_active_block_index
 from .poll import is_keymesh_object
 from .timeline import get_keymesh_fcurve
 
@@ -60,7 +59,7 @@ def update_keymesh(scene):
                 active_ui_index = obj.keymesh.blocks_active_index
 
                 if active_ui_index is not None:
-                    active_block_index = get_active_block_index(obj)
+                    active_block_index = obj.keymesh.blocks.find(obj.data.name)
 
                     if (active_ui_index != active_block_index) and (active_block_index >= 0):
                         if bpy.context.active_object.keymesh.grid_view:

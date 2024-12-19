@@ -62,18 +62,6 @@ def assign_keymesh_id(obj, animate=False):
             obj.keymesh.animated = True
 
 
-def get_active_block_index(obj):
-    """Returns index (integer) for active Keymesh block (current object data)"""
-    """NOTE: Necessary to get with iterations since there is no direct way to access index for CollectionProperty items"""
-
-    active_block_index = None
-    for i, block in enumerate(obj.keymesh.blocks):
-        if block.block == obj.data:
-            active_block_index = i
-    
-    return active_block_index
-
-
 def insert_block(obj, block, index, name=None):
     """Inserts given object data in Keymesh blocks list for given object"""
 
@@ -139,7 +127,7 @@ def update_active_index(obj, index=None):
     """Updates active block in Frame Picker & grid view UI"""
 
     if index == None:
-        index = get_active_block_index(obj)
+        index = obj.keymesh.blocks.find(obj.data.name)
     obj.keymesh.blocks_active_index = int(index)
     obj.keymesh.blocks_grid = str(index)
 
