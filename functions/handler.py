@@ -1,4 +1,4 @@
-import bpy
+import bpy, os
 from .. import __package__ as base_package
 from .poll import is_keymesh_object
 from .timeline import get_keymesh_fcurve
@@ -95,7 +95,7 @@ def append_keymesh(lapp_context):
                 km_id = obj.keymesh.get("ID", None)
                 new_id = None
 
-                # ensure_unique_id
+                # Ensure Unique ID
                 if is_unique_id(obj, km_id) == False:
                     new_id = new_object_id()
                     obj.keymesh["ID"] = new_id
@@ -107,6 +107,20 @@ def append_keymesh(lapp_context):
                     data.use_fake_user = True
                     if new_id != None:
                         data.keymesh["ID"] = new_id
+
+                    # Make Thumbnails Relative
+                    """NOTE: Since thumbnails (StringProperty) are set to relative in library files, they're incorrect when imported"""
+                    """NOTE: this code gets absolute path for them and generates new path relative to receiving file"""
+                    if block.thumbnail != "":
+                        library_path = os.path.dirname(library.filepath)
+                        thumbnail_path = block.thumbnail.lstrip("/\\")
+                        abs_thumbnail_path = os.path.join(library_path, thumbnail_path)
+
+                        if os.path.splitdrive(abs_thumbnail_path)[0] != os.path.splitdrive(bpy.data.filepath)[0]:
+                            """Assign absolute path is current file is on different disk"""
+                            block.thumbnail = abs_thumbnail_path
+                        else:
+                            block.thumbnail = bpy.path.relpath(abs_thumbnail_path)
 
 
     # update_frame_handler
