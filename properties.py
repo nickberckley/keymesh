@@ -8,6 +8,11 @@ def update_block_name(self, context):
     if self.block:
         self.block.name = self.name
 
+        """NOTE: When using name that is already used block is assigned different string from self.name (.001 added)"""
+        """NOTE: this part checks if updated block.name isn't what was inputted, and if it isn't changed self.name as well"""
+        if self.block.name != self.name:
+            self.name = self.block.name
+
 
 def keymesh_blocks_enum_update(self, context):
     """Make active EnumProperty item active Keymesh block."""
