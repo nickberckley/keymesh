@@ -150,21 +150,18 @@ def update_active_index(obj, index=None):
 def update_active_block_by_index(obj):
     """Get Keymesh block with UI index and assign it to active object"""
 
-    data_block = None
-    for i, block in enumerate(obj.keymesh.blocks):
-        if i == obj.keymesh.blocks_active_index:
-            data_block = block
-            break
+    index = int(obj.keymesh.blocks_active_index)
+    block = obj.keymesh.blocks[index].block
 
     # Assign Keymesh Block to Object
-    if data_block:
-        if obj.data.name != data_block.name:
+    if block:
+        if obj.data.name != block.name:
             data_type = obj_data_type(obj)
-            obj.data = data_type[data_block.name]
+            obj.data = data_type[block.name]
 
         # Update Static Object
         if obj.keymesh.animated == False:
-            obj.keymesh["Keymesh Data"] = data_block.block.keymesh.get("Data", None)
+            obj.keymesh["Keymesh Data"] = block.keymesh.get("Data", None)
 
 
 def convert_to_mesh(context, obj):
