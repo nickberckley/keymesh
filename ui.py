@@ -5,25 +5,20 @@ from .functions.timeline import get_keymesh_fcurve, keymesh_block_usage_count
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-def get_block_icon(context, obj, block):
+def get_block_icon(obj, block):
     """Returns correct icon for Keymesh block based on scene properties, object state, and blocks status"""
 
-    action = obj.animation_data.action if obj.animation_data else None
     obj_keymesh_data = obj.keymesh.get("Keymesh Data")
     block_keymesh_data = block.block.keymesh.get("Data")
 
-    if obj in context.editable_objects and (action and action.library is None):
-        if block_keymesh_data == obj_keymesh_data:
-            select_icon = 'RADIOBUT_ON'
-        else:
-            select_icon = 'RADIOBUT_OFF'
+    if (block_keymesh_data == obj.data.keymesh.get("Data")
+        and block_keymesh_data != obj_keymesh_data
+        and obj.keymesh.animated):
+        select_icon = 'VIEWZOOM'
+    elif block_keymesh_data == obj_keymesh_data:
+        select_icon = 'RADIOBUT_ON'
     else:
-        if block_keymesh_data == obj.data.keymesh.get("Data") and block_keymesh_data != obj_keymesh_data:
-            select_icon = 'VIEWZOOM'
-        elif block_keymesh_data == obj_keymesh_data:
-            select_icon = 'PINNED'
-        else:
-            select_icon = 'UNPINNED'
+        select_icon = 'RADIOBUT_OFF'
 
     return select_icon
 
@@ -146,7 +141,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             row.alignment = 'EXPAND'
 
             row.operator("object.keymesh_block_active_set", text="Previous", icon='BACK').direction='PREVIOUS'
-            row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(context, obj, active_block)).block = active_block.name
+            row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, active_block)).block = active_block.name
             row.operator("object.keymesh_block_active_set", text="Next", icon='FORWARD').direction='NEXT'
 
 
@@ -217,7 +212,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
         row = col.row(align=True)
 
         # Name
-        row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(context, obj, item)).block = item.name
+        row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, item), emboss=False).block = item.name
         row.prop(item, "name", text="", emboss=False)
 
         # Usage Count
