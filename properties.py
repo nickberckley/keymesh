@@ -1,5 +1,5 @@
 import bpy
-from .functions.poll import obj_data_type
+from .functions.object import update_active_block_by_index
 from .functions.thumbnail import keymesh_blocks_enum_items, get_missing_thumbnails
 
 
@@ -19,31 +19,19 @@ def keymesh_blocks_grid_update(self, context):
     """Make active EnumProperty item active Keymesh block."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if context.active_object:
-        if context.active_object.keymesh.grid_view:
-            self.blocks_active_index = int(self.blocks_grid)
-
-            data_block = None
-            for i, block in enumerate(context.active_object.keymesh.blocks):
-                if i == int(self.blocks_grid):
-                    data_block = block.name
-                    break
-
-            # Assign Keymesh Block to Object
-            if data_block:
-                obj = context.active_object
-                data_type = obj_data_type(obj)
-                obj.data = data_type[data_block]
+    if self.id_data.keymesh.grid_view:
+        self.blocks_active_index = int(self.blocks_grid)
+        update_active_block_by_index(self, self.id_data)
 
 
 def keymesh_blocks_list_update(self, context):
     """Set blocks_active_index from active blocks_grid EnumProperty item."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if context.active_object:
-        if context.active_object.keymesh.grid_view == False:
-            if self.blocks_active_index >= 0:
-                self.blocks_grid = str(self.blocks_active_index)
+    if self.id_data.keymesh.grid_view == False:
+        if self.blocks_active_index >= 0:
+            self.blocks_grid = str(self.blocks_active_index)
+            update_active_block_by_index(self, self.id_data)
 
 
 def thumbnails_render_offer(self, context):

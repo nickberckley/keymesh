@@ -1,5 +1,5 @@
 import bpy, random
-from .poll import is_keymesh_object
+from .poll import is_keymesh_object, obj_data_type
 from .timeline import get_keymesh_fcurve, delete_empty_action
 from .. import __package__ as base_package
 
@@ -145,6 +145,23 @@ def update_active_index(obj, index=None):
         index = obj.keymesh.blocks.find(obj.data.name)
     obj.keymesh.blocks_active_index = int(index)
     obj.keymesh.blocks_grid = str(index)
+
+
+def update_active_block_by_index(self, obj):
+    """Get Keymesh block with UI index and assign it to active object"""
+
+    data_block = None
+    for i, block in enumerate(obj.keymesh.blocks):
+        if i == int(self.blocks_grid):
+            data_block = block.name
+            break
+
+    # Assign Keymesh Block to Object
+    if data_block:
+        data_type = obj_data_type(obj)
+        obj.data = data_type[data_block]
+
+    print("THIS HAPPENED for object: ", obj.name)
 
 
 def convert_to_mesh(context, obj):
