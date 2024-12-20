@@ -1,6 +1,6 @@
 import bpy, os
 from .. import __package__ as base_package
-from .poll import is_keymesh_object
+from .poll import is_keymesh_object, supported_types
 from .timeline import get_keymesh_fcurve
 from .object import new_object_id, is_unique_id
 
@@ -84,7 +84,7 @@ def append_keymesh(lapp_context):
 
     for item in items:
         type = item.id_type
-        direct = False if 'INDIRECT_USAGE' not in item.import_info else True
+        direct = False if 'INDIRECT_USAGE' in item.import_info else True
         library = item.source_library
 
         # Detect Keymesh Object
@@ -100,7 +100,6 @@ def append_keymesh(lapp_context):
                     new_id = new_object_id()
                     obj.keymesh["ID"] = new_id
 
-                # detect_keymesh_blocks
                 for block in obj.keymesh.blocks:
                     data = block.block
 
@@ -121,6 +120,17 @@ def append_keymesh(lapp_context):
                             block.thumbnail = abs_thumbnail_path
                         else:
                             block.thumbnail = bpy.path.relpath(abs_thumbnail_path)
+
+
+        # Detect Keymesh Blocks
+        elif type in [t[0] for t in supported_types()]:
+            if direct:
+                # remove_keymesh_properties_from_directly_appended_blocks
+                block = item.id
+                if block.keymesh.get("ID", None):
+                    del block.keymesh["ID"]
+                if block.keymesh.get("Data", None):
+                    del block.keymesh["Data"]
 
 
     # update_frame_handler
