@@ -32,21 +32,21 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         obj = context.active_object
-        data_type = obj_data_type(obj)
 
         # Assign Keymesh Block to Object
+        data_type = obj_data_type(obj)
         obj.data = data_type[self.block]
         update_active_index(obj)
 
         # account_for_non_animated_Keymesh_objects (properly_assign_block_by_changing_object_keymesh_data_as_well)
         block_keymesh_data = obj.data.keymesh.get("Data")
-        if scene.keymesh.insert_on_selection == False and obj.keymesh.animated == False:
+        if scene.keymesh.keyframe_on_selection == False and obj.keymesh.animated == False:
             obj.keymesh["Keymesh Data"] = int(block_keymesh_data)
 
 
         # Keyframe Block
         if obj in context.editable_objects:
-            if scene.keymesh.insert_on_selection:
+            if scene.keymesh.keyframe_on_selection:
                 # create_action_if_object_isn't_animated
                 if not obj.keymesh.animated:
                     new_action = bpy.data.actions.new(obj.name + "Action")

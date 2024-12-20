@@ -56,18 +56,16 @@ def update_keymesh(scene):
 
         # Update Active Index
         if bpy.context.active_object:
-            scene = bpy.context.scene.keymesh
-            if scene.sync_with_timeline:
-                active_ui_index = obj.keymesh.blocks_active_index
+            active_ui_index = obj.keymesh.blocks_active_index
 
-                if active_ui_index is not None:
-                    active_block_index = obj.keymesh.blocks.find(obj.data.name)
+            if active_ui_index is not None:
+                active_block_index = obj.keymesh.blocks.find(obj.data.name)
 
-                    if (active_ui_index != active_block_index) and (active_block_index >= 0):
-                        if bpy.context.active_object.keymesh.grid_view:
-                            obj.keymesh.blocks_grid = str(active_block_index)
-                        else:
-                            obj.keymesh.blocks_active_index = int(active_block_index)
+                if (active_ui_index != active_block_index) and (active_block_index >= 0):
+                    if bpy.context.active_object.keymesh.grid_view:
+                        obj.keymesh.blocks_grid = str(active_block_index)
+                    else:
+                        obj.keymesh.blocks_active_index = int(active_block_index)
 
 
 
