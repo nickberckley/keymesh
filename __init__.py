@@ -53,6 +53,7 @@ def register():
     # HANDLERS
     bpy.app.handlers.load_post.append(functions.handler.update_keymesh)
     bpy.app.handlers.frame_change_post.append(functions.handler.update_keymesh)
+    bpy.app.handlers.blend_import_post.append(functions.handler.append_keymesh)
 
 
 def unregister():
@@ -65,6 +66,7 @@ def unregister():
     # HANDLERS
     bpy.app.handlers.load_post.remove(functions.handler.update_keymesh)
     bpy.app.handlers.frame_change_post.remove(functions.handler.update_keymesh)
+    bpy.app.handlers.blend_import_post.remove(functions.handler.append_keymesh)
 
 
 if __name__ == "__main__":
