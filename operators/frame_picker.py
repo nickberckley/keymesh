@@ -18,12 +18,17 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.active_object:
-            if is_keymesh_object(context.active_object):
-                if context.mode in edit_modes():
-                    cls.poll_message_set("Can't insert Keymesh frames in edit modes")
-                    return False
+            obj = context.active_object
+            if is_keymesh_object(obj):
+                if obj in context.editable_objects:
+                    if context.mode in edit_modes():
+                        cls.poll_message_set("Can't insert Keymesh frames in edit modes")
+                        return False
+                    else:
+                        return True
                 else:
-                    return True
+                    cls.poll_message_set("Can't insert Keymesh frames on linked objects")
+                    return False
             else:
                 return False
         else:
@@ -37,25 +42,24 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         data_type = obj_data_type(obj)
         obj.data = data_type[self.block]
         update_active_index(obj)
+        block_keymesh_data = obj.data.keymesh.get("Data")
+
+        # create_action_if_object_isn't_animated
+        if not obj.keymesh.animated:
+            new_action = bpy.data.actions.new(obj.name + "Action")
+            obj.animation_data_create()
+            obj.animation_data.action = new_action
+            obj.keymesh.animated = True
 
         # Keyframe Block
-        block_keymesh_data = obj.data.keymesh.get("Data")
-        if obj in context.editable_objects:
-            # create_action_if_object_isn't_animated
-            if not obj.keymesh.animated:
-                new_action = bpy.data.actions.new(obj.name + "Action")
-                obj.animation_data_create()
-                obj.animation_data.action = new_action
-                obj.keymesh.animated = True
-
-            action = obj.animation_data.action
-            if action:
-                if action.library is None:
-                    insert_keyframe(obj, scene.frame_current, block_keymesh_data)
-                else:
-                    self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
-            else:
+        action = obj.animation_data.action
+        if action:
+            if action.library is None:
                 insert_keyframe(obj, scene.frame_current, block_keymesh_data)
+            else:
+                self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
+        else:
+            insert_keyframe(obj, scene.frame_current, block_keymesh_data)
 
         return {'FINISHED'}
 
