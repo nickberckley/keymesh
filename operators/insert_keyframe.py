@@ -48,7 +48,7 @@ def insert_keymesh_keyframe(self, context, obj):
         else:
             # Insert Keyframe
             insert_keyframe(obj, context.scene.frame_current, block_index)
-            update_keymesh(context.scene)
+            update_keymesh(context.scene, override=True)
 
     if prefs.enable_edit_mode:
         if object_mode in edit_modes():

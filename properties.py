@@ -133,6 +133,12 @@ class DATA_PG_keymesh(bpy.types.PropertyGroup):
 class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     # SCENE-level PROPERTIES
 
+    enable_handler: bpy.props.BoolProperty(
+        name = "Enable Keymesh Animation",
+        description = "When disabled Keymesh objects will not get updated during playback, scrubbing, or rendering",
+        default = True,
+    )
+
     frame_skip_count: bpy.props.IntProperty(
         name = "Frame Count",
         description = "Skip this many frames forwards or backwards when inserting keyframe",

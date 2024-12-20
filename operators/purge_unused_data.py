@@ -96,7 +96,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                 obj_type.remove(block)
 
         # update_frame_handler
-        update_keymesh(context.scene)
+        update_keymesh(context.scene, override=True)
 
         # Info
         if len(purged_keymesh_blocks) == 0:

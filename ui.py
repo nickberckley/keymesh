@@ -11,10 +11,19 @@ def get_block_icon(obj, block):
     obj_keymesh_data = obj.keymesh.get("Keymesh Data")
     block_keymesh_data = block.block.keymesh.get("Data")
 
-    if block_keymesh_data == obj_keymesh_data:
-        select_icon = 'RADIOBUT_ON'
+    # Handler Disabled
+    if not bpy.context.scene.keymesh.enable_handler:
+        if block_keymesh_data == obj.data.keymesh.get("Data"):
+            select_icon = 'RADIOBUT_ON'
+        else:
+            select_icon = 'RADIOBUT_OFF'
+    
+    # Handler Enabled
     else:
-        select_icon = 'RADIOBUT_OFF'
+        if block_keymesh_data == obj_keymesh_data:
+            select_icon = 'RADIOBUT_ON'
+        else:
+            select_icon = 'RADIOBUT_OFF'
 
     return select_icon
 
@@ -163,7 +172,6 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
         layout.operator("object.keymesh_join")
         layout.operator("anim.bake_to_keymesh")
         layout.operator("object.keymesh_to_objects", text="Convert to Separate Objects")
-        layout.operator("scene.initialize_keymesh_handler", text="Initialize Frame Handler")
 
         # debug_tools
         if prefs.debug and (obj is not None and obj.keymesh.get("ID", None)):
@@ -185,6 +193,28 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
                 # panel.separator()
                 # panel.operator("object.keymesh_interpolate", text="INTERPOLATE")
 
+
+class SCENE_PT_keymesh(bpy.types.Panel):
+    bl_idname = "SCENE_PT_keymesh"
+    bl_label = "Keymesh"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "scene"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = True
+
+        props = context.scene.keymesh
+
+        layout.prop(props, "enable_handler", text="Keymesh Animation")
+        layout.operator("scene.initialize_keymesh_handler", text="Refresh Frame Handler")
+
+
+
+#### ------------------------------ MENUS ------------------------------ ####
 
 class VIEW3D_MT_keymesh_special_menu(bpy.types.Menu):
     bl_label = "Keymesh Specials"
@@ -260,6 +290,7 @@ classes = [
     VIEW3D_PT_keymesh,
     VIEW3D_PT_keymesh_frame_picker,
     VIEW3D_PT_keymesh_tools,
+    SCENE_PT_keymesh,
     VIEW3D_MT_keymesh_special_menu,
     VIEW3D_MT_keymesh_filter_menu,
     VIEW3D_UL_keymesh_blocks,

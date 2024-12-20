@@ -465,7 +465,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             bpy.data.objects.remove(backup_obj)
             if self.keep_original == False:
                 if original_data.name not in obj.keymesh.blocks:
-                    update_keymesh(context.scene)
+                    update_keymesh(context.scene, override=True)
                     obj_type.remove(original_data)
 
 
@@ -476,7 +476,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Finish
         obj.keymesh.animated = True
         bpy.app.handlers.frame_change_post.append(update_keymesh)
-        update_keymesh(context.scene)
+        update_keymesh(context.scene, override=True)
         context.scene.frame_set(initial_frame)
 
         end_time = time.time()

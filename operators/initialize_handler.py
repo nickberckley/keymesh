@@ -7,7 +7,7 @@ from ..functions.handler import update_keymesh
 class SCENE_OT_initialize_keymesh_handler(bpy.types.Operator):
     bl_idname = "scene.initialize_keymesh_handler"
     bl_label = "Initialize Keymesh Frame Handler"
-    bl_description = "If Keymesh stops working try using this operator to re-initialize it's frame handler"
+    bl_description = "Refresh handlers to fix Keymesh animation freezes"
     bl_options = {'REGISTER'}
 
     @classmethod
@@ -17,6 +17,10 @@ class SCENE_OT_initialize_keymesh_handler(bpy.types.Operator):
     def execute(self, context):
         bpy.app.handlers.frame_change_post.remove(update_keymesh)
         bpy.app.handlers.frame_change_post.append(update_keymesh)
+        update_keymesh(context.scene)
+
+        if context.scene.keymesh.enable_handler == False:
+            self.report({'INFO'}, "Keymesh animation is disabled in scene properties")
 
         return {'FINISHED'}
 
