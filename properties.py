@@ -21,7 +21,7 @@ def keymesh_blocks_grid_update(self, context):
 
     if self.id_data.keymesh.grid_view:
         self.blocks_active_index = int(self.blocks_grid)
-        update_active_block_by_index(self, self.id_data)
+        update_active_block_by_index(self.id_data)
 
 
 def keymesh_blocks_list_update(self, context):
@@ -31,7 +31,7 @@ def keymesh_blocks_list_update(self, context):
     if self.id_data.keymesh.grid_view == False:
         if self.blocks_active_index >= 0:
             self.blocks_grid = str(self.blocks_active_index)
-            update_active_block_by_index(self, self.id_data)
+            update_active_block_by_index(self.id_data)
 
 
 def thumbnails_render_offer(self, context):

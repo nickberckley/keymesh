@@ -147,21 +147,20 @@ def update_active_index(obj, index=None):
     obj.keymesh.blocks_grid = str(index)
 
 
-def update_active_block_by_index(self, obj):
+def update_active_block_by_index(obj):
     """Get Keymesh block with UI index and assign it to active object"""
 
     data_block = None
     for i, block in enumerate(obj.keymesh.blocks):
-        if i == int(self.blocks_grid):
+        if i == obj.keymesh.blocks_active_index:
             data_block = block.name
             break
 
     # Assign Keymesh Block to Object
     if data_block:
-        data_type = obj_data_type(obj)
-        obj.data = data_type[data_block]
-
-    print("THIS HAPPENED for object: ", obj.name)
+        if obj.data.name != data_block:
+            data_type = obj_data_type(obj)
+            obj.data = data_type[data_block]
 
 
 def convert_to_mesh(context, obj):
