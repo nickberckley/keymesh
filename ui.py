@@ -104,6 +104,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
 
             col.separator()
+            col.menu("VIEW3D_MT_keymesh_filter_menu", icon='FILTER', text="")
             col.menu("VIEW3D_MT_keymesh_special_menu", icon='DOWNARROW_HLT', text="")
 
             col.separator()
@@ -195,6 +196,15 @@ class VIEW3D_MT_keymesh_special_menu(bpy.types.Menu):
         layout.operator("object.purge_keymesh_data", text="Purge Unused Blocks", icon='TRASH')
 
 
+class VIEW3D_MT_keymesh_filter_menu(bpy.types.Menu):
+    bl_label = "Keymesh Filters"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(context.scene.keymesh, "show_keyframe", text="Keyframe Operator")
+        layout.prop(context.scene.keymesh, "show_count", text="Usage Count")
+
+
 
 #### ------------------------------ /ui_list/ ------------------------------ ####
 
@@ -203,21 +213,26 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.active_object
-        usage_count, __ = keymesh_block_usage_count(obj, item.block)
 
         col = layout.column(align=True)
         row = col.row(align=True)
 
         # Name
-        row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, item), emboss=False).block = item.name
+        if context.scene.keymesh.show_keyframe:
+            row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, item), emboss=False).block = item.name
         row.prop(item, "name", text="", emboss=False)
 
         # Usage Count
-        col = layout.column(align=True)
-        col.scale_x = 0.1
-        row = col.row(align=True)
-        usage_count_label = str(usage_count) if usage_count is not None else "0"
-        row.label(text=usage_count_label)
+        if context.scene.keymesh.show_count:
+            usage_count, __ = keymesh_block_usage_count(obj, item.block)
+
+            col = layout.column(align=True)
+            col.scale_x = 0.1
+            row = col.row(align=True)
+
+            usage_count_label = str(usage_count) if usage_count is not None else "0"
+            row.label(text=usage_count_label)
+
 
     def filter_items(self, context, data, propname):
         items = getattr(data, propname)
@@ -246,6 +261,7 @@ classes = [
     VIEW3D_PT_keymesh_frame_picker,
     VIEW3D_PT_keymesh_tools,
     VIEW3D_MT_keymesh_special_menu,
+    VIEW3D_MT_keymesh_filter_menu,
     VIEW3D_UL_keymesh_blocks,
 ]
 

@@ -151,6 +151,19 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         default = True,
     )
 
+    # ui_filters
+    show_keyframe: bpy.props.BoolProperty(
+        name = "Show Keyframe Button",
+        description = "Expose operator in list view that allows keyframing blocks",
+        default = True,
+    )
+    show_count: bpy.props.BoolProperty(
+        name = "Show Usage Count",
+        description = ("Show how many times each Keymesh block has been used in animation (number of keyframes).\n"
+                       "NOTE: Calculation can be expensive in heavy scenes and it's recommended to turn off"),
+        default = True,
+    )
+
     def update_properties_from_preferences(self):
         prefs = bpy.context.preferences.addons[__package__].preferences
         if prefs:
