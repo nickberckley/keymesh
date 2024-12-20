@@ -24,8 +24,6 @@ def update_keymesh(scene):
         if fcurve.mute:
             continue
 
-        obj_keymesh_data = obj.keymesh["Keymesh Data"]
-
         # store_data_that_is_not_persistent
         if prefs.persistent_settings and obj.type == 'MESH':
             remesh_voxel_size = obj.data.remesh_voxel_size
@@ -36,15 +34,14 @@ def update_keymesh(scene):
 
         # Find Correct Keymesh Block for Object (with Same Data)
         correct_block = None
+        obj_keymesh_data = obj.keymesh["Keymesh Data"]
         for block in obj.keymesh.blocks:
-            block_keymesh_data = block.block.keymesh["Data"]
-            if block_keymesh_data != obj_keymesh_data:
-                continue
-            correct_block = block.block
+            if block.block.keymesh["Data"] == obj_keymesh_data:
+                correct_block = block.block
+                break
 
-        if not correct_block:
-            continue
-        obj.data = correct_block
+        if correct_block:
+            obj.data = correct_block
 
         # restore_inpersistent_data
         if prefs.persistent_settings and obj.type == 'MESH':
@@ -54,20 +51,19 @@ def update_keymesh(scene):
             obj.data.use_mirror_y = symmetry_y
             obj.data.use_mirror_z = symmetry_z
 
+
         # Update Active Index
-        if bpy.context.active_object:
-            scene = bpy.context.scene.keymesh
-            if scene.sync_with_timeline:
-                active_ui_index = obj.keymesh.blocks_active_index
+        if obj == bpy.context.active_object:
+            """NOTE: UI updates aren't important for non-active objects because it's not visible anyway"""
+            ui_index = obj.keymesh.blocks_active_index
+            if ui_index is not None:
+                block_index = obj.keymesh.blocks.find(obj.data.name)
 
-                if active_ui_index is not None:
-                    active_block_index = obj.keymesh.blocks.find(obj.data.name)
-
-                    if (active_ui_index != active_block_index) and (active_block_index >= 0):
-                        if bpy.context.active_object.keymesh.grid_view:
-                            obj.keymesh.blocks_grid = str(active_block_index)
-                        else:
-                            obj.keymesh.blocks_active_index = int(active_block_index)
+                if (ui_index != block_index) and (block_index >= 0):
+                    if obj.keymesh.grid_view:
+                        obj.keymesh.blocks_grid = str(block_index)
+                    else:
+                        obj.keymesh.blocks_active_index = int(block_index)
 
 
 

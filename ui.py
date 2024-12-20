@@ -3,6 +3,23 @@ from .functions.poll import is_linked, is_keymesh_object
 from .functions.timeline import get_keymesh_fcurve, keymesh_block_usage_count
 
 
+#### ------------------------------ FUNCTIONS ------------------------------ ####
+
+def get_block_icon(obj, block):
+    """Returns correct icon for Keymesh block based on scene properties, object state, and blocks status"""
+
+    obj_keymesh_data = obj.keymesh.get("Keymesh Data")
+    block_keymesh_data = block.block.keymesh.get("Data")
+
+    if block_keymesh_data == obj_keymesh_data:
+        select_icon = 'RADIOBUT_ON'
+    else:
+        select_icon = 'RADIOBUT_OFF'
+
+    return select_icon
+
+
+
 #### ------------------------------ PANELS ------------------------------ ####
 
 class VIEW3D_PT_keymesh(bpy.types.Panel):
@@ -93,12 +110,6 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').direction='UP'
             col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').direction='DOWN'
 
-            # properties
-            col = layout.column(align=True)
-            col.prop(scene, "insert_on_selection", text="Keyframe on Selection")
-            if not obj in context.editable_objects:
-                col.enabled = False
-
 
         # Grid View
         else:
@@ -117,6 +128,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             row = col.row(align=True)
             row.prop(active_block, "thumbnail", text="")
             row.operator("object.keymesh_thumbnails_refresh", text="", icon='FILE_REFRESH')
+            row.active = False
 
             # buttons
             col = layout.column()
@@ -125,38 +137,9 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             row.scale_y = 1.5
             row.alignment = 'EXPAND'
 
-            # get_keyframe_icon_based_on_animation_state
-            fcurve = get_keymesh_fcurve(obj)
-            is_keyframed = False
-            is_active = False
-            if fcurve:
-                for keyframe in fcurve.keyframe_points:
-                    if keyframe.co.x == context.scene.frame_current:
-                        is_keyframed = True
-                        if int(keyframe.co.y) == obj.keymesh.blocks[int(obj.keymesh.blocks_grid)].block.keymesh["Data"]:
-                            is_active = True
-                            break
-
-            if obj not in context.editable_objects:
-                if obj.keymesh.blocks[active_index].block != obj.data:
-                    icon = 'VIEWZOOM'
-                else:
-                    icon = 'PINNED'
-            else:
-                if is_active:
-                    icon = 'DECORATE_KEYFRAME'
-                else:
-                    if is_keyframed:
-                        icon = 'DECORATE_OVERRIDE'
-                    else:
-                        icon = 'DECORATE_ANIMATE'
-
             row.operator("object.keymesh_block_active_set", text="Previous", icon='BACK').direction='PREVIOUS'
-            row.operator("object.keymesh_pick_frame", text="", icon=icon).block = active_block.name
+            row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, active_block)).block = active_block.name
             row.operator("object.keymesh_block_active_set", text="Next", icon='FORWARD').direction='NEXT'
-
-            col = layout.column(align=True)
-            col.prop(scene, "sync_with_timeline", text="Synchronize Active with Timeline")
 
 
 class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
@@ -220,29 +203,14 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.active_object
-        action = obj.animation_data.action if obj.animation_data else None
-
-        obj_keymesh_data = obj.keymesh.get("Keymesh Data")
-        block_keymesh_data = item.block.keymesh.get("Data")
         usage_count, __ = keymesh_block_usage_count(obj, item.block)
 
         col = layout.column(align=True)
         row = col.row(align=True)
 
-        # insert_button_icon
-        if context.scene.keymesh.insert_on_selection and obj in context.editable_objects and (action and action.library is None):
-            select_icon = 'PINNED' if block_keymesh_data == obj_keymesh_data else 'UNPINNED'
-        else:
-            if block_keymesh_data == obj.data.keymesh.get("Data") and block_keymesh_data != obj_keymesh_data:
-                select_icon = 'VIEWZOOM'
-            elif block_keymesh_data == obj_keymesh_data:
-                select_icon = 'PINNED'
-            else:
-                select_icon = 'UNPINNED'
-
         # Name
-        row.operator("object.keymesh_pick_frame", text="", icon=select_icon).block = item.name
-        row.prop(item, "name", text="", emboss=False,)
+        row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, item), emboss=False).block = item.name
+        row.prop(item, "name", text="", emboss=False)
 
         # Usage Count
         col = layout.column(align=True)

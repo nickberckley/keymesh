@@ -1,4 +1,5 @@
 import bpy
+from .functions.object import update_active_block_by_index
 from .functions.thumbnail import keymesh_blocks_enum_items, get_missing_thumbnails
 
 
@@ -14,23 +15,25 @@ def update_block_name(self, context):
             self.name = self.block.name
 
 
-def keymesh_blocks_enum_update(self, context):
+def keymesh_blocks_grid_update(self, context):
     """Make active EnumProperty item active Keymesh block."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if context.active_object:
-        if context.active_object.keymesh.grid_view:
-            self.blocks_active_index = int(self.blocks_grid)
+    obj = self.id_data
+    if obj.keymesh.grid_view:
+        self.blocks_active_index = int(self.blocks_grid)
+        update_active_block_by_index(obj)
 
 
-def keymesh_blocks_coll_update(self, context):
+def keymesh_blocks_list_update(self, context):
     """Set blocks_active_index from active blocks_grid EnumProperty item."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if context.active_object:
-        if context.active_object.keymesh.grid_view == False:
-            if self.blocks_active_index >= 0:
-                self.blocks_grid = str(self.blocks_active_index)
+    obj = self.id_data
+    if obj.keymesh.grid_view == False:
+        if self.blocks_active_index >= 0:
+            self.blocks_grid = str(self.blocks_active_index)
+            update_active_block_by_index(obj)
 
 
 def thumbnails_render_offer(self, context):
@@ -95,12 +98,12 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
         items = keymesh_blocks_enum_items,
         options = {'HIDDEN', 'LIBRARY_EDITABLE'},
         override = {"LIBRARY_OVERRIDABLE"},
-        update = keymesh_blocks_enum_update,
+        update = keymesh_blocks_grid_update,
     )
     blocks_active_index: bpy.props.IntProperty(
         name = "Active Block Index",
         options = set(),
-        update = keymesh_blocks_coll_update,
+        update = keymesh_blocks_list_update,
         default = -1,
     )
 
@@ -144,18 +147,6 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         name = "Insert Keyframe",
         description = ("When enabled, skipping frames forward or backwards from UI will also keyframe the object data\n"
                     "WARNING: jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
-        options = {'HIDDEN'},
-        default = True,
-    )
-    insert_on_selection: bpy.props.BoolProperty(
-        name = "Keyframe Keymesh Blocks After Selection",
-        description = "Automatically insert keyframe on current frame for Keymesh block when selecting it.",
-        options = {'HIDDEN'},
-        default = True,
-    )
-    sync_with_timeline: bpy.props.BoolProperty(
-        name = "Synchronize with Timeline",
-        description = "Make active Keymesh block also active item in frame picker UI when scrubbing timeline",
         options = {'HIDDEN'},
         default = True,
     )
