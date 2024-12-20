@@ -11,11 +11,7 @@ def get_block_icon(obj, block):
     obj_keymesh_data = obj.keymesh.get("Keymesh Data")
     block_keymesh_data = block.block.keymesh.get("Data")
 
-    if (block_keymesh_data == obj.data.keymesh.get("Data")
-        and block_keymesh_data != obj_keymesh_data
-        and obj.keymesh.animated):
-        select_icon = 'VIEWZOOM'
-    elif block_keymesh_data == obj_keymesh_data:
+    if block_keymesh_data == obj_keymesh_data:
         select_icon = 'RADIOBUT_ON'
     else:
         select_icon = 'RADIOBUT_OFF'

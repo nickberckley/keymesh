@@ -153,14 +153,18 @@ def update_active_block_by_index(obj):
     data_block = None
     for i, block in enumerate(obj.keymesh.blocks):
         if i == obj.keymesh.blocks_active_index:
-            data_block = block.name
+            data_block = block
             break
 
     # Assign Keymesh Block to Object
     if data_block:
-        if obj.data.name != data_block:
+        if obj.data.name != data_block.name:
             data_type = obj_data_type(obj)
-            obj.data = data_type[data_block]
+            obj.data = data_type[data_block.name]
+
+        # Update Static Object
+        if obj.keymesh.animated == False:
+            obj.keymesh["Keymesh Data"] = data_block.block.keymesh.get("Data", None)
 
 
 def convert_to_mesh(context, obj):

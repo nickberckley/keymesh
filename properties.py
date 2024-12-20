@@ -19,19 +19,21 @@ def keymesh_blocks_grid_update(self, context):
     """Make active EnumProperty item active Keymesh block."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if self.id_data.keymesh.grid_view:
+    obj = self.id_data
+    if obj.keymesh.grid_view:
         self.blocks_active_index = int(self.blocks_grid)
-        update_active_block_by_index(self.id_data)
+        update_active_block_by_index(obj)
 
 
 def keymesh_blocks_list_update(self, context):
     """Set blocks_active_index from active blocks_grid EnumProperty item."""
     """NOTE: To make this work all enum_item id names should be str(i)."""
 
-    if self.id_data.keymesh.grid_view == False:
+    obj = self.id_data
+    if obj.keymesh.grid_view == False:
         if self.blocks_active_index >= 0:
             self.blocks_grid = str(self.blocks_active_index)
-            update_active_block_by_index(self.id_data)
+            update_active_block_by_index(obj)
 
 
 def thumbnails_render_offer(self, context):
