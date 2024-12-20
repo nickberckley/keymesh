@@ -128,6 +128,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             row = col.row(align=True)
             row.prop(active_block, "thumbnail", text="")
             row.operator("object.keymesh_thumbnails_refresh", text="", icon='FILE_REFRESH')
+            row.active = False
 
             # buttons
             col = layout.column()
