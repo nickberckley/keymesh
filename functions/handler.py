@@ -107,6 +107,10 @@ def append_keymesh(lapp_context):
                     if new_id != None:
                         data.keymesh["ID"] = new_id
 
+                    # Fix Name Collisions
+                    if block.name != data.name:
+                        block.name = data.name
+
                     # Make Thumbnails Relative
                     """NOTE: Since thumbnails (StringProperty) are set to relative in library files, they're incorrect when imported"""
                     """NOTE: this code gets absolute path for them and generates new path relative to receiving file"""
