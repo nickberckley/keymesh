@@ -12,7 +12,7 @@ def get_block_icon(context, obj, block):
     obj_keymesh_data = obj.keymesh.get("Keymesh Data")
     block_keymesh_data = block.block.keymesh.get("Data")
 
-    if context.scene.keymesh.keyframe_on_selection and obj in context.editable_objects and (action and action.library is None):
+    if obj in context.editable_objects and (action and action.library is None):
         if block_keymesh_data == obj_keymesh_data:
             select_icon = 'RADIOBUT_ON'
         else:
@@ -118,12 +118,6 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             col.separator()
             col.operator("object.keymesh_block_move", text="", icon='TRIA_UP').direction='UP'
             col.operator("object.keymesh_block_move", text="", icon='TRIA_DOWN').direction='DOWN'
-
-            # properties
-            col = layout.column(align=True)
-            col.prop(scene, "keyframe_on_selection", text="Keyframe on Selection")
-            if not obj in context.editable_objects:
-                col.enabled = False
 
 
         # Grid View

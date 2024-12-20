@@ -38,30 +38,24 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         obj.data = data_type[self.block]
         update_active_index(obj)
 
-        # account_for_non_animated_Keymesh_objects (properly_assign_block_by_changing_object_keymesh_data_as_well)
-        block_keymesh_data = obj.data.keymesh.get("Data")
-        if scene.keymesh.keyframe_on_selection == False and obj.keymesh.animated == False:
-            obj.keymesh["Keymesh Data"] = int(block_keymesh_data)
-
-
         # Keyframe Block
+        block_keymesh_data = obj.data.keymesh.get("Data")
         if obj in context.editable_objects:
-            if scene.keymesh.keyframe_on_selection:
-                # create_action_if_object_isn't_animated
-                if not obj.keymesh.animated:
-                    new_action = bpy.data.actions.new(obj.name + "Action")
-                    obj.animation_data_create()
-                    obj.animation_data.action = new_action
-                    obj.keymesh.animated = True
+            # create_action_if_object_isn't_animated
+            if not obj.keymesh.animated:
+                new_action = bpy.data.actions.new(obj.name + "Action")
+                obj.animation_data_create()
+                obj.animation_data.action = new_action
+                obj.keymesh.animated = True
 
-                action = obj.animation_data.action
-                if action:
-                    if action.library is None:
-                        insert_keyframe(obj, scene.frame_current, block_keymesh_data)
-                    else:
-                        self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
-                else:
+            action = obj.animation_data.action
+            if action:
+                if action.library is None:
                     insert_keyframe(obj, scene.frame_current, block_keymesh_data)
+                else:
+                    self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
+            else:
+                insert_keyframe(obj, scene.frame_current, block_keymesh_data)
 
         return {'FINISHED'}
 

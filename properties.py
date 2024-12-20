@@ -148,12 +148,6 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
         options = {'HIDDEN'},
         default = True,
     )
-    keyframe_on_selection: bpy.props.BoolProperty(
-        name = "Keyframe Keymesh Blocks After Selection",
-        description = "Automatically insert keyframe on current frame for Keymesh block when selecting it",
-        options = {'HIDDEN'},
-        default = True,
-    )
 
     def update_properties_from_preferences(self):
         prefs = bpy.context.preferences.addons[__package__].preferences
