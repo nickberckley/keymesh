@@ -9,7 +9,6 @@ class TIMELINE_OT_keymesh_frame_jump(bpy.types.Operator):
     bl_idname = "timeline.keymesh_frame_jump"
     bl_label = "Jump to Next Keymesh Keyframe"
     bl_description = "Jump to the next frame that has a Keymesh keyframe for the current object"
-    bl_options = {'UNDO'}
 
     path: bpy.props.EnumProperty(
         name = "Direction",
