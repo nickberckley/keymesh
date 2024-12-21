@@ -1,15 +1,3 @@
-bl_info = {
-    "name": "Keymesh",
-    "author": "Pablo Dobarro, Aldrin Mathew, Nika Kutsniashvili (version 2.0)",
-    "version": (2, 2, 1),
-    "blender": (4, 0, 0),
-    "location": "3D Viewport (Sidebar) > Animate > Keymesh",
-    "category": "Animation",
-    "description": "Create stop-motion-like animations by sculpting and animating object data frame-by-frame.",
-    "tracker_url": "https://github.com/nickberckley/keymesh",
-    "doc_url": "https://blenderartists.org/t/keymesh/",
-}
-
 import bpy
 
 from .operators import register as operators_register, unregister as operators_unregister
@@ -22,6 +10,8 @@ from . import (
     functions,
 )
 
+
+#### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def update_properties_from_preferences():
     scene = bpy.context.scene
@@ -53,7 +43,8 @@ def register():
     # HANDLERS
     bpy.app.handlers.load_post.append(functions.handler.update_keymesh)
     bpy.app.handlers.frame_change_post.append(functions.handler.update_keymesh)
-    bpy.app.handlers.blend_import_post.append(functions.handler.append_keymesh)
+    if bpy.app.version > (4, 3, 0):
+        bpy.app.handlers.blend_import_post.append(functions.handler.append_keymesh)
 
 
 def unregister():
@@ -66,7 +57,8 @@ def unregister():
     # HANDLERS
     bpy.app.handlers.load_post.remove(functions.handler.update_keymesh)
     bpy.app.handlers.frame_change_post.remove(functions.handler.update_keymesh)
-    bpy.app.handlers.blend_import_post.remove(functions.handler.append_keymesh)
+    if bpy.app.version > (4, 3, 0):
+        bpy.app.handlers.blend_import_post.remove(functions.handler.append_keymesh)
 
 
 if __name__ == "__main__":

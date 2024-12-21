@@ -76,6 +76,7 @@ def get_missing_thumbnails(obj):
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 def previews_register():
+    import bpy.utils.previews
     pcoll = bpy.utils.previews.new()
     preview_collections["main"] = pcoll
 
@@ -84,6 +85,7 @@ def register():
 
 
 def previews_unregister():
+    import bpy.utils.previews
     for pcoll in preview_collections.values():
         bpy.utils.previews.remove(pcoll)
     preview_collections.clear()

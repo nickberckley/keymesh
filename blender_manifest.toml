@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "keymesh"
-version = "2.2.1"
+version = "2.3.0"
 name = "Keymesh"
 tagline = "Create stop-motion animations by sculpting frame-by-frame"
 maintainer = "Nika Kutsniashvili <nickberckley@gmail.com>"
@@ -18,6 +18,20 @@ blender_version_min = "4.2.0"
 license = [
   "SPDX:GPL-3.0-or-later",
 ]
+copyright = [
+  "2024 Nika Kutsniashvili",
+  "2024 Pablo Dobarro",
+  "2024 Daniel Martinez Lara",
+  "2024 Aldrin Mathew",
+]
+
+[build]
+paths_exclude_pattern = [
+  "/.git/",
+  "__pycache__/",
+  ".*",
+]
+
 
 [permissions]
 files = "Store generated pose preview images and/or load them from disk"
