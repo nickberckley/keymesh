@@ -49,8 +49,6 @@ def populate_keymesh_blocks(scene):
 
                 if obj.get("km_datablock", None):
                     del obj["km_datablock"]
-                if obj.get("Keymesh Data", None):
-                    del obj["Keymesh Data"]
 
                 if obj.get("Keymesh Name") is not None:
                     del obj["Keymesh Name"]

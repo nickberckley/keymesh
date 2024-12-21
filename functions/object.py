@@ -35,7 +35,7 @@ def is_unique_id(obj, id):
 def get_next_keymesh_index(obj):
     """Get the appropriate index for the newly created/added Keymesh block"""
 
-    if obj.keymesh.get("Keymesh Data") is None:
+    if obj.keymesh.get("Keymesh Data") is None or obj.keymesh.get("Keymesh Data") is -1:
         return 0
     else:
         # find_the_largest_value_in_the_list
@@ -75,6 +75,8 @@ def assign_keymesh_id(obj, animate=False):
     if animate:
         if obj.keymesh.animated is False:
             obj.keymesh.animated = True
+            obj.keymesh["Keymesh Data"] = -1
+            obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
 
 
 def insert_block(obj, block, index, name=None):
