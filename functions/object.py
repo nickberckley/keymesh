@@ -1,4 +1,4 @@
-import bpy, random
+import bpy, random, bmesh
 from .poll import is_keymesh_object, obj_data_type
 from .timeline import get_keymesh_fcurve, delete_empty_action
 from .. import __package__ as base_package
@@ -158,8 +158,16 @@ def update_active_block_by_index(obj):
     # Assign Keymesh Block to Object
     if block:
         if obj.data.name != block.name:
+            in_edit_mode = False
+            if obj.mode == 'EDIT':
+                bpy.ops.object.mode_set(mode='OBJECT')
+                in_edit_mode = True
+
             data_type = obj_data_type(obj)
             obj.data = data_type[block.name]
+
+            if in_edit_mode:
+                bpy.ops.object.mode_set(mode='EDIT')
 
         # Update Static Object
         if obj.keymesh.animated == False:
