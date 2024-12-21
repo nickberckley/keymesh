@@ -80,9 +80,10 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
             for block in obj.keymesh.blocks:
                 block_keymesh_data = block.block.keymesh.get("Data")
                 if block_keymesh_data not in used_keymesh_blocks[obj_keymesh_id]:
-                    unused_blocks.append(block.block)
-                    purged_keymesh_blocks.append(block.block)
-                    continue
+                    if block.block != obj.data:
+                        unused_blocks.append(block.block)
+                        purged_keymesh_blocks.append(block.block)
+                        continue
 
             # Purge Unused Blocks
             for block in unused_blocks:
