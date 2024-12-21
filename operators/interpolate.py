@@ -5,7 +5,7 @@ from ..functions.timeline import get_next_keymesh_block
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
-class ANIM_OT_keymesh_interpolate(bpy.types.Operator):
+class OBJECT_OT_keymesh_interpolate(bpy.types.Operator):
     bl_idname = "object.keymesh_interpolate"
     bl_label = "Interpolate Between Keymesh Frames"
     bl_options = {"REGISTER", "UNDO"}
@@ -53,7 +53,7 @@ class ANIM_OT_keymesh_interpolate(bpy.types.Operator):
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
-    ANIM_OT_keymesh_interpolate,
+    OBJECT_OT_keymesh_interpolate,
 ]
 
 def register():

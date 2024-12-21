@@ -6,10 +6,10 @@ from ..functions.timeline import insert_keyframe
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
-class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
-    bl_idname = "object.keymesh_pick_frame"
+class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
+    bl_idname = "object.keymesh_block_keyframe"
     bl_label = "Pick Keymesh Frame"
-    bl_description = "Link the selected Keymesh block to the current object"
+    bl_description = "Link the selected Keymesh block to the current object and keyframe it"
     bl_options = {'UNDO', 'INTERNAL'}
 
     block: bpy.props.StringProperty(
@@ -38,28 +38,22 @@ class OBJECT_OT_keymesh_pick_frame(bpy.types.Operator):
         scene = context.scene
         obj = context.active_object
 
+        if obj.animation_data:
+            if obj.animation_data.action:
+                action = obj.animation_data.action
+                if action:
+                    if action.library:
+                        self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
+                        return {'CANCELLED'}
+
         # Assign Keymesh Block to Object
         data_type = obj_data_type(obj)
         obj.data = data_type[self.block]
         update_active_index(obj)
-        block_keymesh_data = obj.data.keymesh.get("Data")
-
-        # create_action_if_object_isn't_animated
-        if not obj.keymesh.animated:
-            new_action = bpy.data.actions.new(obj.name + "Action")
-            obj.animation_data_create()
-            obj.animation_data.action = new_action
-            obj.keymesh.animated = True
 
         # Keyframe Block
-        action = obj.animation_data.action
-        if action:
-            if action.library is None:
-                insert_keyframe(obj, scene.frame_current, block_keymesh_data)
-            else:
-                self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
-        else:
-            insert_keyframe(obj, scene.frame_current, block_keymesh_data)
+        block_keymesh_data = obj.data.keymesh.get("Data")
+        insert_keyframe(obj, scene.frame_current, block_keymesh_data)
 
         return {'FINISHED'}
 
@@ -150,7 +144,7 @@ class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
-    OBJECT_OT_keymesh_pick_frame,
+    OBJECT_OT_keymesh_block_keyframe,
     OBJECT_OT_keymesh_block_move,
     OBJECT_OT_keymesh_block_set_active,
 ]

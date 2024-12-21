@@ -164,8 +164,8 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class OBJECT_OT_keymesh_offer_render(bpy.types.Operator):
-    bl_idname = 'object.keymesh_offer_render'
+class OBJECT_OT_keymesh_thumbnails_offer(bpy.types.Operator):
+    bl_idname = 'object.keymesh_thumbnails_offer'
     bl_label = 'Generate Thumbnails'
     bl_options = {'INTERNAL'}
 
@@ -240,7 +240,7 @@ class OBJECT_OT_keymesh_thumbnails_refresh(bpy.types.Operator):
 
 classes = [
     OBJECT_OT_keymesh_thumbnails_generate,
-    OBJECT_OT_keymesh_offer_render,
+    OBJECT_OT_keymesh_thumbnails_offer,
     OBJECT_OT_keymesh_thumbnails_refresh,
 ]
 

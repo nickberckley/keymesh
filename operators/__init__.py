@@ -2,14 +2,14 @@ import bpy
 
 from . import (
     bake,
+    convert,
     frame_picker,
     generate_thumbnails,
     initialize_handler,
     insert_keyframe,
     # interpolate,
     join_extract,
-    purge_unused_data,
-    separate_objects,
+    purge,
     timeline_jump,
 )
 
@@ -18,14 +18,14 @@ from . import (
 
 modules = [
     bake,
+    convert,
     frame_picker,
     generate_thumbnails,
     initialize_handler,
     insert_keyframe,
     # interpolate,
     join_extract,
-    purge_unused_data,
-    separate_objects,
+    purge,
     timeline_jump,
 ]
 

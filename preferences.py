@@ -132,8 +132,8 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     # defaults
     frame_skip_count: bpy.props.IntProperty(
         name = "Default Frame Skip Count",
-        description = "Skip this many frames forwards or backwards when inserting keyframe.\n"
-                    "(by default, can be changed in Keymesh panel in sidebar)",
+        description = ("Skip this many frames forwards or backwards when inserting keyframe.\n"
+                       "(by default, can be changed in Keymesh panel in sidebar)"),
         default = 2,
         min = 1, max = 100,
         soft_min = 1, soft_max = 10,
@@ -147,45 +147,45 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
 
     naming_method: bpy.props.EnumProperty(
         name = "Name Keymesh Blocks After...",
-        description = "When creating new Keymesh blocks you can name them after index\n" 
-                    "(i.e. order they're created in), or after frame they were created on.",
+        description = ("When creating new Keymesh blocks you can name them after index\n"
+                       "(i.e. order they're created in), or after frame they were created on"),
         items = [('INDEX', 'Index', ''),
                 ('FRAME', 'Frame', ''),],
         default = 'FRAME',
     )
     persistent_settings: bpy.props.BoolProperty(
         name = "Persistent Sculpt Mode Settings",
-        description = "By default remesh and symmetry properties are saved separate for each Keymesh block.\n"
-                    "Enabling this will ensure settings are stored on object-level, and remain when changing frames.\n"
-                    "NOTE: This might have slight performance impact.",
+        description = ("By default remesh and symmetry properties are saved separate for each Keymesh block.\n"
+                       "Enabling this will ensure settings are stored on object-level, and remain when changing frames.\n"
+                       "NOTE: This might have slight performance impact"),
         default = False,
     )
 
     # experimental
     enable_edit_mode: bpy.props.BoolProperty(
         name = "Allow Inserting Keyframes in Edit Modes",
-        description = "Warning: Because of how Blender evaluates data in edit modes, this might cause some data to be lost.\n"
-                    "You will not see Keymesh animation update in edit mode no matter if this is on or off",
+        description = ("Warning: Because of how Blender evaluates data in edit modes, this might cause some data to be lost.\n"
+                       "You will not see Keymesh animation update in edit mode no matter if this is on or off"),
         default = False,
     )
     enable_shape_keys: bpy.props.BoolProperty(
         name = "Allow Shape Keys Support",
-        description = "If disabled, Keymesh will delete shape keys on object. Enable if you want to mix shape keys and Keymesh animation.\n"
-                    "But because shape keys are separate data-block, some issues and difficulties are expected.\n"
-                    "You may experience glitching when scrubbing the timeline. Read more in documentation",
+        description = ("If disabled, Keymesh will delete shape keys on object. Enable if you want to mix shape keys and Keymesh animation.\n"
+                       "But because shape keys are separate data-block, some issues and difficulties are expected.\n"
+                       "You may experience glitching when scrubbing the timeline. Read more in documentation"),
         default = False,
     )
 
     versioning: bpy.props.BoolProperty(
         name = "Versioning",
-        description = "Because of changes to Keymesh data, it is required to do versioning when old Keymesh files are opened.\n"
-                    "When you overwrite those files, versioning isn't needed anymore. Updates should be robust and painless,\n"
-                    "but if you don't have files made with old Keymesh version, or you've overwritten all of them, disable this",
+        description = ("Because of changes to Keymesh data, it is required to do versioning when old Keymesh files are opened.\n"
+                       "When you overwrite those files, versioning isn't needed anymore. Updates should be robust and painless,\n"
+                       "but if you don't have files made with old Keymesh version, or you've overwritten all of them, disable this"),
         default = True,
     )
     debug: bpy.props.BoolProperty(
         name = "Debugging Tools",
-        description = "Will expose internal object and object data properties in UI for debugging purposes",
+        description = "Will expose internal properties and experimental tools in UI for debugging purposes",
         default = False,
     )
 

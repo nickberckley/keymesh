@@ -481,7 +481,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         end_time = time.time()
         execution_time = end_time - start_time
-        print("Keymesh bake operator executed in " + str(round(execution_time, 4)) + " seconds.")
+        print("Keymesh bake operator executed in", str(round(execution_time, 4)), "seconds.")
 
         return {'FINISHED'}
 

@@ -115,7 +115,7 @@ def populate_keymesh_blocks(scene):
                         if (fcurve.data_path == '["Keymesh Data"]') or (fcurve.data_path == '["km_datablock"]'):
                             obj.animation_data.action.fcurves.remove(fcurve)
 
-                print("Successfully versioned ", obj.name)
+                print("Successfully versioned", obj.name)
 
 
             # handle_new_keymesh_objects

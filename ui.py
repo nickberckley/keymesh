@@ -110,7 +110,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             add = col.operator("object.keyframe_object_data", text="", icon='ADD')
             add.path='STILL'
             add.static=True
-            col.operator("object.remove_keymesh_block", text="", icon='REMOVE')
+            col.operator("object.keymesh_block_remove", text="", icon='REMOVE')
 
             col.separator()
             col.menu("VIEW3D_MT_keymesh_filter_menu", icon='FILTER', text="")
@@ -148,7 +148,7 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
             row.alignment = 'EXPAND'
 
             row.operator("object.keymesh_block_active_set", text="Previous", icon='BACK').direction='PREVIOUS'
-            row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, active_block)).block = active_block.name
+            row.operator("object.keymesh_block_keyframe", text="", icon=get_block_icon(obj, active_block)).block=active_block.name
             row.operator("object.keymesh_block_active_set", text="Next", icon='FORWARD').direction='NEXT'
 
 
@@ -171,7 +171,7 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
 
         layout.operator("object.keymesh_join")
         layout.operator("anim.bake_to_keymesh")
-        layout.operator("object.keymesh_to_objects", text="Convert to Separate Objects")
+        layout.operator("object.keymesh_convert", text="Convert to Separate Objects")
 
         # debug_tools
         if prefs.debug and (obj is not None and obj.keymesh.get("ID", None)):
@@ -210,7 +210,7 @@ class SCENE_PT_keymesh(bpy.types.Panel):
         props = context.scene.keymesh
 
         layout.prop(props, "enable_handler", text="Keymesh Animation")
-        layout.operator("scene.initialize_keymesh_handler", text="Refresh Frame Handler")
+        layout.operator("scene.keymesh_handler_initialize", text="Refresh Frame Handler")
 
 
 
@@ -221,9 +221,9 @@ class VIEW3D_MT_keymesh_special_menu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("object.keymesh_extract", icon='FILE_PARENT')
+        layout.operator("object.keymesh_block_extract", icon='FILE_PARENT')
         layout.separator()
-        layout.operator("object.purge_keymesh_data", text="Purge Unused Blocks", icon='TRASH')
+        layout.operator("object.keymesh_purge", text="Purge Unused Blocks", icon='TRASH')
 
 
 class VIEW3D_MT_keymesh_filter_menu(bpy.types.Menu):
@@ -249,7 +249,7 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
 
         # Name
         if context.scene.keymesh.show_keyframe:
-            row.operator("object.keymesh_pick_frame", text="", icon=get_block_icon(obj, item), emboss=False).block = item.name
+            row.operator("object.keymesh_block_keyframe", text="", icon=get_block_icon(obj, item), emboss=False).block=item.name
         row.prop(item, "name", text="", emboss=False)
 
         # Usage Count

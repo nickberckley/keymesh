@@ -6,8 +6,8 @@ from ..functions.timeline import get_keymesh_keyframes, keymesh_block_usage_coun
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
-class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
-    bl_idname = "object.keymesh_to_objects"
+class OBJECT_OT_keymesh_convert(bpy.types.Operator):
+    bl_idname = "object.keymesh_convert"
     bl_label = "Convert Keymesh Animation into Separate Objects"
     bl_description = "Creates new object for each Keymesh block"
     bl_options = {'REGISTER', 'UNDO'}
@@ -290,9 +290,9 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 
                     if self.workflow == 'RENDER':
                         if self.handling_method == 'INSTANCE':
-                            print("Object data '" + duplicate.name + "' is instanced " + str(usage) + " times on frames: " + str(output_frames))
+                            print("Object data'", duplicate.name, "' is instanced", str(usage), "times on frames:", str(output_frames))
                     if self.workflow == 'PRINT':
-                        print(duplicate.name + " was used " + str(usage) + " times on frames: " + str(output_frames))
+                        print(duplicate.name, "was used", str(usage), "times on frames:", str(output_frames))
 
         obj.select_set(False)
         obj.hide_set(True)
@@ -359,7 +359,7 @@ class OBJECT_OT_keymesh_to_objects(bpy.types.Operator):
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
-    OBJECT_OT_keymesh_to_objects,
+    OBJECT_OT_keymesh_convert,
 ]
 
 def register():

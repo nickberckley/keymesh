@@ -134,7 +134,7 @@ def append_keymesh(lapp_context):
 
     # update_frame_handler
     if has_keymesh:
-        """NOTE: `update_keymesh()` is not working because `obj.keymesh.get("ID")` is set to frame of original file"""
+        """NOTE: `update_keymesh()` is not working because `obj.keymesh.get("Keymesh Data")` is set to the frame of the original file"""
         current_frame = bpy.context.scene.frame_current
         bpy.context.scene.frame_set(current_frame + 1)
         bpy.context.scene.frame_set(current_frame)

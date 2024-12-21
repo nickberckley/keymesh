@@ -4,8 +4,8 @@ from ..functions.handler import update_keymesh
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
-class SCENE_OT_initialize_keymesh_handler(bpy.types.Operator):
-    bl_idname = "scene.initialize_keymesh_handler"
+class SCENE_OT_keymesh_handler_initialize(bpy.types.Operator):
+    bl_idname = "scene.keymesh_handler_initialize"
     bl_label = "Initialize Keymesh Frame Handler"
     bl_description = "Refresh handlers to fix Keymesh animation freezes"
     bl_options = {'REGISTER'}
@@ -29,7 +29,7 @@ class SCENE_OT_initialize_keymesh_handler(bpy.types.Operator):
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
-    SCENE_OT_initialize_keymesh_handler,
+    SCENE_OT_keymesh_handler_initialize,
 ]
 
 def register():

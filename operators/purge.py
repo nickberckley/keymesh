@@ -7,15 +7,15 @@ from ..functions.timeline import get_keymesh_fcurve
 
 #### ------------------------------ OPERATORS ------------------------------ ####
 
-class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
-    bl_idname = "object.purge_keymesh_data"
+class OBJECT_OT_keymesh_purge(bpy.types.Operator):
+    bl_idname = "object.keymesh_purge"
     bl_label = "Purge Unused Keymesh Blocks"
     bl_description = ("Purges all Keymesh blocks from active object that are not used in the animation.\n"
                       "Shift-click purges unused blocks for all Keymesh objects in the .blend file (excluding static ones)")
     bl_options = {'UNDO'}
 
     all: bpy.props.BoolProperty(
-        name = "For All Objects",
+        name = "In All Objects",
         default = False,
     )
 
@@ -49,6 +49,8 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
         if self.all:
             for obj in bpy.data.objects:
                 if obj.keymesh.animated is False:
+                    """NOTE: Static objects are excluded because their blocks always have 0 keyframes, which is expected"""
+                    """NOTE: removing those blocks would remove the object altogether which is pointless"""
                     continue
                 if is_linked(context, obj):
                     continue
@@ -71,7 +73,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                         used_keymesh_blocks[obj_keymesh_id].append(keyframe.co.y)
 
 
-        purged_keymesh_blocks = []
+        purged_blocks_count = 0
         for obj in filtered_objects:
             obj_keymesh_id = obj.keymesh.get("ID")
 
@@ -82,7 +84,7 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                 if block_keymesh_data not in used_keymesh_blocks[obj_keymesh_id]:
                     if block.block != obj.data:
                         unused_blocks.append(block.block)
-                        purged_keymesh_blocks.append(block.block)
+                        purged_blocks_count += 1
                         continue
 
             # Purge Unused Blocks
@@ -96,21 +98,19 @@ class OBJECT_OT_purge_keymesh_data(bpy.types.Operator):
                 obj_type = obj_data_type(obj)
                 obj_type.remove(block)
 
-        # update_frame_handler
-        update_keymesh(context.scene, override=True)
 
         # Info
-        if len(purged_keymesh_blocks) == 0:
+        if purged_blocks_count == 0:
             self.report({'INFO'}, "No Keymesh blocks were removed")
         else:
             specifier = " from the scene" if self.all else " for " + context.active_object.name
-            self.report({'INFO'}, str(len(purged_keymesh_blocks)) + " Keymesh block(s) removed" + specifier)
+            self.report({'INFO'}, str(purged_blocks_count) + " Keymesh block(s) removed" + specifier)
 
         return {'FINISHED'}
 
 
-class OBJECT_OT_keymesh_remove(bpy.types.Operator):
-    bl_idname = "object.remove_keymesh_block"
+class OBJECT_OT_keymesh_block_remove(bpy.types.Operator):
+    bl_idname = "object.keymesh_block_remove"
     bl_label = "Remove Keymesh Keyframe"
     bl_description = "Removes selected Keymesh block and deletes every keyframe associated with it"
     bl_options = {'REGISTER', 'UNDO'}
@@ -135,14 +135,17 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
+        data_type = obj_data_type(obj)
 
         if len(obj.keymesh.blocks) <= 1:
-            bpy.data.objects.remove(obj)
+            block = obj.data
+            context.view_layer.active_layer_collection.collection.objects.unlink(obj)
+            data_type.remove(block)
         else:
             initial_index = obj.keymesh.blocks_active_index
 
             # get_active_block
-            if (initial_index is None) or (initial_index > len(obj.keymesh.blocks) - 1):
+            if (initial_index == None) or (initial_index > len(obj.keymesh.blocks) - 1):
                 return {'CANCELLED'}
             block = obj.keymesh.blocks[initial_index].block
 
@@ -161,7 +164,6 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
             update_active_index(obj, index=previous_block_index)
 
             # Purge
-            data_type = obj_data_type(obj)
             data_type.remove(block)
 
         return {'FINISHED'}
@@ -171,8 +173,8 @@ class OBJECT_OT_keymesh_remove(bpy.types.Operator):
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 classes = [
-    OBJECT_OT_purge_keymesh_data,
-    OBJECT_OT_keymesh_remove,
+    OBJECT_OT_keymesh_purge,
+    OBJECT_OT_keymesh_block_remove,
 ]
 
 def register():

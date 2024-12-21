@@ -35,7 +35,7 @@ def is_unique_id(obj, id):
 def get_next_keymesh_index(obj):
     """Get the appropriate index for the newly created/added Keymesh block"""
 
-    if obj.keymesh.get("Keymesh Data") is None or obj.keymesh.get("Keymesh Data") is -1:
+    if obj.keymesh.get("Keymesh Data") == None or obj.keymesh.get("Keymesh Data") == -1:
         return 0
     else:
         # find_the_largest_value_in_the_list
@@ -43,7 +43,7 @@ def get_next_keymesh_index(obj):
         for block in obj.keymesh.blocks:
             block_keymesh_data = block.block.keymesh.get("Data")
             if block_keymesh_data is not None:
-                if largest_value is None or block_keymesh_data > largest_value:
+                if largest_value == None or block_keymesh_data > largest_value:
                     largest_value = block_keymesh_data
 
         if largest_value is not None:
@@ -68,12 +68,12 @@ def assign_keymesh_id(obj, animate=False):
     """Assigns properties to obj that are required to make it Keymesh object"""
     """If obj is already Keymesh object nothing happens"""
 
-    if obj.keymesh.active is False:
+    if obj.keymesh.active == False:
         obj.keymesh.active = True
         obj.keymesh["ID"] = new_object_id()
 
     if animate:
-        if obj.keymesh.animated is False:
+        if obj.keymesh.animated == False:
             obj.keymesh.animated = True
             obj.keymesh["Keymesh Data"] = -1
             obj.keymesh.property_overridable_library_set('["Keymesh Data"]', True)
@@ -82,7 +82,7 @@ def assign_keymesh_id(obj, animate=False):
 def insert_block(obj, block, index, name=None):
     """Inserts given object data in Keymesh blocks list for given object"""
 
-    if name is None:
+    if name == None:
         name = block.name
 
     block.keymesh["ID"] = obj.keymesh["ID"]
@@ -115,6 +115,10 @@ def remove_block(obj, block):
             obj.animation_data.action.fcurves.remove(fcurve)
             obj.keymesh.animated = False
             delete_empty_action(obj)
+
+    # Remove Properties
+    del block.keymesh["ID"]
+    del block.keymesh["Data"]
 
 
 def remove_keymesh_properties(obj):

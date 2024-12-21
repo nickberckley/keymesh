@@ -45,7 +45,7 @@ def thumbnails_render_offer(self, context):
             if self.grid_view:
                 missing_thumbnails = get_missing_thumbnails(obj)
                 if len(missing_thumbnails) != 0:
-                    bpy.ops.object.keymesh_offer_render('INVOKE_DEFAULT')
+                    bpy.ops.object.keymesh_thumbnails_offer('INVOKE_DEFAULT')
 
     return
 

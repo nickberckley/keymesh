@@ -9,6 +9,7 @@ from ..functions.object import (
     duplicate_object,
 )
 from ..functions.poll import (
+    is_candidate_object,
     is_linked,
     is_instanced,
     is_keymesh_object,
@@ -30,11 +31,15 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
     def poll(cls, context):
         if context.active_object and len(context.selected_objects) > 1:
             if context.object.mode == 'OBJECT':
-                if is_linked(context, context.active_object):
-                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                    return False
+                if is_candidate_object(context.active_object):
+                    if is_linked(context, context.active_object):
+                        cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+                        return False
+                    else:
+                        return True
                 else:
-                    return True
+                    cls.poll_message_set("Active object type isn't supported by Keymesh")
+                    return False
         else:
             return False
 
@@ -70,7 +75,7 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
             # Prepare Target
             assign_keymesh_id(target)
             if keymesh_object == False:
-                # turn_active_data_into_first_Keymesh_block
+                # turn_active_data_into_first_keymesh_block
                 target.keymesh["Keymesh Data"] = 0
                 insert_block(target, target.data, 0)
                 target.keymesh.blocks_active_index = 0
@@ -90,8 +95,8 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class OBJECT_OT_keymesh_extract(bpy.types.Operator):
-    bl_idname = "object.keymesh_extract"
+class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
+    bl_idname = "object.keymesh_block_extract"
     bl_label = "Extract Keymesh Block"
     bl_description = ("Pop (extract) active Keymesh block and make it separate object.\n"
                       "New object will retain modifiers, constraints, animation, and etc. but Keymesh properties will be removed.\n"
@@ -120,7 +125,6 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
         obj = context.active_object
         index = int(obj.keymesh.blocks_active_index)
         block = obj.keymesh.blocks[index].block
-        initial_data = obj.data
 
         # Duplicate Object
         dup_obj = duplicate_object(context, obj, block, name=block.name)
@@ -128,8 +132,6 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
 
         # remove_block_from_registry
         remove_block(obj, block)
-        del block.keymesh["ID"]
-        del block.keymesh["Data"]
 
 
         # remove_original_object_if_last_block_was_extracted
@@ -166,7 +168,7 @@ class OBJECT_OT_keymesh_extract(bpy.types.Operator):
 
 classes = [
     OBJECT_OT_keymesh_join,
-    OBJECT_OT_keymesh_extract,
+    OBJECT_OT_keymesh_block_extract,
 ]
 
 def register():
