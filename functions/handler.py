@@ -3,6 +3,7 @@ from .. import __package__ as base_package
 from .poll import is_keymesh_object, supported_types
 from .timeline import get_keymesh_fcurve
 from .object import new_object_id, is_unique_id
+from .thumbnail import resolve_path
 
 
 #### ------------------------------ /frame_handler/ ------------------------------ ####
@@ -114,13 +115,10 @@ def append_keymesh(lapp_context):
                     if block.thumbnail != "":
                         library_path = os.path.dirname(library.filepath)
                         thumbnail_path = block.thumbnail.lstrip("/\\")
-                        abs_thumbnail_path = os.path.join(library_path, thumbnail_path)
+                        full_path = os.path.join(library_path, thumbnail_path)
 
-                        if os.path.splitdrive(abs_thumbnail_path)[0] != os.path.splitdrive(bpy.data.filepath)[0]:
-                            """Assign absolute path is current file is on different disk"""
-                            block.thumbnail = abs_thumbnail_path
-                        else:
-                            block.thumbnail = bpy.path.relpath(abs_thumbnail_path)
+                        resolved_path = resolve_path(full_path)
+                        block.thumbnail = resolved_path
 
 
         # Detect Keymesh Blocks

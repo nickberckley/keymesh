@@ -1,6 +1,6 @@
 import bpy, os, mathutils
 from ..functions.poll import is_keymesh_object
-from ..functions.thumbnail import get_missing_thumbnails, previews_register, previews_unregister
+from ..functions.thumbnail import get_missing_thumbnails, resolve_path, previews_register, previews_unregister
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -134,7 +134,8 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
             # assign_thumbnail
             image_path = os.path.join(directory, block.name + ".jpg")
             if os.path.isfile(image_path):
-                block.thumbnail = bpy.path.relpath(image_path)
+                resolved_path = resolve_path(image_path)
+                block.thumbnail = resolved_path
 
 
         # restore_values

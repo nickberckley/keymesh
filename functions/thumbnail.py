@@ -14,6 +14,20 @@ def _make_enum_item(id, name, descr, preview_id, uid):
     return _item_map[lookup]
 
 
+def resolve_path(path):
+    """Returns relative or absolute path based on if it's on the same drive as .blend file or not"""
+
+    blend_drive = os.path.splitdrive(bpy.data.filepath)[0]
+    path_drive = os.path.splitdrive(path)[0]
+
+    if path_drive == blend_drive:
+        resolved_path = bpy.path.relpath(path)
+    else:
+        resolved_path = bpy.path.abspath(path)
+
+    return resolved_path
+
+
 preview_collections = {}
 def keymesh_blocks_enum_items(self, context):
     """Generate EnumProperty from `keymesh.blocks` CollectionProperty"""
@@ -28,8 +42,9 @@ def keymesh_blocks_enum_items(self, context):
             thumbnail = pcoll[block.thumbnail].icon_id
         else:
             if block.thumbnail != "":
-                if os.path.isfile(bpy.path.abspath(block.thumbnail)) or os.path.isfile(bpy.path.relpath(block.thumbnail)):
-                    thumbnail = pcoll.load(block.thumbnail, bpy.path.abspath(block.thumbnail), 'IMAGE').icon_id
+                if os.path.isfile(bpy.path.abspath(block.thumbnail)):
+                    path = resolve_path(block.thumbnail)
+                    thumbnail = pcoll.load(block.thumbnail, path, 'IMAGE').icon_id
                 else:
                     thumbnail = 'LIBRARY_DATA_BROKEN'
             else:
