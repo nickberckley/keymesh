@@ -13,7 +13,7 @@ def update_keymesh(scene, override=False):
     prefs = bpy.context.preferences.addons[base_package].preferences
 
     if bpy.context.scene.keymesh.enable_handler or override == True:
-        for obj in bpy.context.scene.objects:
+        for obj in bpy.context.view_layer.objects:
             if not is_keymesh_object(obj):
                 continue
             if not obj.keymesh.animated:
