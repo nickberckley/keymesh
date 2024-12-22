@@ -1,4 +1,6 @@
 import bpy, os, mathutils
+from contextlib import contextmanager
+
 from ..functions.poll import is_keymesh_object
 from ..functions.thumbnail import get_missing_thumbnails, resolve_path, previews_register, previews_unregister
 
@@ -37,6 +39,71 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return context.active_object and is_keymesh_object(context.active_object)
+
+    @contextmanager
+    def viewport_render_context(self, context, obj, area, directory):
+        """Temporarily set up correct viewport shading & overlay settings for OpenGL render"""
+
+        viewport = area.spaces.active
+        no_camera = False
+
+        # Store Values
+        mat, loc, rot = (viewport.region_3d.view_matrix.copy(),
+                         viewport.region_3d.view_location.copy(),
+                         viewport.region_3d.view_rotation.copy())
+        initial_shading = viewport.shading.type
+        initial_overlays = viewport.overlay.show_overlays
+        initial_transparency = context.scene.render.film_transparent
+        initial_resolution_x = context.scene.render.resolution_x
+        initial_resolution_y = context.scene.render.resolution_y
+        initial_file_format = context.scene.render.image_settings.file_format
+        initial_filepath = context.scene.render.filepath
+        initial_block = obj.data
+        initial_mode = obj.mode
+
+        # Prepare Scene
+        viewport.shading.type = 'SOLID'
+        viewport.overlay.show_overlays = False
+        context.scene.render.film_transparent = False
+        context.scene.render.resolution_x = context.scene.render.resolution_y = 512
+        context.scene.render.image_settings.file_format = 'JPEG'
+        context.scene.render.filepath = directory
+
+        if initial_mode == 'EDIT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        if self.perspective == 'CAMERA':
+            if context.scene.camera:
+                viewport.region_3d.view_perspective = 'CAMERA'
+            else:
+                no_camera = True
+                self.report({'INFO'}, "No active camera in the scene. Using viewport perspective instead")
+                self.calibrate_viewport(area)
+        elif self.perspective == 'VIEWPORT':
+            self.calibrate_viewport(area)
+
+
+        yield
+
+        # Restore Values
+        viewport.region_3d.view_matrix = mat
+        viewport.region_3d.view_location = loc
+        viewport.region_3d.view_rotation = rot
+        viewport.shading.type = initial_shading
+        viewport.overlay.show_overlays = initial_overlays
+        context.scene.render.film_transparent = initial_transparency
+        context.scene.render.resolution_x = initial_resolution_x
+        context.scene.render.resolution_y = initial_resolution_y
+        context.scene.render.image_settings.file_format = initial_file_format
+        context.scene.render.filepath = initial_filepath
+        obj.data = initial_block
+
+        if self.perspective == 'CAMERA':
+            if no_camera:
+                viewport.region_3d.view_perspective = 'PERSP'
+        if initial_mode == 'EDIT':
+            bpy.ops.object.mode_set(mode=initial_mode)
+
 
     def calibrate_viewport(self, area):
         """Tries to better center objects in the frame so that they're not too tiny in the image"""
@@ -88,73 +155,21 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         # get_3d_viewport
         areas = {a.type:a for a in bpy.context.screen.areas}
         area = areas.get("VIEW_3D", None)
-        viewport = area.spaces.active
-
-        # store_values
-        mat, loc, rot = (viewport.region_3d.view_matrix.copy(),
-                         viewport.region_3d.view_location.copy(),
-                         viewport.region_3d.view_rotation.copy())
-        initial_shading = viewport.shading.type
-        initial_overlays = viewport.overlay.show_overlays
-        initial_transparency = context.scene.render.film_transparent
-        initial_resolution_x = context.scene.render.resolution_x
-        initial_resolution_y = context.scene.render.resolution_y
-        initial_file_format = context.scene.render.image_settings.file_format
-        initial_filepath = context.scene.render.filepath
-        initial_block = obj.data
-        initial_mode = obj.mode
-
-        # Prepare Scene
-        viewport.shading.type = 'SOLID'
-        viewport.overlay.show_overlays = False
-        context.scene.render.film_transparent = False
-        context.scene.render.resolution_x = context.scene.render.resolution_y = 512
-        context.scene.render.filepath = directory
-        context.scene.render.image_settings.file_format = 'JPEG'
-        if initial_mode == 'EDIT':
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-        if self.perspective == 'CAMERA':
-            if context.scene.camera:
-                viewport.region_3d.view_perspective = 'CAMERA'
-            else:
-                self.report({'INFO'}, "No active camera in the scene. Using viewport perspective instead")
-                self.calibrate_viewport(area)
-        elif self.perspective == 'VIEWPORT':
-            self.calibrate_viewport(area)
 
         # Render
-        for block in filtered_blocks:
-            obj.data = block.block
-            context.scene.render.filepath = directory + block.name
-            bpy.ops.render.opengl(animation=False,
-                                  write_still=True,
-                                  view_context=True)
+        with self.viewport_render_context(context, obj, area, directory):
+            for block in filtered_blocks:
+                obj.data = block.block
+                context.scene.render.filepath = directory + block.name
+                bpy.ops.render.opengl(animation=False,
+                                    write_still=True,
+                                    view_context=True)
 
-            # assign_thumbnail
-            image_path = os.path.join(directory, block.name + ".jpg")
-            if os.path.isfile(image_path):
-                resolved_path = resolve_path(image_path)
-                block.thumbnail = resolved_path
-
-
-        # restore_values
-        viewport.region_3d.view_matrix = mat
-        viewport.region_3d.view_location = loc
-        viewport.region_3d.view_rotation = rot
-        viewport.shading.type = initial_shading
-        viewport.overlay.show_overlays = initial_overlays
-        context.scene.render.film_transparent = initial_transparency
-        context.scene.render.resolution_x = initial_resolution_x
-        context.scene.render.resolution_y = initial_resolution_y
-        context.scene.render.image_settings.file_format = initial_file_format
-        context.scene.render.filepath = initial_filepath
-        obj.data = initial_block
-
-        if self.perspective == 'CAMERA':
-            viewport.region_3d.view_perspective = 'PERSP'
-        if initial_mode == 'EDIT':
-            bpy.ops.object.mode_set(mode=initial_mode)
+                # assign_thumbnail
+                image_path = os.path.join(directory, block.name + ".jpg")
+                if os.path.isfile(image_path):
+                    resolved_path = resolve_path(image_path)
+                    block.thumbnail = resolved_path
 
         # refresh_thumbnails
         previews_unregister()
