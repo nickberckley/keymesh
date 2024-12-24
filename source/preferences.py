@@ -4,13 +4,15 @@ from . import ui
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-panel_classes = [
-    ui.VIEW3D_PT_keymesh,
-    ui.VIEW3D_PT_keymesh_frame_picker,
-    ui.VIEW3D_PT_keymesh_tools,
-]
-
 def update_sidebar_category(self, context):
+    """Change sidebar category of add-ons panels"""
+
+    panel_classes = [
+        ui.VIEW3D_PT_keymesh,
+        ui.VIEW3D_PT_keymesh_frame_picker,
+        ui.VIEW3D_PT_keymesh_tools,
+    ]
+
     for cls in panel_classes:
         try:
             bpy.utils.unregister_class(cls)

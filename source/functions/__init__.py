@@ -1,12 +1,10 @@
-import bpy
-
-from . import (
-    handler,
-    object,
-    poll,
-    thumbnail,
-    timeline,
-)
+if "bpy" in locals():
+    import importlib
+    for mod in [thumbnail]:
+        importlib.reload(mod)
+else:
+    import bpy
+    from . import thumbnail
 
 
 #### ------------------------------ REGISTRATION ------------------------------ ####

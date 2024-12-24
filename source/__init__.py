@@ -1,14 +1,24 @@
-import bpy
-
-from .operators import register as operators_register, unregister as operators_unregister
-from .functions import register as functions_register, unregister as functions_unregister
-from . import (
-    preferences,
-    properties,
-    ui,
-    versioning,
-    functions,
-)
+if "bpy" in locals():
+    import importlib
+    for mod in [functions,
+                operators,
+                preferences,
+                properties,
+                ui,
+                versioning,
+                ]:
+        importlib.reload(mod)
+    print("Add-on Reloaded: Keymesh")
+else:
+    import bpy
+    from . import (
+        functions,
+        operators,
+        preferences,
+        properties,
+        ui,
+        versioning,
+    )
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -24,6 +34,8 @@ def update_properties_from_preferences():
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 modules = [
+    functions,
+    operators,
     preferences,
     properties,
     ui,
@@ -33,9 +45,6 @@ modules = [
 def register():
     for module in modules:
         module.register()
-
-    operators_register()
-    functions_register()
 
     preferences.update_sidebar_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
     bpy.app.timers.register(update_properties_from_preferences)
@@ -50,9 +59,6 @@ def register():
 def unregister():
     for module in reversed(modules):
         module.unregister()
-
-    operators_unregister()
-    functions_unregister()
 
     # HANDLERS
     bpy.app.handlers.load_post.remove(functions.handler.update_keymesh)
