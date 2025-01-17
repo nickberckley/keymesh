@@ -125,10 +125,6 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             return False
 
 
-    def __init__(self):
-        self.has_shape_keys = False
-        self.has_modifiers = False
-
     def invoke(self, context, event):
         obj = context.active_object
 
@@ -136,6 +132,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         self.frame_end = context.scene.frame_end
 
         # modifiers_poll
+        self.has_modifiers = False
         if len(obj.modifiers) > 0:
             self.has_modifiers = True
 
@@ -152,6 +149,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                     self.modifiers = default_mods
 
         # shape_key_poll
+        self.has_shape_keys = False
         if obj.type in shape_key_types:
             if obj.data.shape_keys:
                 self.has_shape_keys = True
