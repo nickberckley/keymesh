@@ -55,17 +55,15 @@ def update_keymesh(scene, override=False):
 
 
             # Update Active Index
-            if obj == bpy.context.active_object:
-                """NOTE: UI updates aren't important for non-active objects because it's not visible anyway"""
-                ui_index = obj.keymesh.blocks_active_index
-                if ui_index is not None:
-                    block_index = obj.keymesh.blocks.find(obj.data.name)
+            ui_index = obj.keymesh.blocks_active_index
+            if ui_index is not None:
+                block_index = obj.keymesh.blocks.find(obj.data.name)
 
-                    if (ui_index != block_index) and (block_index >= 0):
-                        if obj.keymesh.grid_view:
-                            obj.keymesh.blocks_grid = str(block_index)
-                        else:
-                            obj.keymesh.blocks_active_index = int(block_index)
+                if (ui_index != block_index) and (block_index >= 0):
+                    if obj.keymesh.grid_view:
+                        obj.keymesh.blocks_grid = str(block_index)
+                    else:
+                        obj.keymesh.blocks_active_index = int(block_index)
 
 
 

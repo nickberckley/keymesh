@@ -1,6 +1,6 @@
 import bpy
 from ..functions.object import update_active_index
-from ..functions.poll import is_linked, is_keymesh_object, obj_data_type, edit_modes
+from ..functions.poll import is_linked, is_keymesh_object, has_shared_action, obj_data_type, edit_modes
 from ..functions.timeline import insert_keyframe
 
 
@@ -41,10 +41,9 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
         if obj.animation_data:
             if obj.animation_data.action:
                 action = obj.animation_data.action
-                if action:
-                    if action.library:
-                        self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
-                        return {'CANCELLED'}
+                if action.library:
+                    self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
+                    return {'CANCELLED'}
 
         # Assign Keymesh Block to Object
         data_type = obj_data_type(obj)
@@ -54,6 +53,14 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
         # Keyframe Block
         block_keymesh_data = obj.data.keymesh.get("Data")
         insert_keyframe(obj, scene.frame_current, block_keymesh_data)
+
+        # refresh_timeline
+        if has_shared_action(obj):
+            """NOTE: This refresh happens when objects action slot is used by other Keymesh objects as well"""
+            """NOTE: Even though property is animated, it's not updated on other objects until timeline is refreshed"""
+            current_frame = context.scene.frame_current
+            context.scene.frame_set(current_frame + 1)
+            context.scene.frame_set(current_frame)
 
         return {'FINISHED'}
 

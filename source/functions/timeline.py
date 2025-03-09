@@ -9,10 +9,22 @@ def get_keymesh_fcurve(obj):
     fcurve = None
     if obj.animation_data is not None:
         if obj.animation_data.action is not None:
-            for f in obj.animation_data.action.fcurves:
-                if f.data_path == 'keymesh["Keymesh Data"]':
-                    fcurve = f
-                    break
+            if bpy.app.version >= (4, 4, 0):
+                # Slotted actions check.
+                if obj.animation_data.action_slot is not None:
+                    action = obj.animation_data.action
+                    slot = obj.animation_data.action_slot
+                    fcurves = action.layers[0].strips[0].channelbag(slot).fcurves
+                    for f in fcurves:
+                        if f.data_path == 'keymesh["Keymesh Data"]':
+                            fcurve = f
+                            break
+            else:
+                # Blender 4.3 and older check.
+                for f in obj.animation_data.action.fcurves:
+                    if f.data_path == 'keymesh["Keymesh Data"]':
+                        fcurve = f
+                        break
 
     return fcurve
 
@@ -102,14 +114,47 @@ def get_next_keymesh_block(context, obj, direction):
     return next_keyframe, next_keymesh_block
 
 
+def remove_fcurve(obj, fcurve):
+    """Removes given f-curve from objects action (and active action slot)"""
+
+    if obj.animation_data and obj.animation_data.action:
+        action = obj.animation_data.action
+
+        # Slotted actions check.
+        if bpy.app.version >= (4, 4, 0):
+            slot = obj.animation_data.action_slot
+            action.layers[0].strips[0].channelbag(slot).fcurves.remove(fcurve)
+        else:
+            action.fcurves.remove(fcurve)
+
+
 def delete_empty_action(obj):
     """Removes action from object and purges it if it has no f-curves remaining"""
 
     if obj.animation_data:
         if obj.animation_data.action:
-            if len(obj.animation_data.action.fcurves) == 0:
-                empty_action = obj.animation_data.action
-                obj.animation_data.action = None
-                bpy.data.actions.remove(empty_action)
+            if bpy.app.version >= (4, 4, 0):
+                # Slotted actions check.
+                if obj.animation_data.action_slot:
+                    action = obj.animation_data.action
+                    slot = obj.animation_data.action_slot
+                    fcurves = action.layers[0].strips[0].channelbag(slot).fcurves
+
+                    # remove_empty_slot
+                    if len(fcurves) == 0:
+                        action.slots.remove(slot)
+
+                    # remove_action_if_there_are_no_more_slots
+                    if len(action.slots) == 0:
+                        empty_action = obj.animation_data.action
+                        obj.animation_data.action = None
+                        bpy.data.actions.remove(empty_action)
+
+            else:
+                # Blender 4.3 and older check.
+                if len(obj.animation_data.action.fcurves) == 0:
+                    empty_action = obj.animation_data.action
+                    obj.animation_data.action = None
+                    bpy.data.actions.remove(empty_action)
 
     obj.keymesh.animated = False

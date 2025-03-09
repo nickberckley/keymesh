@@ -1,6 +1,6 @@
 import bpy, random, bmesh
-from .poll import is_keymesh_object, obj_data_type
-from .timeline import get_keymesh_fcurve, delete_empty_action
+from .poll import is_keymesh_object, has_shared_action, obj_data_type
+from .timeline import get_keymesh_fcurve, remove_fcurve, delete_empty_action
 from .. import __package__ as base_package
 
 
@@ -105,16 +105,19 @@ def remove_block(obj, block):
     # Remove Keyframes
     fcurve = get_keymesh_fcurve(obj)
     if fcurve:
-        for keyframe in reversed(fcurve.keyframe_points.values()):
-            if keyframe.co_ui[1] == block.keymesh.get("Data"):
-                fcurve.keyframe_points.remove(keyframe)
+        """If objects action slot has other users keyframes are not removed, as others might need it"""
+        """TODO: Check if other slot users have block with the same index. If they don't, it's safe to remove keyframes"""
+        if not has_shared_action(obj):
+            for keyframe in reversed(fcurve.keyframe_points.values()):
+                if keyframe.co_ui[1] == block.keymesh.get("Data"):
+                    fcurve.keyframe_points.remove(keyframe)
 
-        # remove_animated_properties_if_last_keyframe_was_removed
-        has_other_keys = bool(fcurve.keyframe_points)
-        if not has_other_keys:
-            obj.animation_data.action.fcurves.remove(fcurve)
-            obj.keymesh.animated = False
-            delete_empty_action(obj)
+            # remove_animated_properties_if_last_keyframe_was_removed
+            has_other_keys = bool(fcurve.keyframe_points)
+            if not has_other_keys:
+                remove_fcurve(obj, fcurve)
+                obj.keymesh.animated = False
+                delete_empty_action(obj)
 
     # Remove Properties
     del block.keymesh["ID"]
@@ -140,8 +143,9 @@ def remove_keymesh_properties(obj):
         # Remove Keymesh F-Curve
         fcurve = get_keymesh_fcurve(obj)
         if fcurve:
-            obj.animation_data.action.fcurves.remove(fcurve)
-            delete_empty_action(obj)
+            if not has_shared_action(obj):
+                remove_fcurve(obj, fcurve)
+                delete_empty_action(obj)
 
 
 def update_active_index(obj, index=None):
@@ -149,8 +153,10 @@ def update_active_index(obj, index=None):
 
     if index == None:
         index = obj.keymesh.blocks.find(obj.data.name)
-    obj.keymesh.blocks_active_index = int(index)
-    obj.keymesh.blocks_grid = str(index)
+
+    if index != -1:
+        obj.keymesh.blocks_active_index = int(index)
+        obj.keymesh.blocks_grid = str(index)
 
 
 def update_active_block_by_index(obj):
@@ -189,7 +195,7 @@ def convert_to_mesh(context, obj):
 
 
 def duplicate_object(context, obj, block, name=None, hide=False, collection=False):
-    """Creates duplicate of obj and assigns object data / block"""
+    """Creates duplicate of obj and assigns object data (block)"""
 
     if name == None:
         name = obj.name

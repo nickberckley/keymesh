@@ -58,6 +58,15 @@ def is_keymesh_object(obj):
         return False
 
 
+def has_shared_action(obj):
+    """Returns True if objects action has other users as well"""
+
+    if obj.animation_data.action.users > 1:
+        return True
+    else:
+        return False
+
+
 def supported_types():
     return [
         ('MESH', bpy.data.meshes),
