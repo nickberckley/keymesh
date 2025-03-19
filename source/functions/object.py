@@ -185,7 +185,7 @@ def update_active_block_by_index(obj):
 
 
 def convert_to_mesh(context, obj):
-    """Low-level alternative to `bpy.ops.object.convert` for converting to meshes"""
+    """Low-level alternative to `bpy.ops.object.convert` for converting object to mesh"""
 
     depsgraph = context.evaluated_depsgraph_get()
     eval_obj = obj.evaluated_get(depsgraph)
@@ -227,3 +227,19 @@ def duplicate_object(context, obj, block, name=None, hide=False, collection=Fals
                 coll.objects.unlink(dup_obj)
 
     return dup_obj
+
+
+def store_modifiers(obj, store_nodes=False):
+    """Stores modifiers in dict with all its properties and custom keys"""
+
+    stored_modifiers = {}
+    for mod in obj.modifiers:
+        properties = {prop.identifier: getattr(mod, prop.identifier) for prop in mod.bl_rna.properties if not prop.is_readonly}
+        stored_modifiers[mod.name] = {"type": mod.type, "properties": properties}
+
+        # Store Input Values for Geometry Nodes Modifiers
+        if mod.type == 'NODES' and store_nodes:
+            keys = {key: mod[key] for key in mod.keys()}
+            stored_modifiers[mod.name]["keys"] = keys
+
+    return stored_modifiers

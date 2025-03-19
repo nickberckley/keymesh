@@ -1,12 +1,14 @@
-import bpy, numpy, time, itertools
+import bpy, numpy, time
+from contextlib import contextmanager
+
 from ..functions.handler import update_keymesh
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object, convert_to_mesh
+from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object, convert_to_mesh, store_modifiers
 from ..functions.poll import is_candidate_object, is_linked, obj_data_type
 from ..functions.thumbnail import _make_enum_item
 from ..functions.timeline import insert_keyframe
 
 
-main_types = ['MESH', 'LATTICE']
+apply_types = ['MESH', 'LATTICE']
 convert_types = ['CURVE', 'SURFACE', 'FONT']
 shape_key_types = ['MESH', 'CURVE', 'SURFACE', 'LATTICE']
 
@@ -136,23 +138,31 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         if len(obj.modifiers) > 0:
             self.has_modifiers = True
 
-        # select_default_modifiers
-        if obj.type in main_types:
-            enum_items = get_modifier_enum_items(self, context)
-            if enum_items:
-                default_mods = {enum_items[0][0]}
-                for mod in obj.modifiers:
-                    if mod.type == 'ARMATURE':
-                        default_mods.add(mod.name.upper())
-
-                if default_mods not in self.modifiers:
-                    self.modifiers = default_mods
-
         # shape_key_poll
         self.has_shape_keys = False
         if obj.type in shape_key_types:
             if obj.data.shape_keys:
                 self.has_shape_keys = True
+
+
+        # Select Modifiers
+        enum_items = get_modifier_enum_items(self, context)
+        if enum_items:
+            default_mods = {enum_items[0][0]}
+
+            """For obj types that allow applying individual modifiers (Mesh, Lattice), select Armatures and first modifier by default."""
+            if obj.type in apply_types:
+                for mod in obj.modifiers:
+                    if mod.type == 'ARMATURE':
+                        default_mods.add(mod.name.upper())
+
+            """For obj types that need to be converted to Mesh to apply modifiers, consider all modifiers as selected."""
+            if obj.type in convert_types:
+                for mod in obj.modifiers:
+                    default_mods.add(mod.name.upper())
+
+            # if default_mods not in self.modifiers:
+            self.modifiers = default_mods
 
         return context.window_manager.invoke_props_dialog(self)
 
@@ -192,43 +202,92 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         return verts_co, sk_values, match
 
 
-    def store_modifiers(self, selected_modifiers, modifiers, temp_mods):
-        """Stores modifiers in dict with all its properties and custom keys"""
-        """Additionally, temporarily disables visibility of non-selected modifiers to make operator faster"""
-        """Returns: stored_modifiers (dict) & obstructing_mods (list, for restoring visibility at the end)"""
+    @contextmanager
+    def disable_unselected_modifiers(self, obj, selected_modifiers):
+        """Temporarily disables viewport visibility of unselected modifiers, so that they're not included in..."""
+        """the object evaluation that happens in `convert_to_mesh` function for `new_from_object` call."""
 
-        obstructing_mods = []
-        for mod in itertools.chain(modifiers, temp_mods):
-            if mod.name.upper() not in selected_modifiers:
+        # Disable Modifiers Visibility
+        disabled_modifiers = []
+        for mod in obj.modifiers:
+            if (mod.name.upper() not in selected_modifiers):
                 if mod.show_viewport:
-                    obstructing_mods.append(mod.name)
                     mod.show_viewport = False
+                    disabled_modifiers.append(mod)
 
-        stored_modifiers = {}
-        if self.has_modifiers:
-            for mod in modifiers:
-                properties = {prop.identifier: getattr(mod, prop.identifier) for prop in mod.bl_rna.properties if not prop.is_readonly}
-                stored_modifiers[mod.name] = {"type": mod.type, "properties": properties}
-                if mod.type == 'NODES':
-                    keys = {key: mod[key] for key in mod.keys()}
-                    stored_modifiers[mod.name]["keys"] = keys
+        try:
+            yield
 
-        return stored_modifiers, obstructing_mods
+        finally:
+            # Restore Modifiers Visibility
+            for mod in obj.modifiers:
+                if mod in disabled_modifiers:
+                    mod.show_viewport = True
 
 
-    def restore_modifier(self, obj, name, stored):
-        """Adds new modifier on object and assigns values to its properties from stored one"""
+    def apply_selected_modifiers(self, obj, selected_modifiers, backup_obj, garbage_shape_keys):
+        """Unoptimized way of applying individual modifiers with `bpy.ops` operator, but only way to do it for Lattice."""
+        """Also applies shape keys, because modifiers can't be applied with shape keys on."""
 
-        mod = obj.modifiers.new(name=name, type=stored["type"])
-        for prop, value in stored["properties"].items():
-            # restore_modifier_properties
-            if hasattr(mod, prop):
-                setattr(mod, prop, value)
-            
-            # restore_input_values_for_geometry_nodes_modifiers
-            if stored["type"] == 'NODES':
-                for key, value in stored["keys"].items():
-                    mod[key] = value
+        # 1. Store Modifiers
+        """NOTE: Storing same data on every frame isn't optimal, but for the Lattice impact is negligable, and worth the clean code."""
+        stored_modifiers = store_modifiers(backup_obj, store_nodes=False)
+        original_data = obj.data
+ 
+        # 2. Create New Block
+        new_block = obj.data.copy()
+        if self.has_shape_keys:
+            garbage_shape_keys.append(new_block.shape_keys.name)
+
+        # 3. Apply Modifiers & Shape Keys
+        obj.data = new_block
+
+        if self.has_shape_keys:
+            bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+        for mod in obj.modifiers:
+            if (mod.name.upper() in selected_modifiers) and mod.show_viewport:
+                bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
+            else:
+                obj.modifiers.remove(mod)
+
+        obj.data = original_data
+
+        # 4. Restore Modifiers
+        for mod_name, mod_data in stored_modifiers.items():
+            mod = obj.modifiers.new(name=mod_name, type=mod_data["type"])
+
+            """NOTE: Since Lattice can't have Geometry Nodes modifiers, keys (that are used for inputs) are not restored."""
+            for prop, value in mod_data["properties"].items():
+                if hasattr(mod, prop):
+                    setattr(mod, prop, value)
+
+        return new_block
+
+
+    def curves_to_mesh(self, context, obj, garbage_shape_keys):
+        """Unoptimized way of converting object to Mesh by using `bpy.ops` operators."""
+        """Needed because new Curves type doesn't work with `new_from_object` function yet."""
+
+        # 1. create_temporary_object
+        obj.select_set(False)
+        temp_obj = obj.copy()
+        temp_obj.data = obj.data.copy()
+        context.collection.objects.link(temp_obj)
+        context.view_layer.objects.active = temp_obj
+        temp_obj.select_set(True)
+        if self.has_shape_keys:
+            garbage_shape_keys.append(temp_obj.data.shape_keys.name)
+
+        # 2. convert_to_mesh
+        bpy.ops.object.convert(target='MESH', keep_original=False)
+        new_block = temp_obj.data
+
+        # 3. remove_temporary_data
+        bpy.data.objects.remove(temp_obj)
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
+
+        return new_block
 
 
     def handle_modifiers(self, context, obj, selected_modifiers):
@@ -278,6 +337,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         start_time = time.time()
         bpy.app.handlers.frame_change_post.remove(update_keymesh)
 
+        obj = context.active_object
+        original_type = obj.type
+        original_data = obj.data
+
         # define_frame_range
         initial_frame = context.scene.frame_current
         if self.follow_scene_range == True:
@@ -288,130 +351,75 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             self.report({'ERROR'}, "Operation cancelled. Start frame can't be higher than end frame")
             return {'CANCELLED'}
 
-
-        obj = context.active_object
-        original_type = obj.type
-        original_data = obj.data
+        # define_modifier_selection
+        selected_modifiers = ",".join(self.modifiers)
+        if selected_modifiers != "" and (obj.modifiers[0].name.upper() not in selected_modifiers):
+            self.report({'WARNING'}, "Baked modifier was not first, result may not be as expected")
 
         # Back-up Original Object
-        if self.back_up or self.bake_type == 'ALL':
-            """NOTE: Duplicate has to be created when baking modifiers, because storing obj modifier values is bugged"""
-            backup_obj = duplicate_object(context, obj, original_data, name=obj.name + "_backup", collection=True)
-            backup_obj.hide_set(True)
-
+        if self.back_up or original_type == 'LATTICE':
+            """NOTE: Duplicate has to be created for Lattice, because storing modifiers of original obj is bugged"""
+            backup_obj = duplicate_object(context, obj, original_data, name=obj.name + "_backup", hide=True, collection=True)
 
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=True)
 
 
-        # Store Modifiers
-        if self.bake_type == 'ALL' and self.has_modifiers and original_type in main_types:
-            selected_modifiers = ",".join(self.modifiers)
-            stored_modifiers, obstructing_mods = self.store_modifiers(selected_modifiers, backup_obj.modifiers, obj.modifiers)
-
-
         unique_shape_keys_dict = {}
         unique_verts_dict = {}
         garbage_shape_keys = []
-
         for frame in range(self.frame_start, self.frame_end + 1):
             context.scene.frame_set(frame)
 
             # Detect Duplicate
             match = None
-            if self.instance_duplicates and original_type in main_types:
+            if self.instance_duplicates and original_type == 'MESH':
                 verts_co, sk_values, match = self.detect_duplicate(context, obj, original_data,
                                                                    unique_verts_dict, unique_shape_keys_dict)
 
             if match:
                 block_index = match.keymesh.get("Data", None)
             else:
-                new_block = None
-
                 # Apply Modifiers
                 if self.bake_type == 'ALL' and self.has_modifiers:
-                    if original_type in main_types + convert_types:
 
-                        # a. apply_everything
-                        all_selected = (obj.type == 'MESH') and (all(mod.name.upper() in selected_modifiers for mod in obj.modifiers))
-                        """NOTE: obj.type is specified because Lattice, which is in main_types, can't be converted to Mesh"""
-
-                        if all_selected or original_type in convert_types:
+                    """Main, fastest method of applying modifiers by creating new object from evaluated object."""
+                    if original_type == 'MESH' or original_type in convert_types:
+                        with self.disable_unselected_modifiers(obj, selected_modifiers):
                             new_block = convert_to_mesh(context, obj)
 
-                        # b. apply_selected_modifiers
-                        else:
-                            # 1. create_new_block
-                            new_block = original_data.copy()
-                            if self.has_shape_keys:
-                                garbage_shape_keys.append(new_block.shape_keys.name)
+                    """Since lattices can't be converted to Mesh, they need special handling and applying modifiers via `bpy.ops`."""
+                    if original_type == 'LATTICE':
+                        new_block = self.apply_selected_modifiers(obj, selected_modifiers,
+                                                                  backup_obj, garbage_shape_keys)
 
-                            # 2. apply_modifiers_and_shape_keys
-                            obj.data = new_block
+                    """Curves object type can't be converted to Mesh yet with `new_from_object`, so `bpy.ops` workaround is needed."""
+                    if original_type == 'CURVES':
+                        new_block = self.curves_to_mesh(context, obj, garbage_shape_keys)
 
-                            if self.has_shape_keys:
-                                bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-                            for mod in obj.modifiers:
-                                if (mod.name.upper() in selected_modifiers) and mod.show_viewport:
-                                    bpy.ops.object.modifier_apply(modifier=mod.name, report=False)
-                                else:
-                                    obj.modifiers.remove(mod)
-
-                            obj.data = original_data
-
-                            # 3. restore_modifiers
-                            for mod_name, mod_data in stored_modifiers.items():
-                                self.restore_modifier(obj, mod_name, mod_data)
-
-                        if self.instance_duplicates:
-                            unique_verts_dict[new_block] = verts_co
-
-
-                    # Convert to Mesh
-                    elif original_type == 'CURVES':
-                        """Legacy code is kept because hair curves don't support `bpy.data.meshes.new_from_object`"""
-
-                        # 1. create_temporary_object
-                        obj.select_set(False)
-                        temp_obj = obj.copy()
-                        temp_obj.data = obj.data.copy()
-                        context.collection.objects.link(temp_obj)
-                        context.view_layer.objects.active = temp_obj
-                        temp_obj.select_set(True)
-                        if self.has_shape_keys:
-                            garbage_shape_keys.append(temp_obj.data.shape_keys.name)
-
-                        # 2. convert_to_mesh
-                        bpy.ops.object.convert(target='MESH', keep_original=False)
-
-                        # 3. remove_temporary_data
-                        new_block = temp_obj.data
-
-                        bpy.data.objects.remove(temp_obj)
-                        context.view_layer.objects.active = obj
-                        obj.select_set(True)
+                    if self.instance_duplicates:
+                        unique_verts_dict[new_block] = verts_co
 
 
                 # Apply Shape Keys
-                elif (self.bake_type == 'SHAPE_KEYS') or (self.bake_type == 'ALL' and self.has_modifiers == False):
-                    if self.has_shape_keys:
-                        new_block = original_data.copy()
-                        if self.has_shape_keys:
-                            garbage_shape_keys.append(new_block.shape_keys.name)
+                elif self.has_shape_keys and ((self.bake_type == 'SHAPE_KEYS') or (self.bake_type == 'ALL' and self.has_modifiers == False)):
+                    new_block = original_data.copy()
+                    garbage_shape_keys.append(new_block.shape_keys.name)
 
-                        obj.data = new_block
-                        bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-                        obj.data = original_data
+                    obj.data = new_block
+                    bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+                    obj.data = original_data
 
-                        if self.instance_duplicates:
-                            unique_shape_keys_dict[sk_values] = new_block
+                    if self.instance_duplicates:
+                        unique_shape_keys_dict[sk_values] = new_block
+
+
+                # Apply Nothing
+                else:
+                    new_block = original_data.copy()
 
 
                 # assign_new_block_to_object
-                if not new_block:
-                    """NOTE: Safeguard for when nothing is being baked"""
-                    new_block = original_data.copy()
-
                 new_block.name = obj.name + "_frame_" + str(frame)
                 block_index = get_next_keymesh_index(obj)
                 insert_block(obj, new_block, block_index)
@@ -421,30 +429,21 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             insert_keyframe(obj, context.scene.frame_current, block_index)
 
 
-        if self.bake_type == 'ALL':
-            if self.has_modifiers:
-                # a. Handle Modifiers
-                if original_type in main_types:
-                    self.handle_modifiers(context, obj, selected_modifiers)
-                    for mod in itertools.chain(obj.modifiers, backup_obj.modifiers):
-                        if mod.name in obstructing_mods:
-                            mod.show_viewport = True
+        if self.bake_type == 'ALL' and self.has_modifiers:
+            # a. Handle Modifiers
+            if original_type in apply_types:
+                self.handle_modifiers(context, obj, selected_modifiers)
 
-                    if backup_obj.modifiers[0].name.upper() not in selected_modifiers:
-                        self.report({'WARNING'}, "Baked modifier was not first, result may not be as expected")
-
-                # b. Convert Non-Mesh Types to Mesh
-                else:
-                    backup_obj.data = original_data.copy()
-                    bpy.ops.object.convert(target='MESH', keep_original=False)
-                    original_data = obj.data
+            # b. Convert Non-Mesh Types to Mesh
+            else:
+                bpy.ops.object.convert(target='MESH', keep_original=False)
 
 
         # Append Original Mesh in Blocks
         """NOTE: This has to be done at the end because being in `keymesh.blocks` makes mesh users 2 and modifiers can't apply"""
         if self.keep_original:
-            if ((original_type in main_types) or
-                (original_type not in main_types and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
+            if ((original_type in apply_types) or
+                (original_type not in apply_types and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
                                                       self.bake_type == 'ALL' and self.has_modifiers == False))):
                 if original_data.name in obj.keymesh.blocks:
                     block_index = original_data.keymesh.get("Data", None)
@@ -455,21 +454,15 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
                 insert_keyframe(obj, self.frame_start - 1, block_index)
                 insert_keyframe(obj, self.frame_end + 1, block_index)
-
-
-        # Remove Back-up Object
-        if self.bake_type == 'ALL' and self.back_up == False:
-            obj_type = obj_data_type(backup_obj)
-            bpy.data.objects.remove(backup_obj)
-            if self.keep_original == False:
-                if original_data.name not in obj.keymesh.blocks:
-                    update_keymesh(context.scene, override=True)
-                    obj_type.remove(original_data)
+        else:
+            if original_data.name not in obj.keymesh.blocks:
+                obj_type = obj_data_type(obj)
+                update_keymesh(context.scene, override=True)
+                obj_type.remove(original_data)
 
 
         # clean_up_shape_keys
         self.clean_up_shape_keys(garbage_shape_keys)
-
 
         # Finish
         obj.keymesh.animated = True
@@ -502,9 +495,10 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
         # General
         layout.separator()
-        layout.prop(self, "back_up")
-        if ((obj.type in main_types) or
-            (obj.type not in main_types and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
+        if obj.type != 'LATTICE':
+            layout.prop(self, "back_up")
+        if ((obj.type in apply_types) or
+            (obj.type not in apply_types and (self.bake_type in ('SHAPE_KEYS', 'NOTHING') or
                                              self.bake_type == 'ALL' and self.has_modifiers == False))):
             layout.prop(self, "keep_original")
 
@@ -518,7 +512,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
             # all
             if self.bake_type == 'ALL':
                 if self.has_modifiers:
-                    if obj.type in main_types:
+                    if obj.type in apply_types:
                         panel.prop(self, "modifier_handling")
                         panel.prop(self, "modifiers", expand=True)
 
