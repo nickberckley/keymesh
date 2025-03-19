@@ -1,5 +1,5 @@
 import bpy, random, bmesh
-from .poll import is_keymesh_object, has_shared_action, obj_data_type
+from .poll import is_keymesh_object, has_shared_action_slot, has_index, obj_data_type
 from .timeline import get_keymesh_fcurve, remove_fcurve, delete_empty_action
 from .. import __package__ as base_package
 
@@ -98,6 +98,8 @@ def insert_block(obj, block, index, name=None):
 def remove_block(obj, block):
     """Removes given object data from objects Keymesh blocks registry"""
 
+    block_index = block.keymesh.get("Data")
+
     for index, mesh_ref in enumerate(obj.keymesh.blocks):
         if mesh_ref.block == block:
             obj.keymesh.blocks.remove(index)
@@ -106,10 +108,9 @@ def remove_block(obj, block):
     fcurve = get_keymesh_fcurve(obj)
     if fcurve:
         """If objects action slot has other users keyframes are not removed, as others might need it"""
-        """TODO: Check if other slot users have block with the same index. If they don't, it's safe to remove keyframes"""
-        if not has_shared_action(obj):
+        if not has_shared_action_slot(obj, check_index=True, index=block_index):
             for keyframe in reversed(fcurve.keyframe_points.values()):
-                if keyframe.co_ui[1] == block.keymesh.get("Data"):
+                if keyframe.co_ui[1] == block_index:
                     fcurve.keyframe_points.remove(keyframe)
 
             # remove_animated_properties_if_last_keyframe_was_removed
@@ -143,7 +144,7 @@ def remove_keymesh_properties(obj):
         # Remove Keymesh F-Curve
         fcurve = get_keymesh_fcurve(obj)
         if fcurve:
-            if not has_shared_action(obj):
+            if not has_shared_action_slot(obj):
                 remove_fcurve(obj, fcurve)
                 delete_empty_action(obj)
 

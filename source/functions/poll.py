@@ -58,13 +58,44 @@ def is_keymesh_object(obj):
         return False
 
 
-def has_shared_action(obj):
-    """Returns True if objects action has other users as well"""
+def has_shared_action_slot(obj, check_index=False, index=0):
+    """Returns True if objects action slot has other users as well."""
+    """Only other Keymesh objects are considered valid users."""
+    """Furthermore, if `check_index` is True, only Keymesh object that has block with given `index` is considered valid."""
 
-    if obj.animation_data.action.users > 1:
-        return True
-    else:
+    if not obj.animation_data:
         return False
+    if not obj.animation_data.action:
+        return False
+    if not obj.animation_data.action_slot:
+        return False
+
+    action_users = obj.animation_data.action_slot.users()
+    if len(action_users) < 1:
+        return False
+    else:
+        # check_how_many_of_slots_object_users_are_Keymesh_objects
+        keymesh_users = []
+        for user in action_users:
+            if is_keymesh_object(user):
+                keymesh_users.append(user)
+
+        if len(keymesh_users) > 1:
+            # check_if_other_Keymesh_users_have_block_with_given_index
+            if check_index:
+                for user in keymesh_users:
+                    if has_index(user, index):
+                        return True
+            else:
+                return True
+
+
+def has_index(obj, index):
+    """Checks if obj has data-block with given index."""
+
+    for block in obj.keymesh.blocks:
+        if block.block.keymesh.get("Data", None) == index:
+            return True
 
 
 def supported_types():

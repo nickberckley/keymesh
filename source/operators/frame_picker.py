@@ -1,6 +1,6 @@
 import bpy
 from ..functions.object import update_active_index
-from ..functions.poll import is_linked, is_keymesh_object, has_shared_action, obj_data_type, edit_modes
+from ..functions.poll import is_linked, is_keymesh_object, has_shared_action_slot, obj_data_type, edit_modes
 from ..functions.timeline import insert_keyframe
 
 
@@ -55,7 +55,7 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
         insert_keyframe(obj, scene.frame_current, block_keymesh_data)
 
         # refresh_timeline
-        if has_shared_action(obj):
+        if has_shared_action_slot(obj):
             """NOTE: This refresh happens when objects action slot is used by other Keymesh objects as well"""
             """NOTE: Even though property is animated, it's not updated on other objects until timeline is refreshed"""
             current_frame = context.scene.frame_current
