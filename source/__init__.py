@@ -6,6 +6,7 @@ if "bpy" in locals():
                 properties,
                 ui,
                 versioning,
+                translations,
                 ]:
         importlib.reload(mod)
     print("Add-on Reloaded: Keymesh")
@@ -18,6 +19,7 @@ else:
         properties,
         ui,
         versioning,
+        translations,
     )
 
 
@@ -54,9 +56,11 @@ def register():
     bpy.app.handlers.frame_change_post.append(functions.handler.update_keymesh)
     if bpy.app.version > (4, 3, 0):
         bpy.app.handlers.blend_import_post.append(functions.handler.append_keymesh)
+    bpy.app.translations.register(__name__, translations.translations_dict)
 
 
 def unregister():
+    bpy.app.translations.unregister(__name__)
     for module in reversed(modules):
         module.unregister()
 
