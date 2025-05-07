@@ -31,7 +31,7 @@ translations_tuple = (
     (("*", "Debugging Tools"),
      (("bpy.types.KeymeshAddonPreferences.debug",),
       ()),
-     ("fr_FR", "",
+     ("fr_FR", "Outils de débug",
       (False, ())),
      ),
     (("*", "Will expose internal properties and experimental tools in UI for debugging purposes"),
