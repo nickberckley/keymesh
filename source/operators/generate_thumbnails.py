@@ -1,4 +1,6 @@
-import bpy, os, mathutils
+import bpy
+import os
+import mathutils
 from contextlib import contextmanager
 
 from ..functions.poll import is_keymesh_object
@@ -42,7 +44,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
 
     @contextmanager
     def viewport_render_context(self, context, obj, area, directory):
-        """Temporarily set up correct viewport shading & overlay settings for OpenGL render"""
+        """Temporarily set up correct viewport shading & overlay settings for OpenGL render."""
 
         viewport = area.spaces.active
         no_camera = False
@@ -83,31 +85,33 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
             self.calibrate_viewport(area)
 
 
-        yield
+        try:
+            yield
 
-        # Restore Values
-        viewport.region_3d.view_matrix = mat
-        viewport.region_3d.view_location = loc
-        viewport.region_3d.view_rotation = rot
-        viewport.shading.type = initial_shading
-        viewport.overlay.show_overlays = initial_overlays
-        context.scene.render.film_transparent = initial_transparency
-        context.scene.render.resolution_x = initial_resolution_x
-        context.scene.render.resolution_y = initial_resolution_y
-        context.scene.render.image_settings.file_format = initial_file_format
-        context.scene.render.filepath = initial_filepath
-        obj.data = initial_block
+        finally:
+            # Restore Values
+            viewport.region_3d.view_matrix = mat
+            viewport.region_3d.view_location = loc
+            viewport.region_3d.view_rotation = rot
+            viewport.shading.type = initial_shading
+            viewport.overlay.show_overlays = initial_overlays
+            context.scene.render.film_transparent = initial_transparency
+            context.scene.render.resolution_x = initial_resolution_x
+            context.scene.render.resolution_y = initial_resolution_y
+            context.scene.render.image_settings.file_format = initial_file_format
+            context.scene.render.filepath = initial_filepath
+            obj.data = initial_block
 
-        if self.perspective == 'CAMERA':
-            if no_camera:
-                viewport.region_3d.view_perspective = 'PERSP'
-        if initial_mode == 'EDIT':
-            bpy.ops.object.mode_set(mode=initial_mode)
+            if self.perspective == 'CAMERA':
+                if no_camera:
+                    viewport.region_3d.view_perspective = 'PERSP'
+            if initial_mode == 'EDIT':
+                bpy.ops.object.mode_set(mode=initial_mode)
 
 
     def calibrate_viewport(self, area):
-        """Tries to better center objects in the frame so that they're not too tiny in the image"""
-        """It's useful because viewports that are in 'landscape' mode zoom out in gl_render to accomodate height pixels, and vice versa"""
+        """Tries to better center objects in the frame so that they're not too tiny in the image."""
+        """It's useful because viewports that are in 'landscape' mode zoom out in gl_render to accomodate height pixels, and vice versa."""
 
         region = next((region for region in area.regions if region.type == 'WINDOW'), None)
         if region:
@@ -153,7 +157,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
                 return {'CANCELLED'}
 
         # get_3d_viewport
-        areas = {a.type:a for a in bpy.context.screen.areas}
+        areas = {a.type:a for a in context.screen.areas}
         area = areas.get("VIEW_3D", None)
 
         # Render

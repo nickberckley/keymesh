@@ -12,7 +12,6 @@ from ..functions.poll import (
     is_candidate_object,
     is_linked,
     is_keymesh_object,
-    edit_modes,
 )
 
 
@@ -107,7 +106,7 @@ class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
                     cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                     return False
                 else:
-                    if context.mode in edit_modes():
+                    if context.active_object.mode == 'EDIT':
                         cls.poll_message_set("Can't extract Keymesh block in edit modes")
                         return False
                     else:
@@ -126,7 +125,7 @@ class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
         dup_obj = duplicate_object(context, obj, block, name=block.name)
         remove_keymesh_properties(dup_obj)
 
-        # remove_block_from_registry
+        # Remove Block from Registry
         remove_block(obj, block)
 
 

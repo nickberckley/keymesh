@@ -1,22 +1,22 @@
 import bpy
 from .. import __package__ as base_package
+
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, update_active_index
 from ..functions.timeline import insert_keyframe
-from ..functions.poll import is_candidate_object, is_linked, edit_modes
+from ..functions.poll import is_candidate_object, is_linked
 from ..functions.handler import update_keymesh
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def insert_keymesh_keyframe(self, context, obj):
-    prefs = bpy.context.preferences.addons[base_package].preferences
-
-    object_mode = context.mode
-    if prefs.enable_edit_mode and context.mode in edit_modes():
-        if object_mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
+    prefs = context.preferences.addons[base_package].preferences
 
     if obj:
+        object_mode = obj.mode
+        if prefs.enable_edit_mode and object_mode == 'EDIT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
         # Assign Keymesh ID
         assign_keymesh_id(obj, animate=False if self.static else True)
 
@@ -50,10 +50,8 @@ def insert_keymesh_keyframe(self, context, obj):
             insert_keyframe(obj, context.scene.frame_current, block_index)
             update_keymesh(context.scene, override=True)
 
-    if prefs.enable_edit_mode:
-        if object_mode in edit_modes():
-            object_mode = 'EDIT'
-        bpy.ops.object.mode_set(mode=object_mode)
+        if prefs.enable_edit_mode:
+            bpy.ops.object.mode_set(mode=object_mode)
 
 
 
@@ -83,14 +81,14 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        prefs = bpy.context.preferences.addons[base_package].preferences
+        prefs = context.preferences.addons[base_package].preferences
         if context.active_object:
             if is_linked(context, context.active_object):
                 cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                 return False
             else:
                 if is_candidate_object(context.active_object):
-                    if not prefs.enable_edit_mode and context.mode in edit_modes():
+                    if not prefs.enable_edit_mode and context.active_object.mode == 'EDIT':
                         cls.poll_message_set("Keymesh can't create frames in edit modes (can be enabled from preferences)")
                         return False
                     else:

@@ -1,12 +1,12 @@
 import bpy
 from .functions.poll import is_linked, is_keymesh_object
-from .functions.timeline import get_keymesh_fcurve, keymesh_block_usage_count
+from .functions.timeline import keymesh_block_usage_count
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def get_block_icon(obj, block):
-    """Returns correct icon for Keymesh block based on scene properties, object state, and blocks status"""
+    """Returns correct icon for Keymesh block based on scene properties, object state, and blocks status."""
 
     obj_keymesh_data = obj.keymesh.get("Keymesh Data")
     block_keymesh_data = block.block.keymesh.get("Data")
@@ -17,7 +17,7 @@ def get_block_icon(obj, block):
             select_icon = 'RADIOBUT_ON'
         else:
             select_icon = 'RADIOBUT_OFF'
-    
+
     # Handler Enabled
     else:
         if block_keymesh_data == obj_keymesh_data:
@@ -163,7 +163,7 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.active_object
-        prefs = bpy.context.preferences.addons[__package__].preferences
+        prefs = context.preferences.addons[__package__].preferences
 
         layout = self.layout
         layout.use_property_split = True

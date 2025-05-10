@@ -1,13 +1,14 @@
-import bpy, random, bmesh
+import bpy
+import random
+
 from .poll import is_keymesh_object, has_shared_action_slot, has_index, obj_data_type
 from .timeline import get_keymesh_fcurve, remove_fcurve, delete_empty_action
-from .. import __package__ as base_package
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def new_object_id():
-    """Returns random unused number between 1-1000 to be used as Keymesh ID"""
+    """Returns random unused number between 1-1000 to be used as Keymesh ID."""
 
     id = random.randint(1, 1000)
     used_ids = {o.keymesh.get("ID") for o in bpy.data.objects if o.keymesh.get("ID") is not None}
@@ -17,23 +18,8 @@ def new_object_id():
     return id
 
 
-def is_unique_id(obj, id):
-    """Checks if any of the objects in the .blend file have same Keymesh ID as obj"""
-    """Used in link/append handlers to make sure objects don't have same ID"""
-
-    for ob in bpy.data.objects:
-        if ob == obj:
-            continue
-        if not ob.keymesh.active:
-            continue
-        if ob.keymesh.get("ID", None) == id:
-            return False
-
-    return True
-
-
 def get_next_keymesh_index(obj):
-    """Get the appropriate index for the newly created/added Keymesh block"""
+    """Get the appropriate index for the newly created/added Keymesh block."""
 
     if obj.keymesh.get("Keymesh Data") == None or obj.keymesh.get("Keymesh Data") == -1:
         return 0
@@ -51,22 +37,20 @@ def get_next_keymesh_index(obj):
 
 
 def list_block_users(block):
-    """Returns list of objects that are using given Keymesh block"""
-    """NOTE: This look-up is not ideal, but it's needed for now because when Keymesh object is duplicated same block is used twice"""
-    """NOTE: When/if duplicate handlers are added in Blender and we can guarantee one owner per block this can be refactored."""
+    """Returns list of objects that are using given Keymesh block."""
 
     users = []
-    for obj in bpy.data.objects:
-        if is_keymesh_object(obj):
-            if block.keymesh.get("ID") == obj.keymesh.get("ID"):
-                users.append(obj)
+    for key, values in bpy.data.user_map(subset=[block]).items():
+        for value in values:
+            if value.id_type == 'OBJECT':
+                users.append(value)
 
     return users
 
 
 def assign_keymesh_id(obj, animate=False):
-    """Assigns properties to obj that are required to make it Keymesh object"""
-    """If obj is already Keymesh object nothing happens"""
+    """Assigns properties to obj that are required to make it Keymesh object."""
+    """If obj is already Keymesh object nothing happens."""
 
     if obj.keymesh.active == False:
         obj.keymesh.active = True
@@ -80,7 +64,7 @@ def assign_keymesh_id(obj, animate=False):
 
 
 def insert_block(obj, block, index, name=None):
-    """Inserts given object data in Keymesh blocks list for given object"""
+    """Inserts given object data (block) in Keymesh blocks registry for given object."""
 
     if name == None:
         name = block.name
@@ -96,7 +80,7 @@ def insert_block(obj, block, index, name=None):
 
 
 def remove_block(obj, block):
-    """Removes given object data from objects Keymesh blocks registry"""
+    """Removes given object data from objects Keymesh blocks registry."""
 
     block_index = block.keymesh.get("Data")
 
@@ -107,7 +91,7 @@ def remove_block(obj, block):
     # Remove Keyframes
     fcurve = get_keymesh_fcurve(obj)
     if fcurve:
-        """If objects action slot has other users keyframes are not removed, as others might need it"""
+        """If objects action slot has other users keyframes are not removed, as others might need it."""
         if not has_shared_action_slot(obj, check_index=True, index=block_index):
             for keyframe in reversed(fcurve.keyframe_points.values()):
                 if keyframe.co_ui[1] == block_index:
@@ -126,7 +110,7 @@ def remove_block(obj, block):
 
 
 def remove_keymesh_properties(obj):
-    """Removes all Keymesh properties from obj, making it regular object"""
+    """Removes all Keymesh properties from obj, making it regular object."""
 
     if is_keymesh_object(obj):
         obj.keymesh.active = False
@@ -150,7 +134,7 @@ def remove_keymesh_properties(obj):
 
 
 def update_active_index(obj, index=None):
-    """Updates active block in Frame Picker & grid view UI"""
+    """Updates active block in Frame Picker & grid view UI."""
 
     if index == None:
         index = obj.keymesh.blocks.find(obj.data.name)
@@ -161,7 +145,7 @@ def update_active_index(obj, index=None):
 
 
 def update_active_block_by_index(obj):
-    """Get Keymesh block with UI index and assign it to active object"""
+    """Get Keymesh block with UI index and assign it to active object."""
 
     index = int(obj.keymesh.blocks_active_index)
     block = obj.keymesh.blocks[index].block
@@ -186,7 +170,7 @@ def update_active_block_by_index(obj):
 
 
 def convert_to_mesh(context, obj):
-    """Low-level alternative to `bpy.ops.object.convert` for converting object to mesh"""
+    """Low-level alternative to `bpy.ops.object.convert` for converting object to mesh."""
 
     depsgraph = context.evaluated_depsgraph_get()
     eval_obj = obj.evaluated_get(depsgraph)
@@ -196,7 +180,7 @@ def convert_to_mesh(context, obj):
 
 
 def duplicate_object(context, obj, block, name=None, hide=False, collection=False):
-    """Creates duplicate of obj and assigns object data (block)"""
+    """Creates duplicate of obj and assigns object data (block)."""
 
     if name == None:
         name = obj.name
@@ -231,7 +215,7 @@ def duplicate_object(context, obj, block, name=None, hide=False, collection=Fals
 
 
 def store_modifiers(obj, store_nodes=False):
-    """Stores modifiers in dict with all its properties and custom keys"""
+    """Stores modifiers in dict with all its properties and custom keys."""
 
     stored_modifiers = {}
     for mod in obj.modifiers:

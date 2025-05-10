@@ -4,14 +4,14 @@ import bpy
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def is_candidate_object(obj):
-    """Checks if obj.type is supported by Keymesh"""
+    """Checks if obj.type is supported by Keymesh."""
 
     if obj:
         return obj.type in [obj_type for obj_type, _ in supported_types()]
 
 
 def is_linked(context, obj):
-    """Checks whether or not obj is linked from another file and/or library overriden"""
+    """Checks whether or not obj is linked from another file and/or library overriden."""
 
     if obj:
         if obj not in context.editable_objects:
@@ -27,7 +27,7 @@ def is_linked(context, obj):
 
 
 def is_instanced(data):
-    """Checks if data-block is used by more than one object, i.e. is instanced"""
+    """Checks if data-block is used by more than one object, i.e. is instanced."""
 
     if data.users == 1:
         return False
@@ -44,7 +44,7 @@ def is_instanced(data):
 
 
 def is_keymesh_object(obj):
-    """Checks whether or not obj has Keymesh animation or blocks"""
+    """Checks whether or not obj has Keymesh animation or blocks."""
 
     if obj.keymesh.active == True:
         if obj.keymesh.get("ID", None):
@@ -94,6 +94,21 @@ def has_index(obj, index):
     for block in obj.keymesh.blocks:
         if block.block.keymesh.get("Data", None) == index:
             return True
+
+
+def is_unique_id(obj, id):
+    """Checks if any of the objects in the .blend file have same Keymesh ID as obj."""
+    """Used in link/append handlers to make sure objects don't have same ID."""
+
+    for ob in bpy.data.objects:
+        if ob == obj:
+            continue
+        if not ob.keymesh.active:
+            continue
+        if ob.keymesh.get("ID", None) == id:
+            return False
+
+    return True
 
 
 def supported_types():

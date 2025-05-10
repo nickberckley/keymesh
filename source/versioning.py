@@ -73,7 +73,7 @@ def populate_keymesh_blocks(scene):
                             del block["km_id"]
                         if block.get("Keymesh ID", None):
                             del block["Keymesh ID"]
-                        
+
                         if block.get("km_datablock", None):
                             del block["km_datablock"]
                         if block.get("Keymesh Data", None):
@@ -93,7 +93,7 @@ def populate_keymesh_blocks(scene):
                                 frame = int(keyframe.co[0])
                                 value = keyframe.co[1]
 
-                                insert_keyframe(obj, frame, value)
+                                insert_keyframe(obj, frame, block_index=value)
 
                     # transfer_keyframe_values
                     for fcurve in anim_data.action.fcurves:

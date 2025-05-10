@@ -4,7 +4,7 @@ import bpy
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def get_keymesh_fcurve(obj):
-    """Returns f-curve for Keymesh data property of obj"""
+    """Returns f-curve for Keymesh data property of obj."""
 
     fcurve = None
     if obj.animation_data is not None:
@@ -30,7 +30,7 @@ def get_keymesh_fcurve(obj):
 
 
 def get_keymesh_keyframes(obj):
-    """Get all Keymesh keyframes associated with the obj"""
+    """Get all Keymesh keyframes associated with the obj."""
 
     keyframes = []
     fcurve = get_keymesh_fcurve(obj)
@@ -45,12 +45,12 @@ def get_keymesh_keyframes(obj):
     return keyframes
 
 
-def insert_keyframe(obj, frame, block=None):
-    """Inserts keyframe on current frame for given block data"""
+def insert_keyframe(obj, frame, block_index=None):
+    """Inserts keyframe on current frame for given block data."""
 
     # assign_value
-    if block is not None:
-        obj.keymesh["Keymesh Data"] = int(block)
+    if block_index is not None:
+        obj.keymesh["Keymesh Data"] = int(block_index)
 
     # set_animated_property
     if obj.keymesh.animated == False:
@@ -68,7 +68,7 @@ def insert_keyframe(obj, frame, block=None):
 
 
 def keymesh_block_usage_count(obj, block):
-    """Returns number of uses (keyframes) for each Keymesh block of obj"""
+    """Returns number of uses (keyframes) for each Keymesh block of obj."""
 
     fcurve = get_keymesh_fcurve(obj)
     value = block.keymesh["Data"]
@@ -85,7 +85,7 @@ def keymesh_block_usage_count(obj, block):
 
 
 def get_next_keymesh_block(context, obj, direction):
-    """Returns next and previous Keymesh block in timeline"""
+    """Returns next and previous Keymesh block in timeline."""
 
     obj_id = obj.keymesh.get("ID", None)
     next_keyframe = None
@@ -119,7 +119,7 @@ def get_next_keymesh_block(context, obj, direction):
 
 
 def remove_fcurve(obj, fcurve):
-    """Removes given f-curve from objects action (and active action slot)"""
+    """Removes given f-curve from objects action (and active action slot)."""
 
     if obj.animation_data and obj.animation_data.action:
         action = obj.animation_data.action
@@ -133,7 +133,7 @@ def remove_fcurve(obj, fcurve):
 
 
 def delete_empty_action(obj):
-    """Removes action from object and purges it if it has no f-curves remaining"""
+    """Removes action from object and purges it if it has no f-curves remaining."""
 
     if obj.animation_data:
         if obj.animation_data.action:

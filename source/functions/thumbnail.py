@@ -1,4 +1,5 @@
-import bpy, os
+import bpy
+import os
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -15,7 +16,7 @@ def _make_enum_item(id, name, descr, preview_id, uid):
 
 
 def resolve_path(path):
-    """Returns relative or absolute path based on if it's on the same drive as .blend file or not"""
+    """Returns relative or absolute path based on if it's on the same drive as .blend file or not."""
 
     blend_drive = os.path.splitdrive(bpy.data.filepath)[0]
     path_drive = os.path.splitdrive(path)[0]
@@ -30,8 +31,8 @@ def resolve_path(path):
 
 preview_collections = {}
 def keymesh_blocks_enum_items(self, context):
-    """Generate EnumProperty from `keymesh.blocks` CollectionProperty"""
-    """Loads thumbnail image for each block from `block.thumbnail` StringProperty (filepath)"""
+    """Generate EnumProperty from `keymesh.blocks` CollectionProperty."""
+    """Loads thumbnail image for each block from `block.thumbnail` StringProperty (filepath)."""
 
     pcoll = preview_collections["main"]
     enum_items = []
@@ -59,7 +60,7 @@ def keymesh_blocks_enum_items(self, context):
 
 
 def get_missing_thumbnails(obj):
-    """Returns list of Keymesh blocks that either don't have thumbnail property, or can't be found"""
+    """Returns list of Keymesh blocks that either don't have thumbnail property, or can't be found."""
 
     missing_thumbnails = []
     for block in obj.keymesh.blocks:

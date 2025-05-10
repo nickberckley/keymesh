@@ -5,7 +5,7 @@ from . import ui
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def update_sidebar_category(self, context):
-    """Change sidebar category of add-ons panels"""
+    """Change sidebar category of add-ons panels."""
 
     panel_classes = [
         ui.VIEW3D_PT_keymesh,
@@ -24,7 +24,7 @@ def update_sidebar_category(self, context):
 
 # Keymaps
 def get_hotkey_entry_item(km, kmi_name, kmi_prop=None, kmi_value=None):
-    """Returns keymap with given operator name and `path` property value"""
+    """Returns keymap with given operator name and `path` property value."""
 
     for i, km_item in enumerate(km.keymap_items):
         if km.keymap_items.keys()[i] == kmi_name:
@@ -134,8 +134,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     # defaults
     frame_skip_count: bpy.props.IntProperty(
         name = "Default Frame Skip Count",
-        description = ("Skip this many frames forwards or backwards when inserting keyframe.\n"
-                       "(by default, can be changed in Keymesh panel in sidebar)"),
+        description = ("Skip this many frames forwards or backwards when inserting keyframe"),
         default = 2,
         min = 1, max = 100,
         soft_min = 1, soft_max = 10,
@@ -143,14 +142,15 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     )
     keyframe_after_skip: bpy.props.BoolProperty(
         name = "Insert Keyframe after Skip",
-        description = "When enabled, skipping frames forward or backwards from UI will also keyframe the object data",
+        description = ("Jumping forward or backwards in timeline will also keyframe the object data.\n"
+                       "WARNING: Jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
         default = True,
     )
 
     naming_method: bpy.props.EnumProperty(
         name = "Name Keymesh Blocks After...",
         description = ("When creating new Keymesh blocks you can name them after index\n"
-                       "(i.e. order they're created in), or after frame they were created on"),
+                       "(i.e. order they're created in), or after the frame they were created on"),
         items = [('INDEX', 'Index', ''),
                 ('FRAME', 'Frame', ''),],
         default = 'FRAME',
@@ -222,7 +222,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         layout.separator()
         box = layout.box()
         box.label(text="Hotkeys:")
-        kc = bpy.context.window_manager.keyconfigs.user
+        kc = context.window_manager.keyconfigs.user
 
         # insert_shortcuts
         kmi = []

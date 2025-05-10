@@ -1,7 +1,6 @@
 import bpy
-from ..functions.object import list_block_users, remove_block, update_active_index
-from ..functions.handler import update_keymesh
-from ..functions.poll import is_linked, is_keymesh_object, obj_data_type, edit_modes
+from ..functions.object import remove_block, update_active_index
+from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
 from ..functions.timeline import get_keymesh_fcurve
 
 
@@ -32,7 +31,7 @@ class OBJECT_OT_keymesh_purge(bpy.types.Operator):
                 return False
         else:
             return False
-        
+
     def invoke(self, context, event):
         self.all = event.shift
 
@@ -49,8 +48,8 @@ class OBJECT_OT_keymesh_purge(bpy.types.Operator):
         if self.all:
             for obj in bpy.data.objects:
                 if obj.keymesh.animated is False:
-                    """NOTE: Static objects are excluded because their blocks always have 0 keyframes, which is expected"""
-                    """NOTE: removing those blocks would remove the object altogether which is pointless"""
+                    """NOTE: Static objects are excluded because their blocks always have 0 keyframes, which is expected."""
+                    """Removing those blocks would remove the object altogether which is pointless."""
                     continue
                 if is_linked(context, obj):
                     continue
@@ -123,7 +122,7 @@ class OBJECT_OT_keymesh_block_remove(bpy.types.Operator):
                     cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
                     return False
                 else:
-                    if context.mode in edit_modes():
+                    if context.active_object.mode == 'EDIT':
                         cls.poll_message_set("Can't remove Keymesh block in edit modes")
                         return False
                     else:
@@ -138,7 +137,7 @@ class OBJECT_OT_keymesh_block_remove(bpy.types.Operator):
         data_type = obj_data_type(obj)
 
         if len(obj.keymesh.blocks) <= 1:
-            """Completely remove object if last block is being removed"""
+            """Completely remove object if last block is being removed."""
             block = obj.data
             remove_block(obj, block)
             context.view_layer.active_layer_collection.collection.objects.unlink(obj)

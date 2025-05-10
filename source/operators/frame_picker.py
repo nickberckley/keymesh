@@ -1,6 +1,6 @@
 import bpy
 from ..functions.object import update_active_index
-from ..functions.poll import is_linked, is_keymesh_object, has_shared_action_slot, obj_data_type, edit_modes
+from ..functions.poll import is_linked, is_keymesh_object, has_shared_action_slot, obj_data_type
 from ..functions.timeline import insert_keyframe
 
 
@@ -21,7 +21,7 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
             obj = context.active_object
             if is_keymesh_object(obj):
                 if obj in context.editable_objects:
-                    if context.mode in edit_modes():
+                    if obj.mode == 'EDIT':
                         cls.poll_message_set("Can't insert Keymesh frames in edit modes")
                         return False
                     else:
@@ -51,13 +51,13 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
         update_active_index(obj)
 
         # Keyframe Block
-        block_keymesh_data = obj.data.keymesh.get("Data")
-        insert_keyframe(obj, scene.frame_current, block_keymesh_data)
+        block_index = obj.data.keymesh.get("Data")
+        insert_keyframe(obj, scene.frame_current, block_index)
 
         # refresh_timeline
         if has_shared_action_slot(obj):
-            """NOTE: This refresh happens when objects action slot is used by other Keymesh objects as well"""
-            """NOTE: Even though property is animated, it's not updated on other objects until timeline is refreshed"""
+            """NOTE: This refresh happens when objects action slot is used by other Keymesh objects as well."""
+            """NOTE: Even though property is animated, it's not updated on other objects until timeline is refreshed."""
             current_frame = context.scene.frame_current
             context.scene.frame_set(current_frame + 1)
             context.scene.frame_set(current_frame)
@@ -118,7 +118,7 @@ class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
     direction: bpy.props.EnumProperty(
         name = "Direction",
         items = [('NEXT', "Next", "Change to next Keymesh block in the grid"),
-                ('PREVIOUS', "Previous", "Change to previous Keymesh block in the grid"),],
+                 ('PREVIOUS', "Previous", "Change to previous Keymesh block in the grid"),],
         default = 'NEXT'
     )
 

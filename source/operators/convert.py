@@ -87,7 +87,7 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
 
 
     def count_duplicate_usage(self, obj, frames, holds):
-        """Returns list of frames on which block was used, including durations of holds"""
+        """Returns list of frames on which block was used, including durations of holds."""
 
         # check_if_keyframe_frame_also_in_holds
         # if_true,_output_hold_duration_instead_of_that_frame
@@ -105,7 +105,7 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
                     break
             if not found_in_hold:
                 final_frames.append([frame])
-        
+
         # formatting_(show_min_and_max_frames_only)
         output_frames = []
         for frames in final_frames:

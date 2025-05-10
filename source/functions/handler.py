@@ -1,8 +1,10 @@
-import bpy, os
+import bpy
+import os
 from .. import __package__ as base_package
-from .poll import is_keymesh_object, supported_types
+
+from .poll import is_keymesh_object, is_unique_id, supported_types
 from .timeline import get_keymesh_fcurve
-from .object import new_object_id, is_unique_id
+from .object import new_object_id
 from .thumbnail import resolve_path
 
 
@@ -108,8 +110,8 @@ def append_keymesh(lapp_context):
                         block.name = data.name
 
                     # Make Thumbnails Relative
-                    """NOTE: Since thumbnails (StringProperty) are set to relative in library files, they're incorrect when imported"""
-                    """NOTE: this code gets absolute path for them and generates new path relative to receiving file"""
+                    """NOTE: Since thumbnails (StringProperty) are set to relative in library files, they're incorrect when imported."""
+                    """NOTE: this code gets absolute path for them and generates new path relative to receiving file."""
                     if block.thumbnail != "":
                         library_path = os.path.dirname(library.filepath)
                         thumbnail_path = block.thumbnail.lstrip("/\\")
@@ -132,7 +134,7 @@ def append_keymesh(lapp_context):
 
     # update_frame_handler
     if has_keymesh:
-        """NOTE: `update_keymesh()` is not working because `obj.keymesh.get("Keymesh Data")` is set to the frame of the original file"""
+        """NOTE: `update_keymesh()` is not working because `obj.keymesh.get("Keymesh Data")` is set to the frame of the original file."""
         current_frame = bpy.context.scene.frame_current
         bpy.context.scene.frame_set(current_frame + 1)
         bpy.context.scene.frame_set(current_frame)

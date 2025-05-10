@@ -9,8 +9,8 @@ def update_block_name(self, context):
     if self.block:
         self.block.name = self.name
 
-        """NOTE: When using name that is already used block is assigned different string from self.name (.001 added)"""
-        """NOTE: this part checks if updated block.name isn't what was inputted, and if it isn't changed self.name as well"""
+        """NOTE: When using name that is already used block is assigned different string from self.name (.001 added)."""
+        """This part checks if updated block.name isn't what was inputted, and if it isn't changed self.name as well."""
         if self.block.name != self.name:
             self.name = self.block.name
 
@@ -37,7 +37,7 @@ def keymesh_blocks_list_update(self, context):
 
 
 def thumbnails_render_offer(self, context):
-    """Detects when there are Keymesh blocks with no/missing thumbnails and calls for pop-up that offers to render it"""
+    """Detects when there are Keymesh blocks with no/missing thumbnails and calls for pop-up that offers to render it."""
 
     obj = self.id_data
     if obj.is_editable:
@@ -107,10 +107,10 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
         default = -1,
     )
 
-    # ui
+    # UI
     grid_view: bpy.props.BoolProperty(
         name = "Frame Picker Grid View",
-        description = "Display Keymesh blocks as grid represented by thumbnails",
+        description = "Display Keymesh blocks in grid, represented by thumbnails",
         options = {'HIDDEN', 'LIBRARY_EDITABLE'},
         override = {"LIBRARY_OVERRIDABLE"},
         update = thumbnails_render_offer,
@@ -135,7 +135,7 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
 
     enable_handler: bpy.props.BoolProperty(
         name = "Enable Keymesh Animation",
-        description = "When disabled Keymesh objects will not get updated during playback, scrubbing, or rendering",
+        description = "When disabled, Keymesh objects will not get updated during playback, scrubbing, or rendering",
         default = True,
     )
 
@@ -151,8 +151,8 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     )
     keyframe_after_skip: bpy.props.BoolProperty(
         name = "Insert Keyframe",
-        description = ("When enabled, skipping frames forward or backwards from UI will also keyframe the object data\n"
-                    "WARNING: jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
+        description = ("Jumping forward or backwards in timeline will also keyframe the object data.\n"
+                       "WARNING: Jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
         options = {'HIDDEN'},
         default = True,
     )
