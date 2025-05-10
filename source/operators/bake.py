@@ -53,6 +53,12 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         name = "End Frame",
         default = 250, min = 1,
     )
+    frame_step: bpy.props.IntProperty(
+        name = "Frame Step",
+        description = "Number of frames to skip between Keymesh blocks",
+        min = 1, soft_max=100,
+        default = 1,
+    )
 
     # Bake Data
     bake_type: bpy.props.EnumProperty(
@@ -233,7 +239,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         """NOTE: Storing same data on every frame isn't optimal, but for the Lattice impact is negligable, and worth the clean code."""
         stored_modifiers = store_modifiers(backup_obj, store_nodes=False)
         original_data = obj.data
- 
+
         # 2. Create New Block
         new_block = obj.data.copy()
         if self.has_shape_keys:
@@ -368,7 +374,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         unique_shape_keys_dict = {}
         unique_verts_dict = {}
         garbage_shape_keys = []
-        for frame in range(self.frame_start, self.frame_end + 1):
+        for frame in range(self.frame_start, self.frame_end + 1, self.frame_step):
             context.scene.frame_set(frame)
 
             # Detect Duplicate
@@ -487,14 +493,15 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
         # Frame Range
         layout.prop(self, "follow_scene_range")
         col = layout.column(align=True)
-        row = col.row()
-        row.prop(self, "frame_start", text="Frame Range")
-        row.prop(self, "frame_end", text="")
+        col.prop(self, "frame_start", text="Frame Start")
+        col.prop(self, "frame_end", text="End")
         if self.follow_scene_range:
             col.enabled = False
+        col = layout.column(align=True)
+        col.prop(self, "frame_step", text="Step")
+        col.separator()
 
         # General
-        layout.separator()
         if obj.type != 'LATTICE':
             layout.prop(self, "back_up")
         if ((obj.type in apply_types) or
