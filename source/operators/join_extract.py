@@ -11,7 +11,6 @@ from ..functions.object import (
 from ..functions.poll import (
     is_candidate_object,
     is_linked,
-    is_instanced,
     is_keymesh_object,
     edit_modes,
 )
@@ -64,9 +63,6 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
                 continue
             if is_linked(context, source):
                 self.report({'INFO'}, f"{source.name} can not be joined because it's linked.")
-                continue
-            if is_instanced(source.data):
-                self.report({'INFO'}, f"{source.name} has instanced object data and can't be joined.")
                 continue
 
             sources.append(source)

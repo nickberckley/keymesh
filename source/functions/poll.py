@@ -27,22 +27,20 @@ def is_linked(context, obj):
 
 
 def is_instanced(data):
-    """Checks whether or not given object data (i.e. mesh) is instanced (used by more than one object)"""
+    """Checks if data-block is used by more than one object, i.e. is instanced"""
 
     if data.users == 1:
         return False
     else:
-        object_users = []
-        for obj in bpy.data.objects:
-            if obj.data == data:
-                object_users.append(obj)
-                if len(object_users) >= 2:
-                    break
+        users = 0
+        for key, values in bpy.data.user_map(subset=[data]).items():
+            for value in values:
+                if value.id_type == 'OBJECT':
+                    users += 1
+                    if users > 1:
+                        return True
 
-        if len(object_users) > 1:
-            return True
-        else:
-            return False
+        return False
 
 
 def is_keymesh_object(obj):
