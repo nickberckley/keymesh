@@ -52,6 +52,10 @@ def insert_keyframe(obj, frame, block=None):
     if block is not None:
         obj.keymesh["Keymesh Data"] = int(block)
 
+    # set_animated_property
+    if obj.keymesh.animated == False:
+        obj.keymesh.animated = True
+
     # insert_keyframe
     obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
                         frame=frame)
