@@ -1,0 +1,884 @@
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+msgid ""
+msgstr ""
+"Project-Id-Version: Keymesh 2.3.0 (0)\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-05-07 21:07+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: __POT__\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit"
+
+#. :src: bpy.types.KeymeshAddonPreferences.category
+msgid "Sidebar Category"
+msgstr "Catégorie de la barre latérale"
+
+#. :src: bpy.types.KeymeshAddonPreferences.category
+msgid "Choose a name for the category of the Keymesh panel in the sidebar"
+msgstr "Choisir un nom pour la catégorie du panneau Keymesh dans la barre latérale"
+
+#. :src: bpy.types.KeymeshAddonPreferences.debug
+msgid "Debugging Tools"
+msgstr "Outils de débug"
+
+#. :src: bpy.types.KeymeshAddonPreferences.debug
+msgid "Will expose internal properties and experimental tools in UI for debugging purposes"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.enable_edit_mode
+msgid "Allow Inserting Keyframes in Edit Modes"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.enable_edit_mode
+msgid ""
+"Warning: Because of how Blender evaluates data in edit modes, this might cause some data to be lost.\n"
+"You will not see Keymesh animation update in edit mode no matter if this is on or off"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.enable_shape_keys
+msgid "Allow Shape Keys Support"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.enable_shape_keys
+msgid ""
+"If disabled, Keymesh will delete shape keys on object. Enable if you want to mix shape keys and Keymesh animation.\n"
+"But because shape keys are separate data-block, some issues and difficulties are expected.\n"
+"You may experience glitching when scrubbing the timeline. Read more in documentation"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.frame_skip_count
+msgid "Default Frame Skip Count"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.frame_skip_count
+msgid ""
+"Skip this many frames forwards or backwards when inserting keyframe.\n"
+"(by default, can be changed in Keymesh panel in sidebar)"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.keyframe_after_skip
+msgid "Insert Keyframe after Skip"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.keyframe_after_skip
+msgid "When enabled, skipping frames forward or backwards from UI will also keyframe the object data"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.naming_method
+msgid "Name Keymesh Blocks After..."
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.naming_method
+msgid ""
+"When creating new Keymesh blocks you can name them after index\n"
+"(i.e. order they're created in), or after frame they were created on"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.persistent_settings
+msgid "Persistent Sculpt Mode Settings"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.persistent_settings
+msgid ""
+"By default remesh and symmetry properties are saved separate for each Keymesh block.\n"
+"Enabling this will ensure settings are stored on object-level, and remain when changing frames.\n"
+"NOTE: This might have slight performance impact"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.versioning
+msgid "Versioning"
+msgstr ""
+
+#. :src: bpy.types.KeymeshAddonPreferences.versioning
+msgid ""
+"Because of changes to Keymesh data, it is required to do versioning when old Keymesh files are opened.\n"
+"When you overwrite those files, versioning isn't needed anymore. Updates should be robust and painless,\n"
+"but if you don't have files made with old Keymesh version, or you've overwritten all of them, disable this"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh
+msgctxt "Operator"
+msgid "Bake to Keymesh"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data
+msgctxt "Operator"
+msgid "Insert Keymesh Block"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_active_set
+msgctxt "Operator"
+msgid "Change Active Keymesh Block"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_extract
+msgctxt "Operator"
+msgid "Extract Keymesh Block"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_keyframe
+msgctxt "Operator"
+msgid "Pick Keymesh Frame"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_move
+msgctxt "Operator"
+msgid "Move Keymesh Block"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_remove
+msgctxt "Operator"
+msgid "Remove Keymesh Keyframe"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert
+msgctxt "Operator"
+msgid "Convert Keymesh Animation into Separate Objects"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_join
+msgctxt "Operator"
+msgid "Join as Keymesh Blocks"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_purge
+msgctxt "Operator"
+msgid "Purge Unused Keymesh Blocks"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate
+msgctxt "Operator"
+msgid "Render Keymesh Thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_offer
+msgctxt "Operator"
+msgid "Generate Thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_refresh
+msgctxt "Operator"
+msgid "Refresh Keymesh Thumbnails"
+msgstr ""
+
+#. :src: bpy.types.SCENE_OT_keymesh_handler_initialize
+msgctxt "Operator"
+msgid "Initialize Keymesh Frame Handler"
+msgstr ""
+
+#. :src: bpy.types.TIMELINE_OT_keymesh_frame_jump
+msgctxt "Operator"
+msgid "Jump to Next Keymesh Keyframe"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh
+msgid ""
+"Bakes down objects animation (action, armature, shape key) into Keymesh blocks.\n"
+"Keymesh block will be created for each frame of the given range with animation applied"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.back_up
+msgid "Create Back-up"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.back_up
+msgid "Operator will duplicate the active object and bake animation into it, keeping current object safe"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.bake_type
+msgid "Data to Bake"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.bake_type
+msgid "What animation & deformation data to bake down to Keymesh block"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.bake_type:'ALL'
+msgid "Modifiers & Shape Keys"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.bake_type:'ALL'
+msgid ""
+"Bake modifiers and shape key animations to Keymesh blocks.\n"
+"Selected modifiers and shape keys will be applied to every Keymesh block on the frame they're created.\n"
+"(i.e. modifiers and shape key deformations will be baked down to each block)"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.bake_type:'SHAPE_KEYS'
+msgid ""
+"Bake shape key animation to Keymesh blocks.\n"
+"Shape keys will be applied to every Keymesh block on the frame it's created"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.bake_type:'NOTHING'
+msgid "No data will be baked. Operator will create 'empty' Keymesh blocks"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.follow_scene_range
+msgid "Use scene frame range start and end"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.instance_duplicates
+msgid "Instance Duplicates"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.instance_duplicates
+msgid ""
+"Operator will detect if some blocks are exactly the same (same shape key values, same keyframes, etc).\n"
+"If they are, it will reuse same Keymesh block on those frames, instead of creating new one for each.\n"
+"WARNING: For complex objects this is expensive calculation and might make operator slower"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.keep_original
+msgid "Keep Original Object Data"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.keep_original
+msgid ""
+"Keep current object data as Keymesh block without baking animation into it.\n"
+"This keeps overall animation working if only middle part of it is baked to Keymesh"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.modifier_handling
+msgid "Handle Modifiers"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.modifier_handling
+msgid "What to do with modifiers after they're baked into Keymesh blocks"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.modifier_handling:'DELETE'
+msgid "Modifiers will be completely removed from the object."
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.modifier_handling:'ANIMATE'
+msgid "Animate Visibility"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.modifier_handling:'ANIMATE'
+msgid ""
+"Viewport and render visibility of modifiers will be animated.\n"
+"Modifiers will be disabled on given frame start, and re-enabled after frame end.\n"
+"This way object can retain existing animation before and after baked Keymesh blocks"
+msgstr ""
+
+#. :src: bpy.types.ANIM_OT_bake_to_keymesh.modifiers
+msgid "Choose modifiers that are going to be baked"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data
+msgid ""
+"Adds a new Keymesh block on active object and keyframes it.\n"
+"Object data (which is copy of previous block) gets tied to the frame.\n"
+"Shift-click will create new block without keyframing it"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data.path:'STILL'
+msgid "Insert keyframe on current frame"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data.path:'FORWARD'
+msgid "Insert keyframe forward by number of frames specified"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data.path:'BACKWARD'
+#. :src: bpy.types.TIMELINE_OT_keymesh_frame_jump.path:'BACKWARD'
+msgid "Backward"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data.path:'BACKWARD'
+msgid "Insert keyframe backward by number of frames specified"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data.static
+msgid "Static Keymesh Block"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keyframe_object_data.static
+msgid "Don't keyframe new Keymesh block when it's created"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_active_set
+msgid "Change active keymesh block in grid view of frame picker"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_active_set.direction:'NEXT'
+msgid "Change to next Keymesh block in the grid"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_active_set.direction:'PREVIOUS'
+msgid "Change to previous Keymesh block in the grid"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_extract
+msgid ""
+"Pop (extract) active Keymesh block and make it separate object.\n"
+"New object will retain modifiers, constraints, animation, and etc. but Keymesh properties will be removed.\n"
+"Keyframes for extracted block (if there are any) will be deleted from objects active action"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_keyframe
+msgid "Link the selected Keymesh block to the current object and keyframe it"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_move
+msgid "Move the active Keymesh block up or down in the frame picker"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_block_remove
+msgid "Removes selected Keymesh block and deletes every keyframe associated with it"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert
+msgid "Creates new object for each Keymesh block"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handle_duplicates
+#: extensions/user_default/keymesh/operators/convert.py:336
+msgid "Handle Duplicates"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handle_duplicates
+msgid "If disabled, duplicates will be ignored and new object will be created for every frame that is different from previous"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handling_method
+msgid "Duplicate Handling Method"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handling_method
+msgid "How to handle Keymesh blocks that are used more than one time in animation"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handling_method:'REUSE'
+msgid "Reuse Single Object"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handling_method:'REUSE'
+msgid ""
+"Single object will be created for each block regardless of how many times it is used in animation.\n"
+"It's visibility will be animated so that it's visible on every frame that Keymesh block was visible on."
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handling_method:'INSTANCE'
+msgid "Instance Object-Data"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.handling_method:'INSTANCE'
+msgid ""
+"Single object data (i.e. mesh, curve...) will be created for each Keymesh block,\n"
+"and instanced by new object on every frame it is keyframed on."
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.keep_position
+msgid "Keep Position"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.keep_position
+msgid "If enabled new objects will be in the same position as original. If disabled they'll be moved along the selected axis"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.move_axis
+msgid "Move on Axis"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.move_axis
+msgid "Axis to move the duplicated objects on"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.move_axis:'X'
+msgid "Move on X axis"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.move_axis:'Y'
+msgid "Move on Y axis"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.move_axis:'Z'
+msgid "Move on Z axis"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.naming_convention
+msgid "Naming Convention"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.naming_convention
+msgid "Choose how newly created objects are named"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.naming_convention:'BLOCKS'
+#. :src: bpy.types.OBJECT_PG_keymesh.blocks
+#. :src: bpy.types.OBJECT_PG_keymesh.blocks_grid
+msgid "Keymesh Blocks"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.naming_convention:'BLOCKS'
+msgid "Objects will be named after the Keymesh block they represent"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.naming_convention:'FRAMES'
+msgid "Objects will be named after the frame on which they're created"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.offset_distance
+msgid "Distance to move each object by"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.workflow
+msgid "Workflow"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.workflow:'EXPLODE'
+msgid "Each Keymesh block will be extracted as separate object (whether or not its keyframed)."
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.workflow:'PRINT'
+msgid "3D Print"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.workflow:'PRINT'
+msgid ""
+"Will create new, regular object for each frame of Keymesh animation (without animated visibility).\n"
+"New objects can be offsetted from previous objects position, or kept in place.\n"
+"Useful for preparing replacement parts that should be exported and 3D printed for stop-motion."
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.workflow:'RENDER'
+msgid "Rendering"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_convert.workflow:'RENDER'
+msgid ""
+"Will create new, regular object for each frame of Keymesh animation with animated visibility.\n"
+"This allows to keep the final animation by using objects with animated visibility instead of Keymesh blocks.\n"
+"Can be used in render farms, or when regular Keymesh animation is failing in render."
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_join
+msgid ""
+"Make object datas of selected objects Keymesh blocks on active object.\n"
+"When joining Keymesh objects all blocks of selected objects will be transferred to active Keymesh object.\n"
+"Warning: selected objects will be deleted"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_purge
+msgid ""
+"Purges all Keymesh blocks from active object that are not used in the animation.\n"
+"Shift-click purges unused blocks for all Keymesh objects in the .blend file (excluding static ones)"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_purge.all
+msgid "In All Objects"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate
+msgid "Batch-generate thumbnails for Keymesh blocks by rendering them in the background"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.directory
+msgid "Directory to store .jpg images for generated thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.perspective
+msgid "Use scene camera or viewport camera. This also affects camera properties such as focal length and clipping"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.perspective:'CAMERA'
+msgid "Render from active scene cameras perspective"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.perspective:'VIEWPORT'
+msgid "Current Viewport"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.perspective:'VIEWPORT'
+msgid "Render from current viewport perspective"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.selection
+msgid "Select which Keymesh blocks get new thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.selection:'ALL'
+msgid "New thumbnails get generated for all Keymesh blocks, whether or not they already have one"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.selection:'MISSING'
+msgid "Missing"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_generate.selection:'MISSING'
+msgid "Thumbnails get generated only for Keymesh blocks with no existing thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_refresh
+msgid ""
+"Refresh thumbnails for Keymesh blocks to reflect updated images in UI.\n"
+"Shift-Click to regenerate thumbnails (render new images) for non-linked objects"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_refresh.regenerate
+msgid "Regenerate Thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_OT_keymesh_thumbnails_refresh.regenerate
+msgid "Start operator for generating thumbnils to render new images"
+msgstr ""
+
+#. :src: bpy.types.SCENE_OT_keymesh_handler_initialize
+msgid "Refresh handlers to fix Keymesh animation freezes"
+msgstr ""
+
+#. :src: bpy.types.TIMELINE_OT_keymesh_frame_jump
+msgid "Jump to the next frame that has a Keymesh keyframe for the current object"
+msgstr ""
+
+#. :src: bpy.types.TIMELINE_OT_keymesh_frame_jump.path:'FORWARD'
+msgid "Jump to next Keymesh keyframe"
+msgstr ""
+
+#. :src: bpy.types.TIMELINE_OT_keymesh_frame_jump.path:'BACKWARD'
+msgid "Jump to previous Keymesh keyframe"
+msgstr ""
+
+#. :src: bpy.types.KeymeshBlocks.block
+msgid "Block"
+msgstr ""
+
+#. :src: bpy.types.KeymeshBlocks.thumbnail
+msgid "Thumbnail"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_PG_keymesh.active
+msgid "Keymesh Object"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_PG_keymesh.animated
+msgid "Has Keymesh Animation"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_PG_keymesh.blocks_active_index
+msgid "Active Block Index"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_PG_keymesh.grid_view
+msgid "Frame Picker Grid View"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_PG_keymesh.grid_view
+msgid "Display Keymesh blocks as grid represented by thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_PG_keymesh.ignore_missing_thumbnails
+msgid "Ignore Missing Thumbnails"
+msgstr ""
+
+#. :src: bpy.types.OBJECT_PG_keymesh.ignore_missing_thumbnails
+msgid "Don't show pop-up when switching to grid view if block thumbnails are missing"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.enable_handler
+msgid "Enable Keymesh Animation"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.enable_handler
+msgid "When disabled Keymesh objects will not get updated during playback, scrubbing, or rendering"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.frame_skip_count
+msgid "Frame Count"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.frame_skip_count
+msgid "Skip this many frames forwards or backwards when inserting keyframe"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.keyframe_after_skip
+msgid "Insert Keyframe"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.keyframe_after_skip
+msgid ""
+"When enabled, skipping frames forward or backwards from UI will also keyframe the object data\n"
+"WARNING: jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.show_count
+msgid "Show Usage Count"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.show_count
+msgid ""
+"Show how many times each Keymesh block has been used in animation (number of keyframes).\n"
+"NOTE: Calculation can be expensive in heavy scenes and it's recommended to turn off"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.show_keyframe
+msgid "Show Keyframe Button"
+msgstr ""
+
+#. :src: bpy.types.SCENE_PG_keymesh.show_keyframe
+msgid "Expose operator in list view that allows keyframing blocks"
+msgstr ""
+
+#. :src: bpy.types.VIEW3D_UL_keymesh_blocks
+msgid "List of Keymesh data-blocks for active object"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:491
+msgid "Frame Range"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:507
+msgid "Bake Data"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:351
+msgid "Operation cancelled. Start frame can't be higher than end frame"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:357
+msgid "Baked modifier was not first, result may not be as expected"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:112
+#: extensions/user_default/keymesh/operators/insert_keyframe.py:99
+#: extensions/user_default/keymesh/operators/join_extract.py:41
+msgid "Active object type isn't supported by Keymesh"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:526
+msgid "Active object doesn't have modifiers"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:116
+msgid "Volume type objects can't have animation baked"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:522
+msgid " object will be converted to mesh"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:534
+msgid "Active object doesn't have shape keys"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:536
+msgid " doesn't support shape keys"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/bake.py:120
+#: extensions/user_default/keymesh/operators/frame_picker.py:85
+#: extensions/user_default/keymesh/operators/insert_keyframe.py:89
+#: extensions/user_default/keymesh/operators/join_extract.py:111
+#: extensions/user_default/keymesh/operators/join_extract.py:36
+#: extensions/user_default/keymesh/operators/purge.py:27
+#: extensions/user_default/keymesh/operators/purge.py:123
+msgid "Operator is disabled for linked and library-overriden objects"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/convert.py:320
+msgid "Other workflows not available for static Keymesh objects"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/convert.py:285
+msgid "Duplicates were detected. Read console for more information"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/convert.py:343
+msgid "Delete Duplicates"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/frame_picker.py:30
+msgid "Can't insert Keymesh frames on linked objects"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/frame_picker.py:45
+msgid "You cannot animate in library overriden action. Create local one"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/frame_picker.py:25
+msgid "Can't insert Keymesh frames in edit modes"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:125
+msgid "Thumbnails will be rendered with current viewport shading"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:178
+msgid "Thumbnails successfully generated for Keymesh blocks"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:195
+msgid "Keymesh blocks don't have thumbnails, or they're missing"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:196
+msgid "Do you want to generate them?"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:202
+msgid "Don't Ask Me Again"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:140
+msgid "Filepath wasn't provided"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:211
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:245
+msgid ".blend file isn't saved"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:80
+msgid "No active camera in the scene. Using viewport perspective instead"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/generate_thumbnails.py:152
+msgid "All Keymesh blocks already have thumbnails"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/initialize_handler.py:23
+msgid "Keymesh animation is disabled in scene properties"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/insert_keyframe.py:94
+msgid "Keymesh can't create frames in edit modes (can be enabled from preferences)"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/join_extract.py:63
+msgid " can not be joined because it's not the same object type as ."
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/join_extract.py:66
+msgid " can not be joined because it's linked."
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/join_extract.py:69
+msgid " has instanced object data and can't be joined."
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/join_extract.py:115
+msgid "Can't extract Keymesh block in edit modes"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/purge.py:41
+msgid "Can't remove unused blocks for static Keymesh objects"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/purge.py:104
+msgid "No Keymesh blocks were removed"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/purge.py:107
+msgid " Keymesh block(s) removed"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/purge.py:127
+msgid "Can't remove Keymesh block in edit modes"
+msgstr ""
+
+#: extensions/user_default/keymesh/operators/timeline_jump.py:27
+msgid "Active object doesn't have Keymesh animation"
+msgstr ""
+
+#: extensions/user_default/keymesh/preferences.py:202
+msgid "Default Frame Step"
+msgstr ""
+
+#: extensions/user_default/keymesh/preferences.py:224
+msgid "Hotkeys:"
+msgstr ""
+
+#: extensions/user_default/keymesh/preferences.py:113
+msgid "Cmd"
+msgstr ""
+
+#: extensions/user_default/keymesh/preferences.py:96
+msgid "Repeat"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:52
+msgid "Frame Step"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:174
+msgctxt "Operator"
+msgid "Convert to Separate Objects"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:212
+msgid "Keymesh Animation"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:213
+msgctxt "Operator"
+msgid "Refresh Frame Handler"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:226
+msgctxt "Operator"
+msgid "Purge Unused Blocks"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:234
+msgid "Keyframe Operator"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:235
+msgid "Usage Count"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:180
+msgid "Debug"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:63
+#: extensions/user_default/keymesh/ui.py:65
+msgctxt "Operator"
+msgid "Insert"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:67
+#: extensions/user_default/keymesh/ui.py:69
+msgctxt "Operator"
+msgid "Jump"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:150
+msgctxt "Operator"
+msgid "Previous"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:152
+msgctxt "Operator"
+msgid "Next"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:183
+msgid "object.id"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:185
+msgid "object.data"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:189
+msgid "block.id"
+msgstr ""
+
+#: extensions/user_default/keymesh/ui.py:191
+msgid "block.data"
+msgstr ""
+
+#: Add-on Keymesh info: name
+msgid "Keymesh"
+msgstr ""
+
+#: Add-on Keymesh info: description
+msgid "Create stop-motion animations by sculpting frame-by-frame"
+msgstr ""
+
