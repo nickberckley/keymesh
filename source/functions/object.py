@@ -1,7 +1,7 @@
 import bpy
 import random
 
-from .poll import is_keymesh_object, has_shared_action_slot, has_index, obj_data_type
+from .poll import is_keymesh_object, has_shared_action_slot, obj_data_type
 from .timeline import get_keymesh_fcurve, remove_fcurve, delete_empty_action
 
 

@@ -89,7 +89,7 @@ def has_shared_action_slot(obj, check_index=False, index=0):
 
 
 def has_index(obj, index):
-    """Checks if obj has data-block with given index."""
+    """Checks if obj has Keymesh block with given index."""
 
     for block in obj.keymesh.blocks:
         if block.block.keymesh.get("Data", None) == index:

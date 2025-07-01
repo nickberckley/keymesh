@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "keymesh"
-version = "2.3.0"
+version = "2.3.1"
 name = "Keymesh"
 tagline = "Create stop-motion animations by sculpting frame-by-frame"
 maintainer = "Nika Kutsniashvili <nickberckley@gmail.com>"
