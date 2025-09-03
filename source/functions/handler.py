@@ -113,7 +113,7 @@ def append_keymesh(lapp_context):
                     """NOTE: Since thumbnails (StringProperty) are set to relative in library files, they're incorrect when imported."""
                     """NOTE: this code gets absolute path for them and generates new path relative to receiving file."""
                     if block.thumbnail != "":
-                        library_path = os.path.dirname(library.filepath)
+                        library_path = os.path.dirname(bpy.path.abspath(library.filepath))
                         thumbnail_path = block.thumbnail.lstrip("/\\")
                         full_path = os.path.join(library_path, thumbnail_path)
 

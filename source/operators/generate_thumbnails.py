@@ -19,6 +19,7 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         name = "Directory",
         description = "Directory to store .jpg images for generated thumbnails",
         subtype = 'DIR_PATH',
+        options = {'PATH_SUPPORTS_BLEND_RELATIVE'},
         default = "//.keymesh_thumbnails/",
     )
 

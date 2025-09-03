@@ -67,7 +67,7 @@ class KeymeshBlocks(bpy.types.PropertyGroup):
     thumbnail: bpy.props.StringProperty(
         name = "Thumbnail",
         subtype = 'FILE_PATH',
-        options = set(),
+        options = {'PATH_SUPPORTS_BLEND_RELATIVE'},
         override = {"LIBRARY_OVERRIDABLE"},
     )
 

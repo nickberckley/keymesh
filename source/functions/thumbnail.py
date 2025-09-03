@@ -44,7 +44,7 @@ def keymesh_blocks_enum_items(self, context):
         else:
             if block.thumbnail != "":
                 if os.path.isfile(bpy.path.abspath(block.thumbnail)):
-                    path = resolve_path(block.thumbnail)
+                    path = bpy.path.abspath(block.thumbnail)
                     thumbnail = pcoll.load(block.thumbnail, path, 'IMAGE').icon_id
                 else:
                     thumbnail = 'LIBRARY_DATA_BROKEN'
