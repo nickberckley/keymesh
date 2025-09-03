@@ -103,6 +103,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     blocks_active_index: bpy.props.IntProperty(
         name = "Active Block Index",
         options = set(),
+        override = {"LIBRARY_OVERRIDABLE"},
         update = keymesh_blocks_list_update,
         default = -1,
     )
