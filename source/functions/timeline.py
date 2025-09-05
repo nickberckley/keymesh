@@ -1,32 +1,87 @@
 import bpy
 
 
-#### ------------------------------ FUNCTIONS ------------------------------ ####
+#### ------------------------------ /general/ ------------------------------ ####
 
-def get_keymesh_fcurve(obj):
-    """Returns f-curve for Keymesh data property of obj."""
+def get_fcurve(obj, path: str):
+    """Returns f-curve with given data-path from objects action/slot if it exists."""
 
-    fcurve = None
-    if obj.animation_data is not None:
-        if obj.animation_data.action is not None:
+    if not obj.animation_data or not obj.animation_data.action:
+        return None
+
+    if bpy.app.version >= (4, 4, 0):
+        # Slotted actions check.
+        if obj.animation_data.action_slot is not None:
+            action = obj.animation_data.action
+            slot = obj.animation_data.action_slot
+            fcurves = action.layers[0].strips[0].channelbag(slot).fcurves
+            for f in fcurves:
+                if f.data_path == path:
+                    return f
+    else:
+        # Blender 4.3 and older check.
+        for f in obj.animation_data.action.fcurves:
+            if f.data_path == path:
+                return f
+
+
+def remove_fcurve(obj, fcurve):
+    """Removes given f-curve from objects action (and active action slot)."""
+
+    if fcurve is None:
+        return
+    if not obj.animation_data or not obj.animation_data.action:
+        return
+
+    action = obj.animation_data.action
+
+    # Slotted actions check.
+    if bpy.app.version >= (4, 4, 0):
+        slot = obj.animation_data.action_slot
+        action.layers[0].strips[0].channelbag(slot).fcurves.remove(fcurve)
+    else:
+        action.fcurves.remove(fcurve)
+
+
+def delete_empty_action(obj):
+    """Removes action from object and purges it if it has no f-curves remaining."""
+
+    if obj.animation_data:
+        if obj.animation_data.action:
             if bpy.app.version >= (4, 4, 0):
                 # Slotted actions check.
-                if obj.animation_data.action_slot is not None:
+                if obj.animation_data.action_slot:
                     action = obj.animation_data.action
                     slot = obj.animation_data.action_slot
                     fcurves = action.layers[0].strips[0].channelbag(slot).fcurves
-                    for f in fcurves:
-                        if f.data_path == 'keymesh["Keymesh Data"]':
-                            fcurve = f
-                            break
+
+                    # remove_empty_slot
+                    if len(fcurves) == 0:
+                        action.slots.remove(slot)
+
+                    # remove_action_if_there_are_no_more_slots
+                    if len(action.slots) == 0:
+                        empty_action = obj.animation_data.action
+                        obj.animation_data.action = None
+                        bpy.data.actions.remove(empty_action)
+
             else:
                 # Blender 4.3 and older check.
-                for f in obj.animation_data.action.fcurves:
-                    if f.data_path == 'keymesh["Keymesh Data"]':
-                        fcurve = f
-                        break
+                if len(obj.animation_data.action.fcurves) == 0:
+                    empty_action = obj.animation_data.action
+                    obj.animation_data.action = None
+                    bpy.data.actions.remove(empty_action)
 
-    return fcurve
+    obj.keymesh.animated = False
+
+
+
+#### ------------------------------ /keymesh/ ------------------------------ ####
+
+def get_keymesh_fcurve(obj):
+    """Returns f-curve for Keymesh Data property of obj."""
+
+    return get_fcurve(obj, 'keymesh["Keymesh Data"]')
 
 
 def get_keymesh_keyframes(obj):
@@ -36,17 +91,14 @@ def get_keymesh_keyframes(obj):
     fcurve = get_keymesh_fcurve(obj)
     if fcurve:
         keyframe_points = fcurve.keyframe_points
-        for keyframe in keyframe_points:
-            i = 0
-            while i < len(keyframe.co):
-                keyframes.append(int(keyframe.co[i]))
-                i += 2
+        for kp in keyframe_points:
+            keyframes.append(int(kp.co[0]))
 
     return keyframes
 
 
 def insert_keyframe(obj, frame, block_index=None):
-    """Inserts keyframe on current frame for given block data."""
+    """Inserts keyframe on given frame for given block data."""
 
     # assign_value
     if block_index is not None:
@@ -116,49 +168,3 @@ def get_next_keymesh_block(context, obj, direction):
                     next_keymesh_block = mesh
 
     return next_keyframe, next_keymesh_block
-
-
-def remove_fcurve(obj, fcurve):
-    """Removes given f-curve from objects action (and active action slot)."""
-
-    if obj.animation_data and obj.animation_data.action:
-        action = obj.animation_data.action
-
-        # Slotted actions check.
-        if bpy.app.version >= (4, 4, 0):
-            slot = obj.animation_data.action_slot
-            action.layers[0].strips[0].channelbag(slot).fcurves.remove(fcurve)
-        else:
-            action.fcurves.remove(fcurve)
-
-
-def delete_empty_action(obj):
-    """Removes action from object and purges it if it has no f-curves remaining."""
-
-    if obj.animation_data:
-        if obj.animation_data.action:
-            if bpy.app.version >= (4, 4, 0):
-                # Slotted actions check.
-                if obj.animation_data.action_slot:
-                    action = obj.animation_data.action
-                    slot = obj.animation_data.action_slot
-                    fcurves = action.layers[0].strips[0].channelbag(slot).fcurves
-
-                    # remove_empty_slot
-                    if len(fcurves) == 0:
-                        action.slots.remove(slot)
-
-                    # remove_action_if_there_are_no_more_slots
-                    if len(action.slots) == 0:
-                        empty_action = obj.animation_data.action
-                        obj.animation_data.action = None
-                        bpy.data.actions.remove(empty_action)
-
-            else:
-                # Blender 4.3 and older check.
-                if len(obj.animation_data.action.fcurves) == 0:
-                    empty_action = obj.animation_data.action
-                    obj.animation_data.action = None
-                    bpy.data.actions.remove(empty_action)
-
-    obj.keymesh.animated = False
