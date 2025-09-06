@@ -7,7 +7,7 @@ from ..functions.handler import update_keymesh
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, duplicate_object, convert_to_mesh, store_modifiers
 from ..functions.poll import is_candidate_object, is_linked, obj_data_type
 from ..functions.thumbnail import _make_enum_item
-from ..functions.timeline import insert_keyframe
+from ..functions.timeline import insert_keyframe, insert_keymesh_keyframe
 
 
 apply_types = ['MESH', 'LATTICE']
@@ -314,22 +314,23 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                     if mod.show_viewport:
                         if self.frame_start != context.scene.frame_start:
                             mod.show_viewport = True
-                            obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=context.scene.frame_start)
+                            insert_keyframe(obj, context.scene.frame_start, f'modifiers["{mod.name}"].show_viewport', constant=False)
 
                         mod.show_viewport = False
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_start)
+                        insert_keyframe(obj, self.frame_start, f'modifiers["{mod.name}"].show_viewport', constant=False)
                         mod.show_viewport = True
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_viewport', frame=self.frame_end + 1)
+                        insert_keyframe(obj, self.frame_end + 1, f'modifiers["{mod.name}"].show_viewport', constant=False)
 
                     if mod.show_render:
                         if self.frame_start != context.scene.frame_start:
                             mod.show_render = True
-                            obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=context.scene.frame_start)
+                            insert_keyframe(obj, context.scene.frame_start, f'modifiers["{mod.name}"].show_render', constant=False)
 
                         mod.show_render = False
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_start)
+                        insert_keyframe(obj, self.frame_start, f'modifiers["{mod.name}"].show_render', constant=False)
                         mod.show_render = True
-                        obj.keyframe_insert(data_path=f'modifiers["{mod.name}"].show_render', frame=self.frame_end + 1)
+                        insert_keyframe(obj, self.frame_end + 1, f'modifiers["{mod.name}"].show_render', constant=False)
+
 
 
     def clean_up_shape_keys(self, garbage_shape_keys):
@@ -435,7 +436,7 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
 
 
             # Insert Keyframe
-            insert_keyframe(obj, context.scene.frame_current, block_index)
+            insert_keymesh_keyframe(obj, context.scene.frame_current, block_index)
 
 
         if self.bake_type == 'ALL' and self.has_modifiers:
@@ -461,8 +462,8 @@ class ANIM_OT_bake_to_keymesh(bpy.types.Operator):
                     insert_block(obj, original_data, block_index)
                     obj.keymesh.blocks.move(block_index, 0)
 
-                insert_keyframe(obj, self.frame_start - 1, block_index)
-                insert_keyframe(obj, self.frame_end + 1, block_index)
+                insert_keymesh_keyframe(obj, self.frame_start - 1, block_index)
+                insert_keymesh_keyframe(obj, self.frame_end + 1, block_index)
         else:
             if original_data.name not in obj.keymesh.blocks:
                 obj_type = obj_data_type(obj)

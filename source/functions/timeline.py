@@ -25,6 +25,20 @@ def get_fcurve(obj, path: str):
                 return f
 
 
+def insert_keyframe(obj, frame, path: str, constant=True):
+    """Inserts keyframe on given frame for given data-path."""
+
+    # insert_keyframe
+    obj.keyframe_insert(data_path=path, frame=frame)
+
+    # set_constant_interpolation
+    if constant:
+        fcurve = get_fcurve(obj, path)
+        if fcurve:
+            for kf in fcurve.keyframe_points:
+                kf.interpolation = 'CONSTANT'
+
+
 def remove_fcurve(obj, fcurve):
     """Removes given f-curve from objects action (and active action slot)."""
 
@@ -75,6 +89,15 @@ def delete_empty_action(obj):
     obj.keymesh.animated = False
 
 
+def has_driver(obj, data_path):
+    """Checks whether given obj has driver on given data_path."""
+
+    if obj.animation_data and obj.animation_data.drivers:
+        for fcurve in obj.animation_data.drivers:
+            if fcurve.data_path == data_path:
+                return True
+    return False
+
 
 #### ------------------------------ /keymesh/ ------------------------------ ####
 
@@ -97,7 +120,7 @@ def get_keymesh_keyframes(obj):
     return keyframes
 
 
-def insert_keyframe(obj, frame, block_index=None):
+def insert_keymesh_keyframe(obj, frame, block_index=None):
     """Inserts keyframe on given frame for given block data."""
 
     # assign_value
@@ -109,14 +132,7 @@ def insert_keyframe(obj, frame, block_index=None):
         obj.keymesh.animated = True
 
     # insert_keyframe
-    obj.keyframe_insert(data_path='keymesh["Keymesh Data"]',
-                        frame=frame)
-
-    # set_constant_interpolation
-    fcurve = get_keymesh_fcurve(obj)
-    if fcurve:
-        for kf in fcurve.keyframe_points:
-            kf.interpolation = 'CONSTANT'
+    insert_keyframe(obj, frame, 'keymesh["Keymesh Data"]', constant=True)
 
 
 def keymesh_block_usage_count(obj, block):

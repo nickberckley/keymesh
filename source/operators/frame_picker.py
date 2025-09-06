@@ -1,7 +1,7 @@
 import bpy
 from ..functions.object import update_active_index
 from ..functions.poll import is_linked, is_keymesh_object, has_shared_action_slot, obj_data_type
-from ..functions.timeline import insert_keyframe
+from ..functions.timeline import insert_keymesh_keyframe
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -52,7 +52,7 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
 
         # Keyframe Block
         block_index = obj.data.keymesh.get("Data")
-        insert_keyframe(obj, scene.frame_current, block_index)
+        insert_keymesh_keyframe(obj, scene.frame_current, block_index)
 
         # refresh_timeline
         if has_shared_action_slot(obj):

@@ -2,14 +2,14 @@ import bpy
 from .. import __package__ as base_package
 
 from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, update_active_index
-from ..functions.timeline import insert_keyframe
+from ..functions.timeline import insert_keymesh_keyframe
 from ..functions.poll import is_candidate_object, is_linked
 from ..functions.handler import update_keymesh
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-def insert_keymesh_keyframe(self, context, obj):
+def insert_keyframe_exec(self, context, obj):
     prefs = context.preferences.addons[base_package].preferences
 
     if obj:
@@ -47,7 +47,7 @@ def insert_keymesh_keyframe(self, context, obj):
             update_active_index(obj)
         else:
             # Insert Keyframe
-            insert_keyframe(obj, context.scene.frame_current, block_index)
+            insert_keymesh_keyframe(obj, context.scene.frame_current, block_index)
             update_keymesh(context.scene, override=True)
 
         if prefs.enable_edit_mode:
@@ -112,7 +112,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
         if obj is not None:
             # when_no_direction
             if (self.path == 'STILL' or obj.keymesh.animated == False):
-                insert_keymesh_keyframe(self, context, obj)
+                insert_keyframe_exec(self, context, obj)
                 return {'FINISHED'}
 
             # when_forwarding
@@ -123,7 +123,7 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
                     elif self.path == 'BACKWARD':
                         context.scene.frame_current -= step
 
-                insert_keymesh_keyframe(self, context, obj)
+                insert_keyframe_exec(self, context, obj)
 
             return {'FINISHED'}
 
