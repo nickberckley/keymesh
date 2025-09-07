@@ -68,24 +68,28 @@ def has_shared_action_slot(obj, check_index=False, index=0):
     if not obj.animation_data.action_slot:
         return False
 
-    action_users = obj.animation_data.action_slot.users()
-    if len(action_users) < 1:
+    action_slot_users = obj.animation_data.action_slot.users()
+
+    if len(action_slot_users) < 1:
         return False
     else:
-        # check_how_many_of_slots_object_users_are_Keymesh_objects
+        # Check how many of the slots users are Keymesh objects.
         keymesh_users = []
-        for user in action_users:
+        for user in action_slot_users:
             if is_keymesh_object(user):
                 keymesh_users.append(user)
 
-        if len(keymesh_users) > 1:
-            # check_if_other_Keymesh_users_have_block_with_given_index
+        # If the action slot has any Keymesh user besides the obj itself.
+        if len([o for o in keymesh_users if o != obj]) > 0:
+            # Check if other Keymesh users have a block with given index.
             if check_index:
                 for user in keymesh_users:
                     if has_index(user, index):
                         return True
             else:
                 return True
+        else:
+            return False
 
 
 def has_index(obj, index):
