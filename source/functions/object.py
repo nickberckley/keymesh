@@ -179,7 +179,7 @@ def convert_to_mesh(context, obj):
     return mesh
 
 
-def duplicate_object(context, obj, block, name=None, hide=False, collection=False):
+def duplicate_object(context, obj, block, name=None, hide=False, collection=False, anim='COPY'):
     """Creates duplicate of obj and assigns object data (block)."""
 
     if name == None:
@@ -192,8 +192,13 @@ def duplicate_object(context, obj, block, name=None, hide=False, collection=Fals
 
     if obj.animation_data is not None:
         if obj.animation_data.action is not None:
-            dup_action = obj.animation_data.action.copy()
-            dup_obj.animation_data.action = dup_action
+            if anim == 'COPY':
+                dup_action = obj.animation_data.action.copy()
+                dup_obj.animation_data.action = dup_action
+            elif anim == 'LINK':
+                dup_obj.animation_data.action = obj.animation_data.action
+            elif anim == 'NONE':
+                dup_obj.animation_data.action = None
 
     if hide:
         dup_obj.hide_render = True
