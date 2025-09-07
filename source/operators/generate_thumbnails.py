@@ -3,6 +3,7 @@ import os
 import mathutils
 from contextlib import contextmanager
 
+from ..functions.object import get_active_keymesh_block
 from ..functions.poll import is_keymesh_object
 from ..functions.thumbnail import get_missing_thumbnails, resolve_path, previews_register, previews_unregister
 
@@ -135,6 +136,14 @@ class OBJECT_OT_keymesh_thumbnails_generate(bpy.types.Operator):
         layout.prop(self, "perspective")
 
     def invoke(self, context, event):
+        obj = context.active_object
+
+        # If active block already has a thumbnail, set it's dirpath as a default of `directory`.
+        active_block = get_active_keymesh_block(obj)
+        if active_block.thumbnail != "":
+            current_directory = os.path.dirname(active_block.thumbnail)
+            self.directory = os.path.join(current_directory, "")
+
         return context.window_manager.invoke_props_dialog(self, width=350, confirm_text="Generate")
 
     def execute(self, context):

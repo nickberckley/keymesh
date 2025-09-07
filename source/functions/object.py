@@ -233,3 +233,14 @@ def store_modifiers(obj, store_nodes=False):
             stored_modifiers[mod.name]["keys"] = keys
 
     return stored_modifiers
+
+
+def get_active_keymesh_block(obj):
+    """Returns active Keymesh block object (KeymeshBlocks) for given object."""
+
+    if not is_keymesh_object(obj):
+        return None
+
+    for block in obj.keymesh.blocks:
+        if obj.data == block.block:
+            return block
