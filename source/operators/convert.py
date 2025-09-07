@@ -13,7 +13,7 @@ from ..functions.timeline import (
 
 class OBJECT_OT_keymesh_convert(bpy.types.Operator):
     bl_idname = "object.keymesh_convert"
-    bl_label = "Convert Keymesh into Separate Objects"
+    bl_label = "Keymesh Blocks to Separate Objects"
     bl_description = "Create new object for each Keymesh block, or each Keymesh keyframe for animated objects"
     bl_options = {'UNDO'}
 
@@ -24,44 +24,30 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
                                            "This workflow can recreate Keymesh animation with regular objects by animating their visibility."))],
         default = 'ANIMATED',
     )
-
-    # Animation workflow settings.
-    animation_method: bpy.props.EnumProperty(
-        name = "Animation Method",
+    convert_method: bpy.props.EnumProperty(
+        name = "Converting Method",
         description = "How to convert Keymesh animation into regular Blender animation",
-        items = [('KEYFRAME', "Keyframes",
-                    ("Keyframe viewport & render visibility of each object to recreate exact Keymesh animation.\n"
-                     "Can be used in render farms, or whenever animation has to be played without the add-on.")),
+        items = [('SIMPLE', "Simple",
+                    ("In animated workflow, keyframe viewport & render visibility of each object to recreate the exact Keymesh animation.\n"
+                     "Can be used in render farms, or whenever animation has to be played without the add-on.\n"
+                     "In static workflow nothing happens to created objects.")),
                  ('DRIVER', "Drivers",
                     ("Drive viewport & render visibility of each object with custom property on chosen object.\n"
-                     "Custom property will be keyframed to recreate exact Keymesh animation.")),
-                 ('NONE', "None",
-                    ("Create new object for each keyframe of the animation, but do not recreate the animation in any way.\n"
-                     "Useful for preparing replacement parts that should be exported and 3D printed for stop-motion.")),],
-        default = 'KEYFRAME',
-    )
-    naming_convention: bpy.props.EnumProperty(
-        name = "Naming Convention",
-        description = "Choose how newly created objects are named",
-        items = [('BLOCKS', "Keymesh Blocks", "Objects will be named after the Keymesh block they represent"),
-                 ('FRAMES', "Frames", "Objects will be named after the frame on which they're created")],
-        default = 'BLOCKS',
+                     "In animated workflow the custom property will be keyframed to recreate the exact Keymesh animation.")),
+                 ('GEONODES', "Geometry Nodes",
+                    ("Create the duplicate object with a custom Geometry Nodes modifier that will control the...\n"
+                     "visibility of each object with switch nodes. Index will be exposed as Geometry Nodes modifier input .\n"
+                     "In animated workflow index input will be keyframed to recreate the exact Keymesh animation.\n"
+                     "Duplicate object will have empty object data, no Keymesh properties, and modifier will be first in stack.\n"
+                     "That means both evaluated object and animation will be recreated faithfully without Keymesh properties."))],
+        default = 'SIMPLE',
     )
 
-    # Duplicates
-    handle_duplicates: bpy.props.BoolProperty(
-        name = "Handle Duplicates",
-        description = "Avoid duplicating Keymesh blocks that are keyframed multiple times",
+    # Animation
+    skip_unused: bpy.props.BoolProperty(
+        name = "Skip Unused Blocks",
+        description = "Don't create object from Keymesh blocks that were not used in animation",
         default = True,
-    )
-    handling_method: bpy.props.EnumProperty(
-        name = "Duplicate Handling Method",
-        description = "How to handle Keymesh blocks that are used multiple times in animation",
-        items = [('REUSE', "Reuse Single Object", ("Single object will be created for each block regardless of how many times it is used in animation.\n"
-                                                   "It's visibility will be animated so that it's visible on every frame that Keymesh block was visible on")),
-                 ('INSTANCE', "Instance Object-Data", ("Single object data (i.e. mesh, curve...) will be created for each Keymesh block,\n"
-                                                       "and instanced by new object on every frame it is keyframed on."))],
-        default = 'REUSE',
     )
 
     # Offset
@@ -86,11 +72,6 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
     )
 
     # Drivers
-    use_drivers: bpy.props.BoolProperty(
-        name = "Drive Object Visibility",
-        description = "Add driver to viewport & render visibility of new objects",
-        default = False,
-    )
     driver_obj: bpy.props.StringProperty(
         name = "Driver Object",
         description = "Object which will get new custom property that will drive object visibilities",
@@ -101,12 +82,24 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         default = "keymesh_data",
     )
 
+    # Geometry Nodes
+    nodes_transform_space: bpy.props.EnumProperty(
+        name = "Transform Space",
+        description = "The transformation of the geometry and vector outputs of Object Info nodes",
+        items = (('ORIGINAL', "Original", ""),
+                 ('RELATIVE', "Relative", "")),
+        default = 'ORIGINAL',
+    )
+
 
     @classmethod
     def poll(cls, context):
-        if context.active_object:
-            if is_keymesh_object(context.active_object):
-                return True
+        if context.mode == 'OBJECT':
+            if context.active_object:
+                if is_keymesh_object(context.active_object):
+                    return True
+                else:
+                    return False
             else:
                 return False
         else:
@@ -117,10 +110,22 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        obj = context.active_object
 
-        # Reusable Components
-        def offset(layout):
+        row = layout.row()
+        row.prop(self, "workflow", expand=True)
+        col = layout.column(align=True)
+        col.prop(self, "convert_method", expand=True)
+
+        if context.active_object.keymesh.animated == False:
+            warning_row = layout.row()
+            warning_row.alignment = 'RIGHT'
+            warning_row.label(text="No Keymesh animation. Only static mode available", icon='INFO')
+            row.enabled = False
+
+        layout.separator()
+
+        # STATIC Workflows
+        if self.workflow == 'STATIC':
             header, panel = layout.panel("OBJECT_OT_keymesh_convert_offset", default_closed=False)
             header.label(text="Offset")
             if panel:
@@ -136,76 +141,39 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
                     row1.enabled = False
                     row2.enabled = False
 
-        def handle_duplicates(layout):
-            header, panel = layout.panel("OBJECT_OT_keymesh_convert_duplicates", default_closed=False)
-            header.label(text="Duplicates")
+        # ANIMATED Workflows
+        elif self.workflow == 'ANIMATED':
+            header, panel = layout.panel("OBJECT_OT_keymesh_convert_animation", default_closed=False)
+            header.label(text="Settings")
             if panel:
-                panel.prop(self, "handle_duplicates")
-                panel.prop(self, "handling_method", text="Handling Method")
-                panel.separator()
+                col = panel.column()
+                col.prop(self, "skip_unused")
+                col.separator()
 
-        def driver_options(layout):
+        # Convert Methods
+        if self.convert_method == 'DRIVER':
             header, panel = layout.panel("OBJECT_OT_keymesh_convert_driver", default_closed=False)
             header.label(text="Drivers")
             if panel:
-                if self.workflow == 'STATIC':
-                    panel.prop(self, "use_drivers", text="Drivers on Objects Visibility")
-
                 col = panel.column()
                 col.prop(self, "driver_obj", placeholder="Name of the object...")
                 col.prop(self, "custom_prop_name")
                 col.separator()
 
-                if self.workflow == 'STATIC' and not self.use_drivers:
-                    col.enabled = False
-
-
-        row = layout.row()
-        row.prop(self, "workflow", expand=True)
-        if context.active_object.keymesh.animated == False:
-            warning_row = layout.row()
-            warning_row.alignment = 'RIGHT'
-            warning_row.label(text="No Keymesh animation. Only static available", icon='INFO')
-            row.enabled = False
-
-        # STATIC Workflows
-        if self.workflow == 'STATIC':
-            offset(layout)
-            driver_options(layout)
-
-        # ANIMATED Workflows
-        elif self.workflow == 'ANIMATED':
-            col = layout.column(align=True)
-            col.prop(self, "animation_method", expand=True)
-            layout.separator()
-
-            header, panel = layout.panel("OBJECT_OT_keymesh_convert_animation", default_closed=False)
-            header.label(text="Settings")
+        elif self.convert_method == 'GEONODES':
+            header, panel = layout.panel("OBJECT_OT_keymesh_convert_geonodes", default_closed=False)
+            header.label(text="Geometry Nodes")
             if panel:
-                panel.prop(self, "naming_convention")
+                row = panel.row()
+                row.prop(self, "nodes_transform_space", expand=True)
                 panel.separator()
-
-            # Workflow: RENDER
-            if self.animation_method == 'KEYFRAME':
-                handle_duplicates(layout)
-
-            # Workflow: DRIVER
-            elif self.animation_method == 'DRIVER':
-                handle_duplicates(layout)
-                driver_options(layout)
-
-            # Workflow: PRINT
-            elif self.animation_method == 'NONE':
-                panel.prop(self, "handle_duplicates", text="Avoid Duplicates")
-                offset(layout)
 
 
     def invoke(self, context, event):
         obj = context.active_object
-
         if not obj.keymesh.animated:
             self.workflow = 'STATIC'
-            self.naming_convention = 'BLOCKS'
+            self.skip_unused = False
 
         return context.window_manager.invoke_props_dialog(self, width=300, confirm_text="Convert")
 
@@ -215,121 +183,79 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         initial_frame = context.scene.frame_current
         move_axis_index = 'XYZ'.index(self.move_axis)
 
-        # create_driver_target
-        output = self._create_driver_target(context, obj)
-        if output == "cancel":
-            return {'FINISHED'}
+        # create_targets
+        output1 = self._create_driver_target(context, obj)
+        output2 = self._create_geonodes_target(context, obj)
+        if output1 == "cancel" or output2 == "cancel":
+            return {'CANCELLED'}
+
+        # find_unused_blocks
+        unused_blocks = self._find_unused_blocks(obj)
 
         # create_collection
         duplicates_collection = bpy.data.collections.new(obj.name + "_keymesh")
         context.scene.collection.children.link(duplicates_collection)
+        if self.convert_method == 'GEONODES':
+            context.view_layer.layer_collection.children[duplicates_collection.name].exclude = True
 
 
-        # STATIC Workflows
-        if self.workflow == 'STATIC':
-            prev_obj = None
-            for block in obj.keymesh.blocks:
-                dup_obj = self._create_duplicate(context, obj, block.block.copy(), duplicates_collection)
+        # 'STATIC' Workflow
+        previous_obj = None
+        duplicates = {}
+        for block in obj.keymesh.blocks:
+            if self.skip_unused and block in unused_blocks:
+                continue
 
-                # Offset each object from previous.
+            dup_obj = self._create_duplicate(context, obj, block.block.copy(), duplicates_collection)
+            duplicates[dup_obj] = block.block.keymesh["Data"]
+            block_value = block.block.keymesh.get("Data")
+
+            # Offset each object from previous.
+            if self.workflow == 'STATIC':
                 if not self.keep_position:
-                    self._offset_object(dup_obj, prev_obj, move_axis_index)
-                    prev_obj = dup_obj
+                    self._offset_object(dup_obj, previous_obj, move_axis_index)
+                    previous_obj = dup_obj
 
-                # Drive object visibilities.
-                if self.use_drivers:
-                    self._workflow_driver(context, dup_obj, block.block.keymesh.get("Data"))
+            # 'SIMPLE (Keyframing)' Method (Turn off & keyframe visibility of objects created from unused).
+            if self.convert_method == 'SIMPLE':
+                if block in unused_blocks:
+                    self._animate_visibility(dup_obj, 0, True)
+
+            # 'DRIVER' Method (Drive visibility of objects).
+            if self.convert_method == 'DRIVER':
+                self._setup_drivers(dup_obj, block_value)
+                driver_obj = bpy.data.objects.get(self.driver_obj)
+
+            # 'GEONODES' Method (animate modifier input)
+            if self.convert_method == 'GEONODES':
+                self._workflow_geonodes(dup_obj, block_value)
 
 
-        # ANIMATED Workflows
-        elif self.workflow == 'ANIMATED':
+        # 'ANIMATED' Workflow
+        if self.workflow == 'ANIMATED':
             previous_obj = None
             previous_value = None
-            uniques = {} # DICT: {data_block: keymesh_data}
-            duplicates = []
-            holds = {} # DICT: {data_block: {"count": hold_count, "frames": [list_of_frames]}}
 
             for frame in (keymesh_keyframes := get_keymesh_keyframes(obj)):
                 context.scene.frame_set(frame)
                 current_value = obj.keymesh["Keymesh Data"]
 
-                # Detect, Handle, and Report Duplicates
-                if self.handle_duplicates == False:
-                    dup_obj = self._create_duplicate(context, obj, obj.data.copy(), duplicates_collection)
-                else:
-                    # if_block_is_unique
-                    if current_value not in uniques.values():
-                        dup_obj = self._create_duplicate(context, obj, obj.data.copy(), duplicates_collection)
-                        uniques[dup_obj] = current_value
-
-                    # if_block_is_duplicate
-                    else:
-                        if self.workflow == 'PRINT':
-                            previous_obj = None
-
-                        else:
-                            # Find the match for duplicate in uniques dict.
-                            match = None
-                            for unique, value in uniques.items():
-                                if value == current_value:
-                                    match = unique
-
-                            # Create new instance.
-                            if self.handling_method == 'INSTANCE':
-                                dup_obj = self._create_duplicate(context, obj, match.data, duplicates_collection)
-                            # Reuse same object.
-                            if self.handling_method == 'REUSE':
-                                dup_obj = match
-                                dup_obj.hide_viewport = False
-                                dup_obj.hide_render = False
-
-                        # check_if_the_current_frame_continues_last_period
-                        # NOTE: 1 period = 1 hold sequence, i.e. if block was held on frames 5-8 and 12-16 that means 2 periods (4 frames long and 5 frames long).
-                        # NOTE: periods are used to report when blocks were held, for how long, and on which exact frames.
-                        if current_value == previous_value:
-                            if obj.data in holds:
-                                period = holds[obj.data][-1]
-                                if period['frames'][-1] == frame - 1:
-                                    period['count'] += 1
-                                    period['frames'].append(frame)
-                                else:
-                                    holds[obj.data].append({'count': 2, 'frames': [frame-1, frame]})
-                            else:
-                                holds[obj.data] = [{'count': 2, 'frames': [frame-1, frame]}]
-
-                        if obj.data not in duplicates:
-                            duplicates.append(obj.data)
-
-
-                # KEYFRAME Method
-                if self.animation_method == 'KEYFRAME':
+                # 'SIMPLE (Keyframing)' Method (animate visibility of objects)
+                if self.convert_method == 'SIMPLE':
+                    dup_obj = next((obj for obj, value in duplicates.items() if value == current_value), None)
                     self._workflow_keyframe(context, dup_obj, previous_obj, current_value, previous_value)
+                    previous_obj = dup_obj
+                    previous_value = current_value
 
-                # DRIVER Method
-                if self.animation_method == 'DRIVER':
-                    self._workflow_driver(context, dup_obj, current_value)
+                # 'DRIVER' Method (animate driving custom property)
+                if self.convert_method == 'DRIVER':
+                    driver_obj[self.custom_prop_name] = current_value
+                    insert_keyframe(driver_obj, frame, f'["{self.custom_prop_name}"]', constant=True)
 
-                # PRINTING Method
-                if self.animation_method == 'NONE':
-                    self._workflow_print(dup_obj, previous_obj, move_axis_index)
-
-                previous_obj = dup_obj
-                previous_value = current_value
-
-
-            # Print about Duplicates
-            if self.handle_duplicates and len(duplicates) >= 1:
-                self.report({'INFO'}, "Duplicates were detected. Read console for more information")
-
-                for duplicate in duplicates:
-                    usage, frames = keymesh_block_usage_count(obj, duplicate)
-                    output_frames = self._count_duplicate_usage(obj, frames, holds)
-
-                    if self.animation_method == 'KEYFRAME':
-                        if self.handling_method == 'INSTANCE':
-                            print("Object data '" + duplicate.name + "' is instanced", str(usage), "times on frames:", str(output_frames))
-                    if self.animation_method == 'NONE':
-                        print(duplicate.name, "was used", str(usage), "times on frames:", str(output_frames))
+                # 'GEONODES' Method (animate modifier input)
+                if self.convert_method == 'GEONODES':
+                    self.geonodes_mod["Socket_1"] = current_value
+                    insert_keyframe(self.geonodes_obj, frame, 'modifiers["keymesh_convert"]["Socket_1"]', constant=True)
 
         obj.select_set(False)
         obj.hide_set(True)
@@ -337,38 +263,70 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         return {'FINISHED'}
 
 
+    # /anim_utils/
+    def _find_unused_blocks(self, obj):
+        """Find Keymesh blocks that are not used in animation (don't have keyframes)."""
+
+        unused_blocks = []
+        if self.workflow == 'ANIMATED':
+            for block in obj.keymesh.blocks:
+                usage_count, __ = keymesh_block_usage_count(obj, block.block)
+                if usage_count == 0:
+                    unused_blocks.append(block)
+
+        return unused_blocks
+
+
+    def _animate_visibility(self, obj, frame, value):
+        """Insert keyframes for objects viewport & render visibility."""
+
+        obj.hide_viewport = value
+        insert_keyframe(obj, frame, "hide_viewport", constant=False)
+        obj.hide_render = value
+        insert_keyframe(obj, frame, "hide_render", constant=False)
+
+
     def _workflow_keyframe(self, context, dup_obj, prev_obj, current_value, previous_value):
         """Animate render & viewport visibility of newly created object, as well as previous object to hide it."""
 
-        # Animate visibility of objects.
-        if (self.handle_duplicates and self.handling_method == 'REUSE') and current_value == previous_value:
+        if current_value == previous_value:
             return
         else:
             frame = context.scene.frame_current
-            self._animate_visibility(dup_obj, frame)
+            self._animate_visibility(dup_obj, frame, False)
 
             if prev_obj is not None:
-                # keyframe_previous_obj
-                prev_obj.hide_viewport = True
-                prev_obj.hide_render = True
-                self._animate_visibility(prev_obj, frame)
+                # Hide previous object & keyframe
+                self._animate_visibility(prev_obj, frame, True)
 
-                # keyframe_active_object_off
-                dup_obj.hide_viewport = True
-                dup_obj.hide_render = True
-                self._animate_visibility(dup_obj, frame-1)
+                # Hide current object on previous frame
+                self._animate_visibility(dup_obj, frame - 1, True)
 
 
-    def _workflow_print(self, dup_obj, prev_obj, axis):
-        """Line-up objects for 3D printing preparation & inspection."""
+    # /driver_utils/
+    def _create_driver_target(self, context, obj):
+        """Create a separate (clean) object for each Keymesh block & drive its visibility with new custom property."""
 
-        # Offset
-        if not self.keep_position:
-            self._offset_object(dup_obj, prev_obj, axis)
+        if self.convert_method != 'DRIVER':
+            return "pass"
+
+        if not self.driver_obj or self.driver_obj == "" or not context.scene.objects.get(self.driver_obj):
+            self.report({'ERROR'}, "Driver object not picked. Can't create custom property")
+            return "cancel"
+
+        # Create Custom Property
+        driver_obj = bpy.data.objects.get(self.driver_obj)
+        driver_obj[self.custom_prop_name] = -1
+
+        prop = driver_obj.id_properties_ui(self.custom_prop_name)
+        value_range = [block.block.keymesh["Data"] for block in obj.keymesh.blocks]
+        prop.update(soft_min=min(value_range), soft_max=max(value_range))
+
+        return "success"
 
 
-    def _workflow_driver(self, context, dup_obj, current_value):
-        """Drive viewport & render visibility of each new object with custom property on driver object."""
+    def _setup_drivers(self, dup_obj, block_value):
+        """Drive viewport & render visibility of each new object with custom property on target object."""
 
         driver_obj = bpy.data.objects.get(self.driver_obj)
         custom_prop = f'["{self.custom_prop_name}"]'
@@ -386,42 +344,114 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
                 target.id = driver_obj
                 target.data_path = custom_prop
 
-                driver.expression = f"not (keymesh_data == {current_value})"
-
-        # Insert keyframes for custom property.
-        if self.workflow == 'ANIMATED':
-            driver_obj[self.custom_prop_name] = current_value
-            insert_keyframe(driver_obj, context.scene.frame_current, custom_prop)
+                driver.expression = f"not (keymesh_data == {block_value})"
 
 
-    def _create_driver_target(self, context, obj):
-        """Create a separate (clean) object for each Keymesh block & drive its visibility with new custom property"""
+    # /geonodes_utils/
+    def _create_geonodes_target(self, context, obj):
+        """Duplicates active object, removes Keymesh properties & assigns empty data-block. Adds Geometry Nodes modifier."""
 
-        if self.workflow == 'STATIC' and not self.use_drivers:
-            return "pass"
-        if self.workflow == 'ANIMATED' and self.animation_method != 'DRIVER':
+        if self.convert_method != 'GEONODES':
             return "pass"
 
-        if not self.driver_obj or self.driver_obj == "" or not context.scene.objects.get(self.driver_obj):
-            self.report({'ERROR'}, "Driver object not picked. Can't create custom property")
+        # Create an empty object data.
+        name = obj.name + "_empty"
+
+        if obj.type == 'MESH':
+            empty_data = bpy.data.meshes.new(name)
+        elif obj.type == 'CURVE':
+            empty_data = bpy.data.curves.new(name, type='CURVE')
+        elif obj.type == 'FONT':
+            empty_data = bpy.data.curves.new(name, type='FONT')
+        elif obj.type == 'CURVES':
+            empty_data = bpy.data.hair_curves.new(name)
+        elif obj.type == 'POINTCLOUD':
+            empty_data = bpy.data.pointclouds.new(name)
+        elif obj.type == 'VOLUME':
+            empty_data = bpy.data.volumes.new(name)
+        else:
+            self.report({'ERROR'}, "Active object type is currently not supported by this animation method")
             return "cancel"
 
-        # Create Custom Property
-        driver_obj = bpy.data.objects.get(self.driver_obj)
-        driver_obj[self.custom_prop_name] = -1
+        # Create the duplicate.
+        geonodes_obj = duplicate_object(context, obj, empty_data, name=(obj.name + "_geonodes"), collection=True)
+        remove_keymesh_properties(geonodes_obj)
 
-        prop = driver_obj.id_properties_ui(self.custom_prop_name)
-        values = [block.block.keymesh["Data"] for block in obj.keymesh.blocks]
-        prop.update(soft_min=min(values), soft_max=max(values))
+        # Add geometry nodes modifier.
+        mod = geonodes_obj.modifiers.new("keymesh_convert", 'NODES')
+        geonodes_obj.modifiers.move(len(geonodes_obj.modifiers) - 1, 0)
+        node_group = self._create_geonodes_node_group(obj)
+        mod.node_group = node_group
 
+        self.geonodes_obj = geonodes_obj
+        self.geonodes_mod = mod
+        self.geonodes_group = node_group
         return "success"
 
 
-    def _animate_visibility(self, obj, frame):
-        insert_keyframe(obj, frame, "hide_viewport", constant=False)
-        insert_keyframe(obj, frame, "hide_render", constant=False)
+    def _create_geonodes_node_group(self, obj):
+        """Create base node group for geometry nodes modifier."""
+
+        node_group = bpy.data.node_groups.new(obj.name + "_keymesh", 'GeometryNodeTree')
+
+        # SOCKETS
+        out_socket = node_group.interface.new_socket(name="Output", in_out='OUTPUT',
+                                                     socket_type='NodeSocketGeometry')
+
+        in_socket = node_group.interface.new_socket(name="Index", in_out='INPUT',
+                                                    socket_type='NodeSocketInt')
+        value_range = [block.block.keymesh["Data"] for block in obj.keymesh.blocks]
+        in_socket.min_value = min(value_range)
+        in_socket.max_value = max(value_range)
 
 
+        # group_output
+        output = node_group.nodes.new("NodeGroupOutput")
+
+        # index_switch
+        switch = node_group.nodes.new("GeometryNodeIndexSwitch")
+        switch.label = switch.name = "keymesh_blocks"
+        switch.location = (output.location[0] - 200, output.location[1])
+        switch.index_switch_items.clear()
+
+        for i in range(max(value_range) + 1):
+            switch_item = switch.index_switch_items.new()
+
+        # group_input
+        input = node_group.nodes.new("NodeGroupInput")
+        input.location = (switch.location[0] - 260, switch.location[1] + 120)
+        input.color = (0.318, 0.180, 0.247)
+        input.use_custom_color = True
+
+        # LINKS
+        node_group.links.new(switch.inputs["Index"], input.outputs["Index"])
+        node_group.links.new(switch.outputs["Output"], output.inputs["Output"])
+
+        return node_group
+
+
+    def _workflow_geonodes(self, dup_obj, block_value):
+        """Add 'Object Info' node in geometry nodes modifier for each new object, and connect them to switch node."""
+
+        # Prepare Object
+        dup_obj.select_set(False)
+        dup_obj.modifiers.clear()
+
+        node_group = self.geonodes_group
+
+        # Add "Object Info" node
+        node = node_group.nodes.new("GeometryNodeObjectInfo")
+        node.inputs["As Instance"].default_value = False
+        node.transform_space = self.nodes_transform_space
+        node.location = (-460, block_value * -220)
+        node.inputs[0].default_value = dup_obj
+
+        # Connect
+        switch = node_group.nodes.get("keymesh_blocks")
+        node_group.links.new(node.outputs["Geometry"], switch.inputs[f"{block_value}"])
+
+
+    # /general_utils/
     def _offset_object(self, obj, prev_obj, axis):
         """Move object along given axis by given amount to offset it from previously created object."""
 
@@ -429,46 +459,11 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
             obj.location[axis] = prev_obj.location[axis] + self.offset_distance
 
 
-    def _count_duplicate_usage(self, obj, frames, holds):
-        """Returns list of frames on which block was used, including durations of holds."""
-
-        # check_if_keyframe_frame_also_in_holds
-        # if_true,_output_hold_duration_instead_of_that_frame
-        final_frames = []
-        for frame in frames:
-            found_in_hold = False
-            for obj.data, hold_periods in holds.items():
-                for period in hold_periods:
-                    if frame in period['frames']:
-                        if period['frames'] not in final_frames:
-                            final_frames.append(period['frames'])
-                        found_in_hold = True
-                        break
-                if found_in_hold:
-                    break
-            if not found_in_hold:
-                final_frames.append([frame])
-
-        # formatting_(show_min_and_max_frames_only)
-        output_frames = []
-        for frames in final_frames:
-            if len(frames) > 1:
-                output_frames.append(f"{min(frames)}-{max(frames)}")
-            else:
-                output_frames.append(str(frames[0]))
-
-        return output_frames
-
-
     def _create_duplicate(self, context, obj, data, collection):
-        """Creates duplicate of the given obj, assigns given data and collection, and clears Keymesh properties."""
+        """Creates a duplicate of the given obj, assigns given data and collection, and clears Keymesh properties."""
 
-        if self.naming_convention == 'FRAMES':
-            name = obj.name + "_frame_" + str(context.scene.frame_current)
-        elif self.naming_convention == 'BLOCKS':
-            name = data.name
-
-        dup_obj = duplicate_object(bpy.context, obj, data, name=name)
+        anim = 'NONE' if self.convert_method == 'GEONODES' else 'COPY'
+        dup_obj = duplicate_object(context, obj, data, name=data.name, anim=anim)
         dup_obj.hide_viewport = False
         dup_obj.hide_render = False
 
