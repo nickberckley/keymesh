@@ -178,13 +178,6 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         default = False,
     )
 
-    versioning: bpy.props.BoolProperty(
-        name = "Versioning",
-        description = ("Because of changes to Keymesh data, it is required to do versioning when old Keymesh files are opened.\n"
-                       "When you overwrite those files, versioning isn't needed anymore. Updates should be robust and painless,\n"
-                       "but if you don't have files made with old Keymesh version, or you've overwritten all of them, disable this"),
-        default = True,
-    )
     debug: bpy.props.BoolProperty(
         name = "Debugging Tools",
         description = "Will expose internal properties and experimental tools in UI for debugging purposes",
@@ -214,7 +207,6 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         col.prop(self, "enable_edit_mode")
         col.prop(self, "enable_shape_keys")
         col.separator()
-        col.prop(self, "versioning")
         col.prop(self, "debug")
 
 

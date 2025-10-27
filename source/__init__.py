@@ -5,7 +5,6 @@ if "bpy" in locals():
                 preferences,
                 properties,
                 ui,
-                versioning,
                 ]:
         importlib.reload(mod)
     print("Add-on Reloaded: Keymesh")
@@ -17,7 +16,6 @@ else:
         preferences,
         properties,
         ui,
-        versioning,
     )
 
 
@@ -39,7 +37,6 @@ modules = [
     preferences,
     properties,
     ui,
-    versioning,
 ]
 
 def register():
