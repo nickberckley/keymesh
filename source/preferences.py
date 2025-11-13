@@ -127,7 +127,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     category: bpy.props.StringProperty(
         name = "Sidebar Category",
         description = ("Choose a name for the category of the Keymesh panel in the sidebar"),
-        default = "Animate",
+        default = "Animation",
         update = update_sidebar_category,
     )
 
