@@ -1,5 +1,4 @@
 import bpy
-from bpy_extras.anim_utils import action_ensure_channelbag_for_slot
 
 
 #### ------------------------------ /general/ ------------------------------ ####
@@ -20,6 +19,7 @@ def ensure_channelbag(data_block):
     if anim_data.action_slot is None:
         return None
 
+    from bpy_extras.anim_utils import action_ensure_channelbag_for_slot
     channelbag = action_ensure_channelbag_for_slot(action, anim_data.action_slot)
 
     return channelbag
