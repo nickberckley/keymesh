@@ -1,5 +1,5 @@
 import bpy
-from ..functions.object import remove_block, update_active_index
+from ..functions.object import remove_block, remove_keymesh_properties, update_active_index
 from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
 from ..functions.timeline import get_keymesh_fcurve
 
@@ -110,8 +110,8 @@ class OBJECT_OT_keymesh_purge(bpy.types.Operator):
 
 class OBJECT_OT_keymesh_block_remove(bpy.types.Operator):
     bl_idname = "object.keymesh_block_remove"
-    bl_label = "Remove Keymesh Keyframe"
-    bl_description = "Removes selected Keymesh block and deletes every keyframe associated with it"
+    bl_label = "Remove Keymesh Block"
+    bl_description = "Remove selected Keymesh block and delete every keyframe associated with it"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -137,12 +137,8 @@ class OBJECT_OT_keymesh_block_remove(bpy.types.Operator):
         data_type = obj_data_type(obj)
 
         if len(obj.keymesh.blocks) <= 1:
-            """Completely remove object if last block is being removed."""
-            block = obj.data
-            remove_block(obj, block)
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            data_type.remove(block)
+            """Restore the object to "normal" state; remove all Keymesh properties."""
+            remove_keymesh_properties(obj)
         else:
             initial_index = obj.keymesh.blocks_active_index
 
