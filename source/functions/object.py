@@ -18,22 +18,22 @@ def new_object_id():
     return id
 
 
-def get_next_keymesh_index(obj):
+def get_next_keymesh_index(obj) -> int:
     """Get the appropriate index for the newly created/added Keymesh block."""
 
     if obj.keymesh.get("Keymesh Data") == None or obj.keymesh.get("Keymesh Data") == -1:
         return 0
     else:
         # find_the_largest_value_in_the_list
-        largest_value = None
+        largest_value = 0
         for block in obj.keymesh.blocks:
-            block_keymesh_data = block.block.keymesh.get("Data")
-            if block_keymesh_data is not None:
-                if largest_value == None or block_keymesh_data > largest_value:
-                    largest_value = block_keymesh_data
+            block_index: int = block.block.keymesh.get("Data")
+            if block_index is None:
+                continue
+            if block_index > largest_value:
+                largest_value = block_index
 
-        if largest_value is not None:
-            return largest_value + 1
+        return largest_value + 1
 
 
 def list_block_users(block):
