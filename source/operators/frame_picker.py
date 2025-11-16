@@ -1,7 +1,17 @@
 import bpy
-from ..functions.object import update_active_index
-from ..functions.poll import is_linked, is_keymesh_object, has_shared_action_slot, obj_data_type
-from ..functions.timeline import insert_keymesh_keyframe
+
+from ..functions.object import (
+    update_active_index,
+)
+from ..functions.poll import (
+    is_linked,
+    is_keymesh_object,
+    has_shared_action_slot,
+    obj_data_type,
+)
+from ..functions.timeline import (
+    insert_keymesh_keyframe,
+)
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -17,22 +27,21 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object:
-            obj = context.active_object
-            if is_keymesh_object(obj):
-                if obj in context.editable_objects:
-                    if obj.mode == 'EDIT':
-                        cls.poll_message_set("Can't insert Keymesh frames in edit modes")
-                        return False
-                    else:
-                        return True
-                else:
-                    cls.poll_message_set("Can't insert Keymesh frames on linked objects")
-                    return False
-            else:
-                return False
-        else:
+        if not context.active_object:
             return False
+        obj = context.active_object
+        if not is_keymesh_object(obj):
+            return False
+
+        # Not using `is_linked` here, because library-overriden objects work, just not linked.
+        if obj not in context.editable_objects:
+            cls.poll_message_set("Cannot insert Keymesh frames on linked objects")
+            return False
+        if obj.mode == 'EDIT':
+            cls.poll_message_set("Cannot insert Keymesh frames in edit modes")
+            return False
+
+        return True
 
     def execute(self, context):
         scene = context.scene
@@ -42,7 +51,7 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
             if obj.animation_data.action:
                 action = obj.animation_data.action
                 if action.library:
-                    self.report({'INFO'}, "You cannot animate in library overriden action. Create local one")
+                    self.report({'INFO'}, "Cannot animate in a library overriden action. Create a local one")
                     return {'CANCELLED'}
 
         # Assign Keymesh Block to Object
@@ -56,8 +65,10 @@ class OBJECT_OT_keymesh_block_keyframe(bpy.types.Operator):
 
         # refresh_timeline
         if has_shared_action_slot(obj):
-            """NOTE: This refresh happens when objects action slot is used by other Keymesh objects as well."""
-            """NOTE: Even though property is animated, it's not updated on other objects until timeline is refreshed."""
+            """
+            NOTE: This refresh happens when objects action slot is used by other Keymesh objects as well.
+            Even though property is animated, it's not updated on other objects until the timeline is refreshed.
+            """
             current_frame = context.scene.frame_current
             context.scene.frame_set(current_frame + 1)
             context.scene.frame_set(current_frame)
@@ -79,20 +90,17 @@ class OBJECT_OT_keymesh_block_move(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object:
-            if is_keymesh_object(context.active_object):
-                if is_linked(context, context.active_object):
-                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                    return False
-                else:
-                    if context.active_object.keymesh.grid_view == False:
-                        return True
-                    else:
-                        return False
-            else:
-                return False
-        else:
+        if not context.active_object:
             return False
+        if not is_keymesh_object(context.active_object):
+            return False
+        if is_linked(context, context.active_object):
+            cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+            return False
+        if context.active_object.keymesh.grid_view:
+            return False
+
+        return True
 
     def execute(self, context):
         obj = context.active_object
@@ -130,7 +138,7 @@ class OBJECT_OT_keymesh_block_set_active(bpy.types.Operator):
         obj = context.active_object
         index = int(obj.keymesh.blocks_active_index)
 
-        # set_`blocks_active_index`_if_it_is_not_set_(-1)
+        # Set `blocks_active_index` if it is not set (i.e. it's -1).
         if index < 0:
             obj.keymesh.blocks_active_index = int(obj.keymesh.blocks_grid)
 

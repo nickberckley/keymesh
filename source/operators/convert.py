@@ -1,6 +1,12 @@
 import bpy
-from ..functions.object import remove_keymesh_properties, duplicate_object
-from ..functions.poll import is_keymesh_object
+
+from ..functions.object import (
+    remove_keymesh_properties,
+    duplicate_object,
+)
+from ..functions.poll import (
+    is_keymesh_object,
+)
 from ..functions.timeline import (
     insert_keyframe,
     has_driver,
@@ -94,16 +100,14 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.mode == 'OBJECT':
-            if context.active_object:
-                if is_keymesh_object(context.active_object):
-                    return True
-                else:
-                    return False
-            else:
-                return False
-        else:
+        if context.mode != 'OBJECT':
             return False
+        if not context.active_object:
+            return False
+        if not is_keymesh_object(context.active_object):
+            return False
+
+        return True
 
 
     def draw(self, context):
@@ -210,7 +214,7 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
             duplicates[dup_obj] = block.block.keymesh["Data"]
             block_value = block.block.keymesh.get("Data")
 
-            # Offset each object from previous.
+            # Offset each object from the previous.
             if self.workflow == 'STATIC':
                 if not self.keep_position:
                     self._offset_object(dup_obj, previous_obj, move_axis_index)
@@ -221,12 +225,12 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
                 if block in unused_blocks:
                     self._animate_visibility(dup_obj, 0, True)
 
-            # 'DRIVER' Method (Drive visibility of objects).
+            # 'DRIVER' Method (Drive the visibility of objects).
             if self.convert_method == 'DRIVER':
                 self._setup_drivers(dup_obj, block_value)
                 driver_obj = bpy.data.objects.get(self.driver_obj)
 
-            # 'GEONODES' Method (animate modifier input)
+            # 'GEONODES' Method (animate the modifier input)
             if self.convert_method == 'GEONODES':
                 self._workflow_geonodes(dup_obj, block_value)
 
@@ -234,27 +238,29 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         # 'ANIMATED' Workflow
         if self.workflow == 'ANIMATED':
             previous_obj = None
-            previous_value = None
+            previous_index = None
 
             for frame in (keymesh_keyframes := get_keymesh_keyframes(obj)):
                 context.scene.frame_set(frame)
-                current_value = obj.keymesh["Keymesh Data"]
+                current_index = obj.keymesh["Keymesh Data"]
 
-                # 'SIMPLE (Keyframing)' Method (animate visibility of objects)
+                # 'SIMPLE (Keyframing)' Method (animate the visibility of objects)
                 if self.convert_method == 'SIMPLE':
-                    dup_obj = next((obj for obj, value in duplicates.items() if value == current_value), None)
-                    self._workflow_keyframe(context, dup_obj, previous_obj, current_value, previous_value)
-                    previous_obj = dup_obj
-                    previous_value = current_value
+                    dup_obj = next((obj for obj, value in duplicates.items() if value == current_index), None)
+                    if current_index != previous_index:
+                        self._workflow_keyframe(context, dup_obj, previous_obj, current_index, previous_index)
 
-                # 'DRIVER' Method (animate driving custom property)
+                    previous_obj = dup_obj
+                    previous_index = current_index
+
+                # 'DRIVER' Method (animate the custom property that drives the visibility)
                 if self.convert_method == 'DRIVER':
-                    driver_obj[self.custom_prop_name] = current_value
+                    driver_obj[self.custom_prop_name] = current_index
                     insert_keyframe(driver_obj, frame, f'["{self.custom_prop_name}"]', constant=True)
 
-                # 'GEONODES' Method (animate modifier input)
+                # 'GEONODES' Method (animate the modifier input)
                 if self.convert_method == 'GEONODES':
-                    self.geonodes_mod["Socket_1"] = current_value
+                    self.geonodes_mod["Socket_1"] = current_index
                     insert_keyframe(self.geonodes_obj, frame, 'modifiers["keymesh_convert"]["Socket_1"]', constant=True)
 
         obj.select_set(False)
@@ -264,8 +270,11 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
 
 
     # /anim_utils/
-    def _find_unused_blocks(self, obj):
-        """Find Keymesh blocks that are not used in animation (don't have keyframes)."""
+    def _find_unused_blocks(self, obj) -> list:
+        """
+        Returns the list of Keymesh blocks that are not used in the animation,
+        i.e. Keymesh f-curve doesn't have keyframes with the value that matches their index.
+        """
 
         unused_blocks = []
         if self.workflow == 'ANIMATED':
@@ -277,7 +286,7 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         return unused_blocks
 
 
-    def _animate_visibility(self, obj, frame, value):
+    def _animate_visibility(self, obj, frame: int, value: bool):
         """Insert keyframes for objects viewport & render visibility."""
 
         obj.hide_viewport = value
@@ -286,35 +295,40 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         insert_keyframe(obj, frame, "hide_render", constant=False)
 
 
-    def _workflow_keyframe(self, context, dup_obj, prev_obj, current_value, previous_value):
-        """Animate render & viewport visibility of newly created object, as well as previous object to hide it."""
+    def _workflow_keyframe(self, context, dup_obj, prev_obj):
+        """
+        Animate the render & viewport visibility of the newly created object,
+        as well as the previous object to hide it.
+        """
 
-        if current_value == previous_value:
-            return
-        else:
-            frame = context.scene.frame_current
-            self._animate_visibility(dup_obj, frame, False)
+        frame = context.scene.frame_current
+        self._animate_visibility(dup_obj, frame, False)
 
-            if prev_obj is not None:
-                # Hide previous object & keyframe
-                self._animate_visibility(prev_obj, frame, True)
+        if prev_obj is not None:
+            # Hide previous object & keyframe
+            self._animate_visibility(prev_obj, frame, True)
 
-                # Hide current object on previous frame
-                self._animate_visibility(dup_obj, frame - 1, True)
+            # Hide current object on previous frame
+            self._animate_visibility(dup_obj, frame - 1, True)
 
 
     # /driver_utils/
     def _create_driver_target(self, context, obj):
-        """Create a separate (clean) object for each Keymesh block & drive its visibility with new custom property."""
+        """
+        Creates a separate (clean) object for each Keymesh block
+        and drives their viewport & render visibility with the new custom property
+        created on `self.driver_obj`.
+        """
 
         if self.convert_method != 'DRIVER':
             return "pass"
 
-        if not self.driver_obj or self.driver_obj == "" or not context.scene.objects.get(self.driver_obj):
-            self.report({'ERROR'}, "Driver object not picked. Can't create custom property")
+        if not self.driver_obj or self.driver_obj == "" \
+        or not context.scene.objects.get(self.driver_obj):
+            self.report({'ERROR'}, "Driver object not picked. Can't create the custom property")
             return "cancel"
 
-        # Create Custom Property
+        # Create the custom property.
         driver_obj = bpy.data.objects.get(self.driver_obj)
         driver_obj[self.custom_prop_name] = -1
 
@@ -326,7 +340,10 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
 
 
     def _setup_drivers(self, dup_obj, block_value):
-        """Drive viewport & render visibility of each new object with custom property on target object."""
+        """
+        Drives the viewport & render visibility of each new object (for each Keymesh block)
+        with the custom property of the driver object (`self.driver_obj`).
+        """
 
         driver_obj = bpy.data.objects.get(self.driver_obj)
         custom_prop = f'["{self.custom_prop_name}"]'
@@ -349,7 +366,10 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
 
     # /geonodes_utils/
     def _create_geonodes_target(self, context, obj):
-        """Duplicates active object, removes Keymesh properties & assigns empty data-block. Adds Geometry Nodes modifier."""
+        """
+        Duplicates the active object, removes Keymesh properties,
+        assigns an empty data-block, and adds a Geometry Nodes modifier.
+        """
 
         if self.convert_method != 'GEONODES':
             return "pass"
@@ -374,10 +394,12 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
             return "cancel"
 
         # Create the duplicate.
-        geonodes_obj = duplicate_object(context, obj, empty_data, name=(obj.name + "_geonodes"), collection=True)
+        geonodes_obj = duplicate_object(context, obj, empty_data,
+                                        name=(obj.name + "_geonodes"),
+                                        collection=True)
         remove_keymesh_properties(geonodes_obj)
 
-        # Add geometry nodes modifier.
+        # Add the Geometry Nodes modifier.
         mod = geonodes_obj.modifiers.new("keymesh_convert", 'NODES')
         geonodes_obj.modifiers.move(len(geonodes_obj.modifiers) - 1, 0)
         node_group = self._create_geonodes_node_group(obj)
@@ -386,11 +408,12 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
         self.geonodes_obj = geonodes_obj
         self.geonodes_mod = mod
         self.geonodes_group = node_group
+
         return "success"
 
 
     def _create_geonodes_node_group(self, obj):
-        """Create base node group for geometry nodes modifier."""
+        """Creates the base node group for geometry nodes modifier."""
 
         node_group = bpy.data.node_groups.new(obj.name + "_keymesh", 'GeometryNodeTree')
 
@@ -431,7 +454,11 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
 
 
     def _workflow_geonodes(self, dup_obj, block_value):
-        """Add 'Object Info' node in geometry nodes modifier for each new object, and connect them to switch node."""
+        """
+        Add the 'Object Info' node in the Geometry Nodes modifier
+        for each new object (created from each Keymesh block), and connect
+        them to the switch node.
+        """
 
         # Prepare Object
         dup_obj.select_set(False)
@@ -453,28 +480,34 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
 
     # /general_utils/
     def _offset_object(self, obj, prev_obj, axis):
-        """Move object along given axis by given amount to offset it from previously created object."""
+        """
+        Moves the object along the given axis by the given amount
+        to offset it from the previously created object.
+        """
 
         if prev_obj is not None:
             obj.location[axis] = prev_obj.location[axis] + self.offset_distance
 
 
     def _create_duplicate(self, context, obj, data, collection):
-        """Creates a duplicate of the given obj, assigns given data and collection, and clears Keymesh properties."""
+        """
+        Creates the duplicate of the given object, assigns the given data
+        and collection, and clears Keymesh properties.
+        """
 
         anim = 'NONE' if self.convert_method == 'GEONODES' else 'COPY'
         dup_obj = duplicate_object(context, obj, data, name=data.name, anim=anim)
         dup_obj.hide_viewport = False
         dup_obj.hide_render = False
 
-        # remove_keymesh_properties
+        # Remove Keymesh Properties
         remove_keymesh_properties(dup_obj)
         if data.keymesh.get("ID", None):
             del data.keymesh["ID"]
         if data.keymesh.get("Data", None):
             del data.keymesh["Data"]
 
-        # move_to_collection
+        # Move to Collection
         collection.objects.link(dup_obj)
         for coll in dup_obj.users_collection:
             if coll != collection:

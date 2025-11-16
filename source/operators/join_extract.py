@@ -1,4 +1,5 @@
 import bpy
+
 from ..functions.object import (
     get_next_keymesh_index,
     assign_keymesh_id,
@@ -27,30 +28,25 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object and len(context.selected_objects) > 1:
-            if context.object.mode == 'OBJECT':
-                if is_candidate_object(context.active_object):
-                    if is_linked(context, context.active_object):
-                        cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                        return False
-                    else:
-                        return True
-                else:
-                    cls.poll_message_set("Active object type isn't supported by Keymesh")
-                    return False
-        else:
+        if context.object.mode != 'OBJECT':
+            return False
+        if not context.active_object:
+            return False
+        if len(context.selected_objects) <= 1:
             return False
 
+        if not is_candidate_object(context.active_object):
+            cls.poll_message_set("Active object type isn't supported by Keymesh")
+            return False
+        if is_linked(context, context.active_object):
+            cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+            return False
 
-    def transfer_block(self, target, block):
-        block_index = get_next_keymesh_index(target)
-        insert_block(target, block, block_index)
+        return True
 
     def execute(self, context):
         target = context.active_object
-        keymesh_object = False
-        if is_keymesh_object(target):
-            keymesh_object = True
+        keymesh_object = is_keymesh_object(target)
 
         # filter_sources
         sources = []
@@ -58,10 +54,10 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
             if source == target:
                 continue
             if source.type != target.type:
-                self.report({'INFO'}, f"{source.name} can not be joined because it's not the same object type as {target.name}.")
+                self.report({'INFO'}, f"{source.name} cannot be joined because it's not the same object type as {target.name}.")
                 continue
             if is_linked(context, source):
-                self.report({'INFO'}, f"{source.name} can not be joined because it's linked.")
+                self.report({'INFO'}, f"{source.name} cannot be joined because it's linked.")
                 continue
 
             sources.append(source)
@@ -69,25 +65,29 @@ class OBJECT_OT_keymesh_join(bpy.types.Operator):
         if len(sources) > 0:
             # Prepare Target
             assign_keymesh_id(target)
-            if keymesh_object == False:
-                # turn_active_data_into_first_keymesh_block
+            if not keymesh_object:
+                # Turn active data into a first Keymesh block.
                 target.keymesh["Keymesh Data"] = 0
                 insert_block(target, target.data, 0)
                 target.keymesh.blocks_active_index = 0
 
-            # Transfer
+            # Transfer.
             for source in sources:
                 if is_keymesh_object(source):
                     # transfer_keymesh_blocks
                     for block in source.keymesh.blocks:
-                        self.transfer_block(target, block.block)
+                        self._transfer_block(target, block.block)
                 else:
-                    self.transfer_block(target, source.data)
+                    self._transfer_block(target, source.data)
 
                 # remove_source_object
                 bpy.data.objects.remove(source)
 
         return {'FINISHED'}
+
+    def _transfer_block(self, target, block):
+        block_index = get_next_keymesh_index(target)
+        insert_block(target, block, block_index)
 
 
 class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
@@ -100,21 +100,19 @@ class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object:
-            if is_keymesh_object(context.active_object):
-                if is_linked(context, context.active_object):
-                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                    return False
-                else:
-                    if context.active_object.mode == 'EDIT':
-                        cls.poll_message_set("Can't extract Keymesh block in edit modes")
-                        return False
-                    else:
-                        return True
-            else:
-                return False
-        else:
+        if not context.active_object:
             return False
+        if not is_keymesh_object(context.active_object):
+            return False
+
+        if is_linked(context, context.active_object):
+            cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+            return False
+        if context.active_object.mode == 'EDIT':
+            cls.poll_message_set("Can't extract Keymesh block in edit modes")
+            return False
+
+        return True
 
     def execute(self, context):
         obj = context.active_object
@@ -128,21 +126,20 @@ class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
         # Remove Block from Registry
         remove_block(obj, block)
 
-
-        # remove_original_object_if_last_block_was_extracted
+        # Remove the original object if the last block was extracted.
         if len(obj.keymesh.blocks) == 0:
             for coll in obj.users_collection:
                 coll.objects.unlink(obj)
         else:
             # set_new_active_block
             if obj.keymesh.animated:
-                """NOTE: Refreshing timeline to update objects "Keymesh Data" property"""
+                """NOTE: Refreshing the timeline to update objects "Keymesh Data" property."""
                 current_frame = context.scene.frame_current
                 context.scene.frame_set(current_frame + 1)
                 context.scene.frame_set(current_frame)
                 update_active_index(obj)
             else:
-                # make_previous_block_new_obj.data_for_static_keymesh_objects
+                # Make the previous block new `obj.data` for static Keymesh objects.
                 previous_index = index - 1 if index - 1 > -1 else 0
                 update_active_index(obj, index=previous_index)
 
@@ -150,7 +147,7 @@ class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
                 obj.data = previous_block
                 obj.keymesh["Keymesh Data"] = previous_block.keymesh["Data"]
 
-        # make_new_object_active
+        # Make the new object active.
         for ob in context.view_layer.objects:
             ob.select_set(False)
         dup_obj.select_set(True)

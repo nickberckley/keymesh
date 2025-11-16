@@ -2,10 +2,20 @@ import bpy
 import os
 from .. import __package__ as base_package
 
-from .poll import is_keymesh_object, is_unique_id, supported_types
-from .timeline import get_keymesh_fcurve
-from .object import new_object_id
-from .thumbnail import resolve_path
+from .object import (
+    new_object_id,
+)
+from .poll import (
+    is_keymesh_object,
+    is_unique_id,
+    supported_types,
+)
+from .thumbnail import (
+    resolve_path,
+)
+from .timeline import (
+    get_keymesh_fcurve,
+)
 
 
 #### ------------------------------ /frame_handler/ ------------------------------ ####
@@ -36,7 +46,7 @@ def update_keymesh(scene, override=False):
                 symmetry_y = obj.data.use_mirror_y
                 symmetry_z = obj.data.use_mirror_z
 
-            # Find Correct Keymesh Block for Object (with Same Data)
+            # Find correct Keymesh block for an object (with same index).
             correct_block = None
             obj_keymesh_data = obj.keymesh["Keymesh Data"]
             for block in obj.keymesh.blocks:
@@ -56,7 +66,7 @@ def update_keymesh(scene, override=False):
                 obj.data.use_mirror_z = symmetry_z
 
 
-            # Update Active Index
+            # Update active index.
             ui_index = obj.keymesh.blocks_active_index
             if ui_index is not None:
                 block_index = obj.keymesh.blocks.find(obj.data.name)
@@ -88,43 +98,48 @@ def append_keymesh(lapp_context):
         # Detect Keymesh Object
         if type == 'OBJECT':
             obj = item.id
-            if obj.keymesh.active:
-                has_keymesh = True
-                km_id = obj.keymesh.get("ID", None)
-                new_id = None
+            if obj.keymesh.active == False:
+                continue
 
-                # Ensure Unique ID
-                if is_unique_id(obj, km_id) == False:
-                    new_id = new_object_id()
-                    obj.keymesh["ID"] = new_id
+            has_keymesh = True
+            km_id = obj.keymesh.get("ID", None)
+            new_id = None
 
-                for block in obj.keymesh.blocks:
-                    data = block.block
+            # Ensure Unique ID
+            if is_unique_id(obj, km_id) == False:
+                new_id = new_object_id()
+                obj.keymesh["ID"] = new_id
 
-                    data.use_fake_user = True
-                    if new_id != None:
-                        data.keymesh["ID"] = new_id
+            for block in obj.keymesh.blocks:
+                data = block.block
 
-                    # Fix Name Collisions
-                    if block.name != data.name:
-                        block.name = data.name
+                data.use_fake_user = True
+                if new_id != None:
+                    data.keymesh["ID"] = new_id
 
-                    # Make Thumbnails Relative
-                    """NOTE: Since thumbnails (StringProperty) are set to relative in library files, they're incorrect when imported."""
-                    """NOTE: this code gets absolute path for them and generates new path relative to receiving file."""
-                    if block.thumbnail != "":
-                        library_path = os.path.dirname(bpy.path.abspath(library.filepath))
-                        thumbnail_path = block.thumbnail.lstrip("/\\")
-                        full_path = os.path.join(library_path, thumbnail_path)
+                # Fix Name Collisions
+                if block.name != data.name:
+                    block.name = data.name
 
-                        resolved_path = resolve_path(full_path)
-                        block.thumbnail = resolved_path
+                # Make Thumbnails Relative
+                """
+                NOTE: Since thumbnails (`StringProperty`) are set to relative in library
+                files, they're incorrect when imported.this code gets absolute path for
+                them and generates new path relative to receiving file.
+                """
+                if block.thumbnail != "":
+                    library_path = os.path.dirname(bpy.path.abspath(library.filepath))
+                    thumbnail_path = block.thumbnail.lstrip("/\\")
+                    full_path = os.path.join(library_path, thumbnail_path)
+
+                    resolved_path = resolve_path(full_path)
+                    block.thumbnail = resolved_path
 
 
         # Detect Keymesh Blocks
         elif type in [t[0] for t in supported_types()]:
             if direct:
-                # remove_keymesh_properties_from_directly_appended_blocks
+                # Remove Keymesh properties from directly appended blocks.
                 block = item.id
                 if block.keymesh.get("ID", None):
                     del block.keymesh["ID"]
@@ -134,7 +149,10 @@ def append_keymesh(lapp_context):
 
     # update_frame_handler
     if has_keymesh:
-        """NOTE: `update_keymesh()` is not working because `obj.keymesh.get("Keymesh Data")` is set to the frame of the original file."""
+        """
+        NOTE: `update_keymesh()` is not working because `obj.keymesh.get("Keymesh Data")`
+        is set to the frame of the original file.
+        """
         current_frame = bpy.context.scene.frame_current
         bpy.context.scene.frame_set(current_frame + 1)
         bpy.context.scene.frame_set(current_frame)

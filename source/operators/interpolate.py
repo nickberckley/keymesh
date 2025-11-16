@@ -1,6 +1,11 @@
 import bpy
-from ..functions.poll import is_keymesh_object
-from ..functions.timeline import get_next_keymesh_block
+
+from ..functions.poll import (
+    is_keymesh_object,
+)
+from ..functions.timeline import (
+    get_next_keymesh_block,
+)
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####

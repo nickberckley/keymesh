@@ -1,7 +1,18 @@
 import bpy
-from ..functions.object import remove_block, remove_keymesh_properties, update_active_index
-from ..functions.poll import is_linked, is_keymesh_object, obj_data_type
-from ..functions.timeline import get_keymesh_fcurve
+
+from ..functions.object import (
+    remove_block,
+    remove_keymesh_properties,
+    update_active_index,
+)
+from ..functions.poll import (
+    is_linked,
+    is_keymesh_object,
+    obj_data_type,
+)
+from ..functions.timeline import (
+    get_keymesh_fcurve,
+)
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -20,24 +31,23 @@ class OBJECT_OT_keymesh_purge(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object:
-            if is_keymesh_object(context.active_object):
-                if is_linked(context, context.active_object):
-                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                    return False
-                else:
-                    return True
-            else:
-                return False
-        else:
+        if not context.active_object:
             return False
+        obj = context.active_object
+        if not is_keymesh_object(obj):
+            return False
+        if is_linked(context, obj):
+            cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+            return False
+
+        return True
 
     def invoke(self, context, event):
         self.all = event.shift
 
         obj = context.active_object
         if obj.keymesh.animated == False and self.all == False:
-            self.report({'INFO'}, "Can't remove unused blocks for static Keymesh objects")
+            self.report({'INFO'}, "Cannot remove unused blocks for static Keymesh objects")
             return {'CANCELLED'}
 
         return self.execute(context)
@@ -48,15 +58,17 @@ class OBJECT_OT_keymesh_purge(bpy.types.Operator):
         if self.all:
             for obj in bpy.data.objects:
                 if obj.keymesh.animated is False:
-                    """NOTE: Static objects are excluded because their blocks always have 0 keyframes, which is expected."""
-                    """Removing those blocks would remove the object altogether which is pointless."""
+                    """
+                    NOTE: Static objects are excluded because their blocks always
+                    have 0 keyframes, which is expected. Removing those blocks would
+                    remove the object altogether which is pointless.
+                    """
                     continue
                 if is_linked(context, obj):
                     continue
                 filtered_objects.append(obj)
         else:
             filtered_objects = [context.active_object]
-
 
         # list_used_keymesh_blocks
         used_keymesh_blocks = {}
@@ -116,45 +128,43 @@ class OBJECT_OT_keymesh_block_remove(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object:
-            if is_keymesh_object(context.active_object):
-                if is_linked(context, context.active_object):
-                    cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
-                    return False
-                else:
-                    if context.active_object.mode == 'EDIT':
-                        cls.poll_message_set("Can't remove Keymesh block in edit modes")
-                        return False
-                    else:
-                        return True
-            else:
-                return False
-        else:
+        if not context.active_object:
             return False
+        obj = context.active_object
+        if not is_keymesh_object(obj):
+            return False
+        if is_linked(context, obj):
+            cls.poll_message_set("Operator is disabled for linked and library-overriden objects")
+            return False
+        if obj.mode == 'EDIT':
+            cls.poll_message_set("Cannot remove Keymesh block in edit modes")
+            return False
+
+        return True
 
     def execute(self, context):
         obj = context.active_object
         data_type = obj_data_type(obj)
 
         if len(obj.keymesh.blocks) <= 1:
-            """Restore the object to "normal" state; remove all Keymesh properties."""
+            """Restore the object to the "normal" state; remove all Keymesh properties."""
             remove_keymesh_properties(obj)
         else:
             initial_index = obj.keymesh.blocks_active_index
 
-            # get_active_block
+            # Get active block.
             if (initial_index == None) or (initial_index > len(obj.keymesh.blocks) - 1):
                 return {'CANCELLED'}
             block = obj.keymesh.blocks[initial_index].block
 
-            # remove_from_block_registry
+            # Remove it from the blocks registry.
             remove_block(obj, block)
 
 
-            # make_previous_block_active
+            # Make the previous block active.
             previous_block_index = initial_index - 1 if initial_index - 1 > -1 else 0
             if obj.keymesh.animated == False:
-                # make_previous_block_new_obj.data_for_static_keymesh_objects
+                # Make the previous block new `obj.data` for static Keymesh objects.
                 previous_block = obj.keymesh.blocks[previous_block_index].block
                 obj.data = previous_block
                 obj.keymesh["Keymesh Data"] = previous_block.keymesh["Data"]

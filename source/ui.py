@@ -1,24 +1,33 @@
 import bpy
-from .functions.poll import is_linked, is_keymesh_object
-from .functions.timeline import keymesh_block_usage_count
+
+from .functions.poll import (
+    is_linked,
+    is_keymesh_object,
+)
+from .functions.timeline import (
+    keymesh_block_usage_count,
+)
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
 def get_block_icon(obj, block):
-    """Returns correct icon for Keymesh block based on scene properties, object state, and blocks status."""
+    """
+    Returns correct icon for Keymesh block based on scene properties,
+    object state, and blocks status.
+    """
 
     obj_keymesh_data = obj.keymesh.get("Keymesh Data")
     block_keymesh_data = block.block.keymesh.get("Data")
 
-    # Handler Disabled
+    # When handler is disabled, show current object data as active.
     if not bpy.context.scene.keymesh.enable_handler:
         if block_keymesh_data == obj.data.keymesh.get("Data"):
             select_icon = 'RADIOBUT_ON'
         else:
             select_icon = 'RADIOBUT_OFF'
 
-    # Handler Enabled
+    # When handler is enabled, show Keymesh block with correct index as active.
     else:
         if block_keymesh_data == obj_keymesh_data:
             select_icon = 'RADIOBUT_ON'
@@ -31,6 +40,7 @@ def get_block_icon(obj, block):
 
 #### ------------------------------ PANELS ------------------------------ ####
 
+# OBJECT-level
 class VIEW3D_PT_keymesh(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_keymesh"
     bl_label = "Keymesh"
@@ -83,12 +93,12 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
 
     def draw_header_preset(self, context):
         layout = self.layout
-        obj = context.object
-        layout.prop(obj.keymesh, "grid_view", text="", icon='LINENUMBERS_ON' if obj.keymesh.grid_view else 'IMGDISPLAY', emboss=False, toggle=False)
+        obj = context.active_object
+        icon = 'LINENUMBERS_ON' if obj.keymesh.grid_view else 'IMGDISPLAY'
+        layout.prop(obj.keymesh, "grid_view", text="", icon=icon, emboss=False, toggle=False)
 
     def draw(self, context):
         layout = self.layout
-        scene = context.scene.keymesh
         obj = context.active_object
 
         # List View
@@ -102,10 +112,10 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
                 propname = "blocks",
                 active_dataptr = obj.keymesh,
                 active_propname = "blocks_active_index",
-                rows = 8
+                rows = 8,
             )
 
-            # buttons
+            # Buttons
             col = row.column(align=True)
             add = col.operator("object.keyframe_object_data", text="", icon='ADD')
             add.path='STILL'
@@ -131,16 +141,16 @@ class VIEW3D_PT_keymesh_frame_picker(bpy.types.Panel):
                 obj.keymesh,
                 "blocks_grid",
                 show_labels=True,
-                scale=6
+                scale=6,
             )
 
-            # properties
+            # Properties
             row = col.row(align=True)
             row.prop(active_block, "thumbnail", text="")
             row.operator("object.keymesh_thumbnails_refresh", text="", icon='FILE_REFRESH')
             row.active = False
 
-            # buttons
+            # Buttons
             col = layout.column()
             col.separator()
             row = col.row(align=False)
@@ -194,6 +204,7 @@ class VIEW3D_PT_keymesh_tools(bpy.types.Panel):
                 # panel.operator("object.keymesh_interpolate", text="INTERPOLATE")
 
 
+# SCENE-level
 class SCENE_PT_keymesh(bpy.types.Panel):
     bl_idname = "SCENE_PT_keymesh"
     bl_label = "Keymesh"
@@ -239,7 +250,7 @@ class VIEW3D_MT_keymesh_filter_menu(bpy.types.Menu):
 #### ------------------------------ /ui_list/ ------------------------------ ####
 
 class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
-    """List of Keymesh data-blocks for active object"""
+    """List of Keymesh blocks of active object."""
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_property, index):
         obj = context.active_object
@@ -267,15 +278,17 @@ class VIEW3D_UL_keymesh_blocks(bpy.types.UIList):
     def filter_items(self, context, data, propname):
         items = getattr(data, propname)
 
-        # search_filter
+        # Search Filter
         flags = []
         if self.filter_name:
             flags = bpy.types.UI_UL_list.filter_items_by_name(
-                self.filter_name, self.bitflag_filter_item, items, "name", reverse=self.use_filter_invert)
+                self.filter_name, self.bitflag_filter_item, items,
+                "name", reverse=self.use_filter_invert
+            )
         if not flags:
             flags = [self.bitflag_filter_item] * len(items)
 
-        # sort_by_name
+        # Sort by Name
         indices = [i for i in range(len(items))]
         if self.use_filter_sort_alpha:
             indices = bpy.types.UI_UL_list.sort_items_by_name(items, "name")

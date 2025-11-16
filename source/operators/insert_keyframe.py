@@ -1,58 +1,22 @@
 import bpy
 from .. import __package__ as base_package
 
-from ..functions.object import get_next_keymesh_index, assign_keymesh_id, insert_block, update_active_index
-from ..functions.timeline import insert_keymesh_keyframe
-from ..functions.poll import is_candidate_object, is_linked
-from ..functions.handler import update_keymesh
-
-
-#### ------------------------------ FUNCTIONS ------------------------------ ####
-
-def insert_keyframe_exec(self, context, obj):
-    prefs = context.preferences.addons[base_package].preferences
-
-    if obj:
-        object_mode = obj.mode
-        if prefs.enable_edit_mode and object_mode == 'EDIT':
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Assign Keymesh ID
-        assign_keymesh_id(obj, animate=False if self.static else True)
-
-        # get_block_index
-        block_index = get_next_keymesh_index(obj)
-        if prefs.naming_method == 'INDEX':
-            block_name = obj.name_full + "_keymesh_" + str(block_index)
-        elif prefs.naming_method == 'FRAME':
-            block_name = obj.name_full + "_frame_" + str(context.scene.frame_current)
-
-        # Create New Block
-        if obj.type == 'MESH':
-            if prefs.enable_shape_keys and obj.data.shape_keys is not None:
-                new_block = obj.data.copy()
-            else:
-                new_block = bpy.data.meshes.new_from_object(obj)
-        else:
-            new_block = obj.data.copy()
-        new_block.name = block_name
-
-        # assign_new_block_to_object
-        insert_block(obj, new_block, block_index)
-        obj.data = new_block
-
-        if self.static:
-            # account_for_static_keymesh_objects_by_actually_changing_object_data
-            obj.keymesh["Keymesh Data"] = block_index
-            update_active_index(obj)
-        else:
-            # Insert Keyframe
-            insert_keymesh_keyframe(obj, context.scene.frame_current, block_index)
-            update_keymesh(context.scene, override=True)
-
-        if prefs.enable_edit_mode:
-            bpy.ops.object.mode_set(mode=object_mode)
-
+from ..functions.handler import (
+    update_keymesh,
+)
+from ..functions.object import (
+    get_next_keymesh_index,
+    assign_keymesh_id,
+    insert_block,
+    update_active_index,
+)
+from ..functions.poll import (
+    is_candidate_object,
+    is_linked,
+)
+from ..functions.timeline import (
+    insert_keymesh_keyframe,
+)
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####
@@ -99,34 +63,86 @@ class OBJECT_OT_keymesh_insert(bpy.types.Operator):
         else:
             return False
 
+
     def invoke(self, context, event):
         if not self.static:
             self.static = event.shift
         return self.execute(context)
+
 
     def execute(self, context):
         obj = context.active_object
         settings = context.scene.keymesh
         step = settings.frame_skip_count
 
-        if obj is not None:
-            # when_no_direction
-            if (self.path == 'STILL' or obj.keymesh.animated == False):
-                insert_keyframe_exec(self, context, obj)
-                return {'FINISHED'}
+        if obj is None:
+            return {'CANCELLED'}
 
-            # when_forwarding
-            else:
-                if not self.static:
-                    if self.path == 'FORWARD':
-                        context.scene.frame_current += step
-                    elif self.path == 'BACKWARD':
-                        context.scene.frame_current -= step
-
-                insert_keyframe_exec(self, context, obj)
-
+        # When no direction is given.
+        if (self.path == 'STILL' or obj.keymesh.animated == False):
+            self._insert_new_block(context, obj)
             return {'FINISHED'}
 
+        # When forwarding.
+        else:
+            if not self.static:
+                if self.path == 'FORWARD':
+                    context.scene.frame_current += step
+                elif self.path == 'BACKWARD':
+                    context.scene.frame_current -= step
+
+            self._insert_new_block(context, obj)
+
+        return {'FINISHED'}
+
+
+    def _insert_new_block(self, context, obj):
+        """
+        Creates a new Keymesh block (copy of the current `object.data`),
+        inserts it in the blocks registry, and keyframes it.
+        """
+
+        prefs = context.preferences.addons[base_package].preferences
+
+        object_mode = obj.mode
+        if prefs.enable_edit_mode and object_mode == 'EDIT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Assign Keymesh ID
+        assign_keymesh_id(obj, animate=False if self.static else True)
+
+        # get_block_index
+        block_index = get_next_keymesh_index(obj)
+        if prefs.naming_method == 'INDEX':
+            block_name = obj.name_full + "_keymesh_" + str(block_index)
+        elif prefs.naming_method == 'FRAME':
+            block_name = obj.name_full + "_frame_" + str(context.scene.frame_current)
+
+        # Create the New Block
+        if obj.type == 'MESH':
+            if prefs.enable_shape_keys and obj.data.shape_keys is not None:
+                new_block = obj.data.copy()
+            else:
+                new_block = bpy.data.meshes.new_from_object(obj)
+        else:
+            new_block = obj.data.copy()
+        new_block.name = block_name
+
+        # Assign new block to the object.
+        insert_block(obj, new_block, block_index)
+        obj.data = new_block
+
+        if self.static:
+            # Account for static Keymesh objects by actually changing the object data.
+            obj.keymesh["Keymesh Data"] = block_index
+            update_active_index(obj)
+        else:
+            # Insert Keyframe
+            insert_keymesh_keyframe(obj, context.scene.frame_current, block_index)
+            update_keymesh(context.scene, override=True)
+
+        if prefs.enable_edit_mode:
+            bpy.ops.object.mode_set(mode=object_mode)
 
 
 #### ------------------------------ REGISTRATION ------------------------------ ####

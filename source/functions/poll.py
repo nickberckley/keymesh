@@ -3,15 +3,15 @@ import bpy
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
 
-def is_candidate_object(obj):
-    """Checks if obj.type is supported by Keymesh."""
+def is_candidate_object(obj) -> bool:
+    """Checks if type of the object is supported by Keymesh."""
 
     if obj:
         return obj.type in [obj_type for obj_type, _ in supported_types()]
 
 
-def is_linked(context, obj):
-    """Checks whether or not obj is linked from another file and/or library overriden."""
+def is_linked(context, obj) -> bool:
+    """Checks if the object is linked from another file and/or library overriden."""
 
     if obj:
         if obj not in context.editable_objects:
@@ -26,7 +26,7 @@ def is_linked(context, obj):
                 return False
 
 
-def is_instanced(data):
+def is_instanced(data) -> bool:
     """Checks if data-block is used by more than one object, i.e. is instanced."""
 
     if data.users == 1:
@@ -43,8 +43,8 @@ def is_instanced(data):
         return False
 
 
-def is_keymesh_object(obj):
-    """Checks whether or not obj has Keymesh animation or blocks."""
+def is_keymesh_object(obj) -> bool:
+    """Checks if the object has Keymesh animation or blocks."""
 
     if obj.keymesh.active == True:
         if obj.keymesh.get("ID", None):
@@ -56,10 +56,13 @@ def is_keymesh_object(obj):
         return False
 
 
-def has_shared_action_slot(obj, check_index=False, index=0):
-    """Returns True if objects action slot has other users as well."""
-    """Only other Keymesh objects are considered valid users."""
-    """Furthermore, if `check_index` is True, only Keymesh object that has block with given `index` is considered valid."""
+def has_shared_action_slot(obj, check_index=False, index: str=0) -> bool:
+    """
+    Returns True if objects action slot has other valid users as well.
+    Only other Keymesh objects are considered valid users.
+    Furthermore, if `check_index` is True, only Keymesh objects that have a block with
+    the given `index` is considered valid.
+    """
 
     if not obj.animation_data:
         return False
@@ -79,9 +82,9 @@ def has_shared_action_slot(obj, check_index=False, index=0):
             if is_keymesh_object(user):
                 keymesh_users.append(user)
 
-        # If the action slot has any Keymesh user besides the obj itself.
+        # Check if the action slot has any Keymesh user besides the `obj` itself.
         if len([o for o in keymesh_users if o != obj]) > 0:
-            # Check if other Keymesh users have a block with given index.
+            # Check if other Keymesh users have a block with the given index.
             if check_index:
                 for user in keymesh_users:
                     if has_index(user, index):
@@ -92,17 +95,20 @@ def has_shared_action_slot(obj, check_index=False, index=0):
             return False
 
 
-def has_index(obj, index):
-    """Checks if obj has Keymesh block with given index."""
+def has_index(obj, index) -> bool:
+    """Checks if the object has a Keymesh block with the given index."""
 
     for block in obj.keymesh.blocks:
         if block.block.keymesh.get("Data", None) == index:
             return True
 
+    return False
 
-def is_unique_id(obj, id):
-    """Checks if any of the objects in the .blend file have same Keymesh ID as obj."""
-    """Used in link/append handlers to make sure objects don't have same ID."""
+
+def is_unique_id(obj, id) -> bool:
+    """
+    Checks if any of the objects in the .blend file have the same Keymesh ID as `obj`.
+    """
 
     for ob in bpy.data.objects:
         if ob == obj:
@@ -115,7 +121,7 @@ def is_unique_id(obj, id):
     return True
 
 
-def supported_types():
+def supported_types() -> list[tuple]:
     return [
         ('MESH', bpy.data.meshes),
         ('CURVE', bpy.data.curves),
@@ -139,5 +145,11 @@ def obj_data_type(obj):
             return data_type
 
 
-def edit_modes():
-    return ['EDIT_MESH', 'EDIT_CURVE', 'EDIT_SURFACE', 'EDIT_TEXT', 'EDIT_CURVES', 'EDIT_METABALL', 'EDIT_LATTICE']
+def edit_modes() -> list[str]:
+    return ['EDIT_MESH',
+            'EDIT_CURVE',
+            'EDIT_SURFACE',
+            'EDIT_TEXT',
+            'EDIT_CURVES',
+            'EDIT_METABALL',
+            'EDIT_LATTICE']

@@ -1,6 +1,12 @@
 import bpy
-from .functions.object import update_active_block_by_index
-from .functions.thumbnail import keymesh_blocks_enum_items, get_missing_thumbnails
+
+from .functions.object import (
+    update_active_block_by_index,
+)
+from .functions.thumbnail import (
+    keymesh_blocks_enum_items,
+    get_missing_thumbnails,
+)
 
 
 #### ------------------------------ FUNCTIONS ------------------------------ ####
@@ -9,15 +15,20 @@ def update_block_name(self, context):
     if self.block:
         self.block.name = self.name
 
-        """NOTE: When using name that is already used block is assigned different string from self.name (.001 added)."""
-        """This part checks if updated block.name isn't what was inputted, and if it isn't changed self.name as well."""
+        """
+        NOTE: When using the name that is already used, the block is assigned a different
+        string from `self.name` (.001 is added). This part checks if updated `block.name`
+        isn't what was inputted, and if it isn't changed `self.name` as well.
+        """
         if self.block.name != self.name:
             self.name = self.block.name
 
 
 def keymesh_blocks_grid_update(self, context):
-    """Make active EnumProperty item active Keymesh block."""
-    """NOTE: To make this work all enum_item id names should be str(i)."""
+    """
+    Make active `EnumProperty` item active Keymesh block.
+    NOTE: To make this work, all `enum_item` ID names should be `str(i)`.
+    """
 
     obj = self.id_data
     if obj.keymesh.grid_view:
@@ -26,8 +37,10 @@ def keymesh_blocks_grid_update(self, context):
 
 
 def keymesh_blocks_list_update(self, context):
-    """Set blocks_active_index from active blocks_grid EnumProperty item."""
-    """NOTE: To make this work all enum_item id names should be str(i)."""
+    """
+    Set `blocks_active_index` from active `blocks_grid` `EnumProperty` item.
+    NOTE: To make this work all `enum_item` ID names should be `str(i)`.
+    """
 
     obj = self.id_data
     if obj.keymesh.grid_view == False:
@@ -37,16 +50,22 @@ def keymesh_blocks_list_update(self, context):
 
 
 def thumbnails_render_offer(self, context):
-    """Detects when there are Keymesh blocks with no/missing thumbnails and calls for pop-up that offers to render it."""
+    """
+    Detects if there are Keymesh blocks with no/missing thumbnails
+    and calls for a pop-up that offers to render them.
+    """
 
     obj = self.id_data
-    if obj.is_editable:
-        if not obj.keymesh.ignore_missing_thumbnails:
-            if self.grid_view:
-                missing_thumbnails = get_missing_thumbnails(obj)
-                if len(missing_thumbnails) != 0:
-                    bpy.ops.object.keymesh_thumbnails_offer('INVOKE_DEFAULT')
+    if not obj.is_editable:
+        return
+    if obj.keymesh.ignore_missing_thumbnails:
+        return
+    if not self.grid_view:
+        return
 
+    missing_thumbnails = get_missing_thumbnails(obj)
+    if len(missing_thumbnails) != 0:
+        bpy.ops.object.keymesh_thumbnails_offer('INVOKE_DEFAULT')
     return
 
 
@@ -86,7 +105,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
         default = False,
     )
 
-    # keymesh_blocks_registry
+    # Keymesh blocks registy.
     blocks: bpy.props.CollectionProperty(
         name = "Keymesh Blocks",
         type = KeymeshBlocks,
@@ -111,7 +130,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     # UI
     grid_view: bpy.props.BoolProperty(
         name = "Frame Picker Grid View",
-        description = "Display Keymesh blocks in grid, represented by thumbnails",
+        description = "Display Keymesh blocks in a grid, represented by thumbnails",
         options = {'HIDDEN', 'LIBRARY_EDITABLE'},
         override = {"LIBRARY_OVERRIDABLE"},
         update = thumbnails_render_offer,
@@ -119,7 +138,7 @@ class OBJECT_PG_keymesh(bpy.types.PropertyGroup):
     )
     ignore_missing_thumbnails: bpy.props.BoolProperty(
         name = "Ignore Missing Thumbnails",
-        description = "Don't show pop-up when switching to grid view if block thumbnails are missing",
+        description = "Don't show pop-up for missing Keymesh block thumbnails",
         options = set(),
         override = {"LIBRARY_OVERRIDABLE"},
         default = False,
@@ -161,13 +180,13 @@ class SCENE_PG_keymesh(bpy.types.PropertyGroup):
     # ui_filters
     show_keyframe: bpy.props.BoolProperty(
         name = "Show Keyframe Button",
-        description = "Expose operator in list view that allows keyframing blocks",
+        description = "Expose an operator in the list view that allows keyframing blocks",
         default = True,
     )
     show_count: bpy.props.BoolProperty(
         name = "Show Usage Count",
-        description = ("Show how many times each Keymesh block has been used in animation (number of keyframes).\n"
-                       "NOTE: Calculation can be expensive in heavy scenes and it's recommended to turn off"),
+        description = ("Show how many times each Keymesh block has been used in the animation (number of keyframes).\n"
+                       "NOTE: Calculation can be expensive in heavy scenes and it's recommended to be off"),
         default = True,
     )
 

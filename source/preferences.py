@@ -123,7 +123,7 @@ def draw_kmi(kmi, layout):
 class KeymeshAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    # ui
+    # UI
     category: bpy.props.StringProperty(
         name = "Sidebar Category",
         description = ("Choose a name for the category of the Keymesh panel in the sidebar"),
@@ -147,7 +147,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         default = False,
     )
 
-    # experimental
+    # Experimental
     enable_edit_mode: bpy.props.BoolProperty(
         name = "Allow Inserting Keyframes in Edit Modes",
         description = ("Warning: Because of how Blender evaluates data in edit modes, this might cause some data to be lost.\n"
@@ -167,7 +167,6 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         description = "Will expose internal properties and experimental tools in UI for debugging purposes",
         default = False,
     )
-
 
     def draw(self, context):
         layout = self.layout
@@ -195,7 +194,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         box.label(text="Hotkeys:")
         kc = context.window_manager.keyconfigs.user
 
-        # insert_shortcuts
+        # Shortcuts for inserting keyframes.
         kmi = []
         km = kc.keymaps["3D View"]
         kmi.append(get_hotkey_entry_item(km, "object.keyframe_object_data", 'path', 'FORWARD'))
@@ -205,7 +204,7 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
                 box.context_pointer_set("keymap", km)
                 draw_kmi(kmi, box)
 
-        # jump_shortcuts
+        # Shortcuts for timeline jump.
         kmi = []
         km = kc.keymaps["Frames"]
         kmi.append(get_hotkey_entry_item(km, "timeline.keymesh_frame_jump", 'path', 'FORWARD'))

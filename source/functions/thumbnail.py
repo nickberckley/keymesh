@@ -6,12 +6,16 @@ import os
 
 _item_map = dict()
 def _make_enum_item(id, name, descr, preview_id, uid):
-    """NOTE: This workaround is needed because names are not correctly populated in Enums due to known Blender bug."""
-    """NOTE: It populates dictionary for each item with enum_item properties and then assigns them to new enum_item."""
+    """
+    NOTE: This workaround is needed because names are not correctly populated in Enums
+    due to known Blender bug. This function populates a `dict` from `enum_item`
+    properties and then assigns them to a new `enum_item`.
+    """
 
     lookup = f"{str(id)}\0{str(name)}\0{str(descr)}\0{str(preview_id)}\0{str(uid)}"
     if not lookup in _item_map:
         _item_map[lookup] = (id, name, descr, preview_id, uid)
+
     return _item_map[lookup]
 
 
@@ -31,8 +35,11 @@ def resolve_path(path):
 
 preview_collections = {}
 def keymesh_blocks_enum_items(self, context):
-    """Generate EnumProperty from `keymesh.blocks` CollectionProperty."""
-    """Loads thumbnail image for each block from `block.thumbnail` StringProperty (filepath)."""
+    """
+    Generates `EnumProperty` from `keymesh.blocks` `CollectionProperty`.
+    Thumbnail images from `block.thumbnail` (`StringProperty`, `filepath`) are used as icon IDs.
+    If a block doesn't have a thumbnail placeholder icon is used instead.
+    """
 
     pcoll = preview_collections["main"]
     enum_items = []
@@ -53,19 +60,23 @@ def keymesh_blocks_enum_items(self, context):
 
         enum_items.append(_make_enum_item(str(i), block.name, "", thumbnail, i))
 
-    # sort_by_index
+    # Sort by Index
     enum_items.sort(key=lambda item: item[4])
 
     return enum_items
 
 
-def get_missing_thumbnails(obj):
-    """Returns list of Keymesh blocks that either don't have thumbnail property, or can't be found."""
+def get_missing_thumbnails(obj) -> list:
+    """
+    Returns a list of Keymesh blocks that either don't have a thumbnail (`StringPropert` is empty),
+    or thumbnail image paths can't be found on the disk.
+    """
 
     missing_thumbnails = []
     for block in obj.keymesh.blocks:
         if block.thumbnail != "":
-            if os.path.isfile(bpy.path.abspath(block.thumbnail)) or os.path.isfile(bpy.path.relpath(block.thumbnail)):
+            if os.path.isfile(bpy.path.abspath(block.thumbnail)) \
+            or os.path.isfile(bpy.path.relpath(block.thumbnail)):
                 continue
 
         missing_thumbnails.append(block)

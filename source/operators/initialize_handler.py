@@ -1,5 +1,8 @@
 import bpy
-from ..functions.handler import update_keymesh
+
+from ..functions.handler import (
+    update_keymesh,
+)
 
 
 #### ------------------------------ OPERATORS ------------------------------ ####

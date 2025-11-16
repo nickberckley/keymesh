@@ -4,7 +4,10 @@ import bpy
 #### ------------------------------ /general/ ------------------------------ ####
 
 def ensure_channelbag(data_block):
-    """Returns the channelbag of f-curves for a given ID, or None if ID doesn't have anim_data, action, or slot."""
+    """
+    Returns the channelbag of f-curves for a given ID, or `None` if the ID doesn't
+    have an animation data, an action, or a slot.
+    """
 
     anim_data = data_block.animation_data
     if anim_data is None:
@@ -26,7 +29,7 @@ def ensure_channelbag(data_block):
 
 
 def get_fcurve(obj, path: str):
-    """Returns f-curve with given data-path from objects action/slot if it exists."""
+    """Returns the f-curve with a given data-path from objects action, or `None` if it doesn't exists."""
 
     if not obj.animation_data or not obj.animation_data.action:
         return None
@@ -39,18 +42,17 @@ def get_fcurve(obj, path: str):
                 return fcurve
     else:
         # Blender 4.5 LTS or older check.
-        for f in obj.animation_data.action.fcurves:
-            if f.data_path == path:
-                return f
+        for fcurve in obj.animation_data.action.fcurves:
+            if fcurve.data_path == path:
+                return fcurve
 
 
 def insert_keyframe(obj, frame, path: str, constant=True):
-    """Inserts keyframe on given frame for given data-path."""
+    """Inserts the keyframe on an object, on a given frame, for a given data-path."""
 
-    # insert_keyframe
     obj.keyframe_insert(data_path=path, frame=frame)
 
-    # set_constant_interpolation
+    # Set Constant Interpolation
     if constant:
         fcurve = get_fcurve(obj, path)
         if fcurve:
@@ -59,7 +61,7 @@ def insert_keyframe(obj, frame, path: str, constant=True):
 
 
 def remove_fcurve(obj, fcurve):
-    """Removes given f-curve from objects action (and active action slot)."""
+    """Removes the given f-curve from objects action (and an active action slot)."""
 
     if fcurve is None:
         return
@@ -75,7 +77,7 @@ def remove_fcurve(obj, fcurve):
 
 
 def delete_empty_action(obj):
-    """Removes action from object and purges it if it has no f-curves remaining."""
+    """Removes the objects action and purges it if it has no f-curves remaining."""
 
     obj.keymesh.animated = False
 
@@ -106,13 +108,14 @@ def delete_empty_action(obj):
                     bpy.data.actions.remove(empty_action)
 
 
-def has_driver(obj, data_path):
-    """Checks whether given obj has driver on given data_path."""
+def has_driver(obj, data_path) -> bool:
+    """Checks if the given object has a driver on a given `data_path`."""
 
     if obj.animation_data and obj.animation_data.drivers:
         for fcurve in obj.animation_data.drivers:
             if fcurve.data_path == data_path:
                 return True
+
     return False
 
 
@@ -120,13 +123,13 @@ def has_driver(obj, data_path):
 #### ------------------------------ /keymesh_specific/ ------------------------------ ####
 
 def get_keymesh_fcurve(obj):
-    """Returns f-curve for Keymesh Data property of obj."""
+    """Returns the f-curve for Keymesh Data property of the object."""
 
     return get_fcurve(obj, 'keymesh["Keymesh Data"]')
 
 
-def get_keymesh_keyframes(obj):
-    """Get all Keymesh keyframes associated with the obj."""
+def get_keymesh_keyframes(obj) -> list:
+    """Returns a list of all Keymesh keyframes in the objects action & slot."""
 
     keyframes = []
     fcurve = get_keymesh_fcurve(obj)
@@ -139,22 +142,27 @@ def get_keymesh_keyframes(obj):
 
 
 def insert_keymesh_keyframe(obj, frame, block_index=None):
-    """Inserts keyframe on given frame for given block data."""
+    """Inserts the keyframe on a Keymesh data-path on a given frame, optionally for a given index."""
 
-    # assign_value
+    # Assign Value
     if block_index is not None:
         obj.keymesh["Keymesh Data"] = int(block_index)
 
-    # set_animated_property
+    # Set Animated Property
     if obj.keymesh.animated == False:
         obj.keymesh.animated = True
 
-    # insert_keyframe
+    # Insert Keyframe
     insert_keyframe(obj, frame, 'keymesh["Keymesh Data"]', constant=True)
 
 
-def keymesh_block_usage_count(obj, block):
-    """Returns number of uses (keyframes) for each Keymesh block of obj."""
+def keymesh_block_usage_count(obj, block) -> tuple[int, list]:
+    """
+    Returns:
+        tuple:
+            count (int): number of times the given Keymesh block is keyframed.
+            frames (list[int]): frames where the Keymesh value matches the block index.
+    """
 
     fcurve = get_keymesh_fcurve(obj)
     value = block.keymesh["Data"]
@@ -171,7 +179,7 @@ def keymesh_block_usage_count(obj, block):
 
 
 def get_next_keymesh_block(context, obj, direction):
-    """Returns next and previous Keymesh block in timeline."""
+    """Returns the next and the previous Keymesh blocks in timeline."""
 
     obj_id = obj.keymesh.get("ID", None)
     next_keyframe = None
