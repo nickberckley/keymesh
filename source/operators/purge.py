@@ -140,7 +140,8 @@ class OBJECT_OT_keymesh_block_remove(bpy.types.Operator):
             """Completely remove object if last block is being removed."""
             block = obj.data
             remove_block(obj, block)
-            context.view_layer.active_layer_collection.collection.objects.unlink(obj)
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
             data_type.remove(block)
         else:
             initial_index = obj.keymesh.blocks_active_index

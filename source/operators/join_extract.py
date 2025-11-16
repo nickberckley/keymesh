@@ -131,7 +131,8 @@ class OBJECT_OT_keymesh_block_extract(bpy.types.Operator):
 
         # remove_original_object_if_last_block_was_extracted
         if len(obj.keymesh.blocks) == 0:
-            context.view_layer.active_layer_collection.collection.objects.unlink(obj)
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
         else:
             # set_new_active_block
             if obj.keymesh.animated:
