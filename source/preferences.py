@@ -131,22 +131,6 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         update = update_sidebar_category,
     )
 
-    # defaults
-    frame_skip_count: bpy.props.IntProperty(
-        name = "Default Frame Skip Count",
-        description = ("Skip this many frames forwards or backwards when inserting keyframe"),
-        default = 2,
-        min = 1, max = 100,
-        soft_min = 1, soft_max = 10,
-        step = 1,
-    )
-    keyframe_after_skip: bpy.props.BoolProperty(
-        name = "Insert Keyframe after Skip",
-        description = ("Jumping forward or backwards in timeline will also keyframe the object data.\n"
-                       "WARNING: Jumping on the frame with existing Keymesh keyframe will overwrite it, but not delete it"),
-        default = True,
-    )
-
     naming_method: bpy.props.EnumProperty(
         name = "Name Keymesh Blocks After...",
         description = ("When creating new Keymesh blocks you can name them after index\n"
@@ -191,11 +175,6 @@ class KeymeshAddonPreferences(bpy.types.AddonPreferences):
         layout.use_property_decorate = False
 
         column = layout.column()
-        row = column.row(align=True)
-        row.prop(self, "frame_skip_count", text="Default Frame Step")
-        row.separator()
-        row.prop(self, "keyframe_after_skip", text="")
-
         row = column.row(align=True)
         row.prop(self, "naming_method", expand=True)
         row = column.row(align=True)

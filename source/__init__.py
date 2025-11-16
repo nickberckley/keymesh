@@ -19,16 +19,6 @@ else:
     )
 
 
-#### ------------------------------ FUNCTIONS ------------------------------ ####
-
-def update_properties_from_preferences():
-    scene = bpy.context.scene
-    if scene:
-        scene.keymesh.update_properties_from_preferences()
-    return None
-
-
-
 #### ------------------------------ REGISTRATION ------------------------------ ####
 
 modules = [
@@ -44,7 +34,6 @@ def register():
         module.register()
 
     preferences.update_sidebar_category(bpy.context.preferences.addons[__package__].preferences, bpy.context)
-    bpy.app.timers.register(update_properties_from_preferences)
 
     # HANDLERS
     bpy.app.handlers.load_post.append(functions.handler.update_keymesh)
