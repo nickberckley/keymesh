@@ -20,46 +20,45 @@ from ..functions.timeline import (
 class OBJECT_OT_keymesh_convert(bpy.types.Operator):
     bl_idname = "object.keymesh_convert"
     bl_label = "Keymesh Blocks to Separate Objects"
-    bl_description = "Create new object for each Keymesh block, or each Keymesh keyframe for animated objects"
+    bl_description = "Create a new object for each Keymesh block, and animate their visibility to recreate the Keymesh animation"
     bl_options = {'UNDO'}
 
     workflow: bpy.props.EnumProperty(
         name = "Workflow",
-        items = [('STATIC', "Static", "Create new object for each Keymesh block"),
-                 ('ANIMATED', "Animated", ("Iterate over animation and create new object for each Keymesh keyframe.\n"
-                                           "This workflow can recreate Keymesh animation with regular objects by animating their visibility."))],
+        items = [('STATIC', "Static", "Create a object for each Keymesh block."),
+                 ('ANIMATED', "Animated", ("Create a object for each Keymesh block and animate their visibility with\n"
+                                           "the chosen conversation method to faithfully recreate the Keymesh animation.\n"
+                                           "The result can be used in render farms, or to play the animation without the add-on."))],
         default = 'ANIMATED',
     )
     convert_method: bpy.props.EnumProperty(
-        name = "Converting Method",
-        description = "How to convert Keymesh animation into regular Blender animation",
+        name = "Conversion Method",
+        description = "How to convert the Keymesh animation into a regular Blender animation",
         items = [('SIMPLE', "Simple",
-                    ("In animated workflow, keyframe viewport & render visibility of each object to recreate the exact Keymesh animation.\n"
-                     "Can be used in render farms, or whenever animation has to be played without the add-on.\n"
-                     "In static workflow nothing happens to created objects.")),
-                 ('DRIVER', "Drivers",
-                    ("Drive viewport & render visibility of each object with custom property on chosen object.\n"
-                     "In animated workflow the custom property will be keyframed to recreate the exact Keymesh animation.")),
+                    ("In the animated mode, keyframe viewport & render visibility of each object to recreate the Keymesh animation.\n"
+                     "In the static mode, nothing happens to created objects.")),
+                 ('DRIVER', "Driver",
+                    ("Drive viewport & render visibility of each object with the custom property on the chosen object.\n"
+                     "In the animated mode, the custom property will be keyframed to recreate the Keymesh animation.")),
                  ('GEONODES', "Geometry Nodes",
-                    ("Create the duplicate object with a custom Geometry Nodes modifier that will control the...\n"
-                     "visibility of each object with switch nodes. Index will be exposed as Geometry Nodes modifier input .\n"
-                     "In animated workflow index input will be keyframed to recreate the exact Keymesh animation.\n"
-                     "Duplicate object will have empty object data, no Keymesh properties, and modifier will be first in stack.\n"
-                     "That means both evaluated object and animation will be recreated faithfully without Keymesh properties."))],
+                    ("Create the duplicate object with an empty object-data and the custom Geometry Nodes modifier that\n"
+                     "will control the visibility of each newly created object (for each Keymesh block) with Index Switch node."
+                     "Index will be exposed as an input of the modifier so that visibility can be controlled the same way.\n"
+                     "In the animated mode, the index input will be keyframed to recreate the exact Keymesh animation.\n"))],
         default = 'SIMPLE',
     )
 
     # Animation
     skip_unused: bpy.props.BoolProperty(
         name = "Skip Unused Blocks",
-        description = "Don't create object from Keymesh blocks that were not used in animation",
+        description = "Do not create objects from Keymesh blocks that were not used in the animation",
         default = True,
     )
 
     # Offset
     keep_position: bpy.props.BoolProperty(
         name = "Keep Position",
-        description = "Don't offset new objects, keep them in the same position as the original",
+        description = "Do not offset new objects, keep them in the same position as the original",
         default = False,
     )
     offset_distance: bpy.props.FloatProperty(
@@ -80,11 +79,11 @@ class OBJECT_OT_keymesh_convert(bpy.types.Operator):
     # Drivers
     driver_obj: bpy.props.StringProperty(
         name = "Driver Object",
-        description = "Object which will get new custom property that will drive object visibilities",
+        description = "The object which will get new the custom property that will drive the visibility of objects",
     )
     custom_prop_name: bpy.props.StringProperty(
         name = "Custom Property Name",
-        description = "Name for new integer custom property that will drive visibility of separate objects",
+        description = "Name for the new integer custom property that will drive the visibility of objects",
         default = "keymesh_data",
     )
 
